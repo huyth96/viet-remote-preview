@@ -19,6 +19,7 @@
      8  Responsive (desktop curve from 900 px; below it the gutter line)
      9  Motion (start states only under html.hm): T1 pin, the plane, waypoints, T2, the 1B pin and its replies, the
         2B stage's sequence and pin, the cards' pop and stamps, the toggles, the landing's faces, reveals
+    10  The lite tier (html.hm-lite: weak phones and slow links): the same page with its costly effects cut
    Revolut's grammar: black, white and grey UI, colour from photographs; headings weight 500 with tight tracking;
    20 px cards and photos; pill buttons 48 px (44 on phones); hairlines (1 px white ~8 %) and a top inner highlight
    on graphite cards, soft layered shadows; no glass on text. Nothing on the home heavier than 600. One accent:
@@ -58,7 +59,7 @@
    own (cobalt on white, light cobalt on black). */
 html[data-field]:has(> body.page-home) { --focus: #2C4FE6; }
 html[data-field="night"] body.page-home .site-header:not(.is-open) { --focus: var(--hm-cobalt-l); }
-@media (prefers-reduced-motion: no-preference) { html:has(body.page-home) { scroll-behavior: smooth; } }
+@media (prefers-reduced-motion: no-preference) { html:has(> body.page-home) { scroll-behavior: smooth; } }
 
 /* header: transparent over the black hero (only while JS can bring the bar back on scroll), black on the black
    sections once scrolled, white over the white ones. Links 15/500; the join pill white on black, ink on white. */
@@ -264,7 +265,8 @@ html:is([data-field="night"]) body.page-home .site-header:not(.is-open) .hdr-cta
   transform: scaleX(var(--ls, 0)); opacity: var(--lo, 0);
 }
 
-.hv__foot { position: relative; z-index: 2; margin-top: clamp(14px, 1.8vw, 28px); text-align: center; }
+/* (written before the orbit in the markup, so the column is whole in the page's first parse: shown after it) */
+.hv__foot { position: relative; z-index: 2; order: 1; margin-top: clamp(14px, 1.8vw, 28px); text-align: center; }
 .hv__members { font: 400 clamp(18px, 1.7vw, 24px)/1.4 var(--font); color: rgba(255, 255, 255, .84); text-wrap: balance; }
 .hv__members, .hv__more { font-variant-numeric: tabular-nums; }
 .hv__more {
@@ -719,7 +721,7 @@ html.hm .fq__pin > .fl-plane { z-index: 8; filter: drop-shadow(0 8px 6px rgba(0,
 .fts-ex { --d: var(--fts-depth, 1); position: absolute; left: 0; top: 0; z-index: 1; opacity: var(--fts-ex-o, 1); }
 .fts-ex__g {
   position: absolute; left: 0; top: 0; display: block;
-  transform: translate3d(calc(var(--k0) / 24 * var(--fts-ex-dx) * var(--d)), calc(var(--k0) / 24 * var(--fts-ex-dy) * var(--d)), 0);
+  transform: translate(calc(var(--k0) / 24 * var(--fts-ex-dx) * var(--d)), calc(var(--k0) / 24 * var(--fts-ex-dy) * var(--d)));
 }
 .fts-ex__l {
   position: absolute; left: 0; top: 0; display: block; white-space: nowrap; line-height: 1;
@@ -1216,6 +1218,7 @@ html.hm .fq__pin > .fl-plane { z-index: 8; filter: drop-shadow(0 8px 6px rgba(0,
 .hn-hz--line { box-sizing: content-box; padding: 30px 0; margin-top: -30px; clip-path: inset(0 calc(50% - 50% * var(--h)) 0 calc(50% - 50% * var(--h))); opacity: calc(.25 + .75 * var(--h)); }   /* (30 px of room for the glow inside the clip) */
 .hn-hz__line { stroke-width: 2.2px; }
 .hn-hz__glow { stroke-width: 16px; opacity: .75; filter: blur(7px); }
+.hn-hz__soft { stroke-width: 0; }      /* (drawn in the lite tier only: its glow's soft edge without a blur) */
 /* the pill ON the horizon (its centre on the line), over the path (z 5); the plane lands on its right end */
 /* The arrival pill is the page's climax (client 18/11: "nổi bật hơn khi về đích"). Its finished state (no JS, reduced
    motion, and with motion once the plane has docked) is the larger pill (56 px, 18 px label; phones 52 / 17), lifted
@@ -1335,7 +1338,7 @@ html.hm .fq__pin > .fl-plane { z-index: 8; filter: drop-shadow(0 8px 6px rgba(0,
   .fts-was { margin-top: 10px; font-size: clamp(26px, 7vw, 36px); }
   .fts-num { position: relative; top: 0; margin-top: 18px; font-size: clamp(190px, 56vw, 300px); }
   .page-home ul.ft__panels { position: relative; inset: auto; display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: -6px; perspective: none; }
-  .ft__panels > .ft-panel { position: relative; left: auto; top: auto; width: auto; height: auto; min-height: 0; padding: 18px 18px 20px; transform: translate3d(0, calc((1 - var(--r)) * 28px), 0); --lx: 0; }
+  .ft__panels > .ft-panel { position: relative; left: auto; top: auto; width: auto; height: auto; min-height: 0; padding: 18px 18px 20px; transform: translate(0, calc((1 - var(--r)) * 28px)); --lx: 0; }
   /* the flat cards: the hairline, the top highlight and the slab as on the stage; the soft shadow on the floor under
      each one a gradient (a large blurred box-shadow cost each card's first frame ~60 ms on a 4x slower phone) */
   .ft__panels > .ft-panel {
@@ -1647,17 +1650,21 @@ html.hm .hv-av.is-ready img, html.hm .hv-av.is-ready::after { animation-play-sta
 .hv-rings .hm-cut { transform-box: fill-box; transform-origin: center; }
 html.hm .hv-rings .hm-cut { animation: hm-cut 1.2s var(--hm-ease) backwards; animation-delay: calc(.75s + var(--i) * 70ms); animation-play-state: paused; }
 html.hm .hv-rings .hm-cut.is-ready { animation-play-state: running; }
-/* home.js never said it is running (blocked, failed): from 1.2 s (html.hm-free, the head's guard) the orb, its halo
-   and the faces play at once, short, so the stage is never left empty and then snapped in when html.hm goes at 2.5 s */
+/* home.js has not said it is running yet (slow, blocked, failed): from 1.2 s (html.hm-free, the head's guard) the orb,
+   its halo and the faces play at once, short, so the stage is never left empty; html.hm itself goes (the finished page)
+   only if home.js never ran by the end of the parse (DOMContentLoaded), or at 8 s at the latest */
 html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb img, html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb::before,
 html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb::after, html.hm.hm-free .hv__sky:not(.is-orb) .hv-halo::before { animation-play-state: running; animation-delay: 0s; animation-duration: 1s; }
 html.hm.hm-free .hv-av img, html.hm.hm-free .hv-av::after, html.hm.hm-free .hv-rings .hm-cut { animation-play-state: running; animation-delay: calc(var(--i) * 40ms); animation-duration: .9s; }
 html.hm .hv-dot::before { animation: hm-fade 1s var(--hm-ease) 1.3s backwards; }
 html.hm .hv__foot { animation-delay: 1.15s; }      /* orb, rings, faces, then the member line */
 
-/* the hero layers home.js moves every frame */
-html.hm .hv-orb, html.hm .hv-rings, html.hm .hv-halo { will-change: transform, opacity; }
+/* the hero layers home.js moves every frame (a 2D move: each is a layer by this hint, so they all go once T1 is past:
+   from T1 .58 everything in the sky is at 0 and home.js hides its pieces, .is-gone, and the faded copy, .is-past) */
+html.hm .hv-orb, html.hm .hv-rings, html.hm .hv-halo, html.hm .hv-burst { will-change: transform, opacity; }
 html.hm .hv-av { will-change: transform, filter, opacity; }
+html.hm .hv__sky.is-gone > * { visibility: hidden; will-change: auto; }
+html.hm .hv.is-past [data-t1-fade] { will-change: auto; }
 
 /* T1: the hero is pinned (sticky) through an extra run of scroll; home.js scrubs the orbit to a stop, folds the
    nine faces into the orb, folds the rings in and forms the plane (.hv-burst: the flash where the faces meet).
@@ -1708,7 +1715,7 @@ html.hm .hn__pill .fl-dock { transition: scale .9s var(--hm-ease); }
 html.hm .hn__pill:not(.is-glow) .fl-dock { scale: calc(1 / var(--pre)); }
 @keyframes fl-glow { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: .72; } }
 @keyframes hn-halo { 0% { inset: 0; opacity: .95; } 100% { inset: -26px -30px; opacity: 0; } }
-@keyframes hn-sweep { 0% { opacity: 1; left: -45%; } 100% { opacity: 1; left: 110%; } }
+@keyframes hn-sweep { 0% { opacity: 1; transform: translateX(0) skewX(-20deg); } 100% { opacity: 1; transform: translateX(387.5%) skewX(-20deg); } }   /* (its left -45 % to 110 %: 155 % of the pill, 3.875 of its own 40 %, moved on the compositor) */
 @keyframes hn-flare { 0% { opacity: 0; transform: scaleX(.35); } 28% { opacity: 1; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1.25); } }
 html.hm .hn__pill.is-glow::after { animation: fl-glow 1.8s var(--hm-ease) both; }
 html.hm .hn__pill.is-glow .hn__halo { animation: hn-halo 1.2s var(--hm-ease) .12s both; }
@@ -1719,7 +1726,7 @@ html.hm .hn.is-landed .hn-flare { animation: hn-flare 1.5s var(--hm-ease) both; 
 html.hm .fl-wp:not(.is-lit) { background: #262A3D; box-shadow: 0 0 0 4px rgba(44, 79, 230, .16), 0 0 0 0 rgba(76, 107, 255, 0); transform: scale(.8); }
 
 /* T2: the photo's card flies into 1B's centre (home.js writes its transform and opacity) */
-html.hm .fq__q, html.hm .fc__qa { will-change: transform, opacity; }
+html.hm .fc.is-near .fc__qa, html.hm .fq.is-near .fq__q { will-change: transform, opacity; }
 /* measuring the path: the springs at rest, so the replies' waypoints are read where they settle */
 .fl.is-measure .fq-bub { transform: none !important; transition: none !important; }
 /* and Chặng 02's cards at their places */
@@ -1842,7 +1849,10 @@ html.hm .fq-bub__dots {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), 0 10px 22px -10px rgba(0, 0, 0, .9);
   opacity: calc(var(--fqh, 1) * var(--fqa, 1)); transition: opacity .25s var(--hm-ease);
 }
-html.hm .fq-bub__dots i { width: 6px; height: 6px; border-radius: 50%; background: #A9AFC4; animation: fq-type 1.2s ease-in-out 40; }
+html.hm .fq-bub__dots i { width: 6px; height: 6px; border-radius: 50%; background: #A9AFC4; }
+/* (only while 1B is in the window, home.js .is-seen: never as layers held below it; longhands, so each dot keeps its
+   delay below and the three run as a wave) */
+html.hm .fq.is-seen .fq-bub__dots i { animation-name: fq-type; animation-duration: 1.2s; animation-timing-function: ease-in-out; animation-iteration-count: 40; }
 html.hm .fq-bub__dots i:nth-child(2) { animation-delay: .16s; }
 html.hm .fq-bub__dots i:nth-child(3) { animation-delay: .32s; }
 html.hm .fq-bub.is-lit .fq-bub__dots { opacity: 0; transition-duration: .15s; }
@@ -1892,16 +1902,16 @@ html.hm .ft__odo.is-done .ft__lead { display: none; }
 html.hm .ft-panel:focus-within { --r: 1 !important; --o: 1 !important; --rp: .58 !important; --cp: 1 !important; --rk: 1 !important; }
 html.hm .ft-panel:focus-within li, html.hm .ft-panel:focus-within mark { --ck: 1 !important; --li: 1 !important; --mk: 1 !important; }
 html.hm .ft__foot:focus-within { --fts-foot: 1 !important; }
-/* what the scroll moves is a composited layer of its own, kept while the page runs (never a layer made or dropped
-   mid-scrub): the light's two groups, the extrusion's six groups, the struck price and its strike, the flare, the ground,
+/* what the scroll moves is a composited layer of its own while the stage is near the window (home.js .is-near: made
+   a window and a half before it shows, never mid-scrub): the light's two groups, the extrusion's six groups, the struck price and its strike, the flare, the ground,
    each panel, the pill; the price while it rolls (it rests crisp and unscaled once "0đ" lands). Measured on the first
    scroll through (later ones never repaint): the light painted cost 60-110 ms frames as it came up on a 4x slower
    phone, composited none */
-html.hm-on :is(.fts-bg__beam, .fts-bg__ground),
-html.hm-on :is(.fts-ex__g, .fts-was, .fts-was__strike, .fts-flare, .fts-num__contact, .fts-num__refl, .ft-panel, .ft__foot) { will-change: transform, opacity; }
+html.hm-on .ft.is-near :is(.fts-bg__beam, .fts-bg__ground),
+html.hm-on .ft.is-near :is(.fts-ex__g, .fts-was, .fts-was__strike, .fts-flare, .fts-num__contact, .fts-num__refl, .ft-panel, .ft__foot) { will-change: transform, opacity; }
 /* each floor reflection its own layer too: painted inside its turned card, the first frame a card showed cost a
    ~100 ms raster (1440 × 900); on its own layer, a few ms */
-html.hm-on :is(.fts-refl, .fts-prefl) { will-change: transform; }
+html.hm-on .ft.is-near :is(.fts-refl, .fts-prefl) { will-change: transform; }
 html.hm .ft__odo.is-rolling { will-change: transform, opacity; }
 /* measuring the path: the panels at rest (their rise off) */
 .fl.is-measure .ft-panel { --r: 1 !important; }
@@ -1917,7 +1927,7 @@ html.hm .ft__odo.is-rolling { will-change: transform, opacity; }
    reversible); once a card is out its stamp presses on (.is-stamped: from 1.6 x, turned -20°, clear, it lands with a
    faint ink ring, once); each toggle switches on as the plane passes its dot (.is-lit), its name brightening */
 html.hm .fj-card, html.hm .fj-row--slot { --pop: 0; }
-html.hm .fj-card { will-change: transform, opacity; }
+html.hm .fj.is-near .fj-card { will-change: transform, opacity; }
 @keyframes fl-stamp {
   0% { opacity: 0; transform: rotate(-20deg) scale(1.6); }
   40% { opacity: 1; }
@@ -1939,6 +1949,7 @@ html.hm .fj-check:not(.is-lit) .fj-tog__knob { transform: none; }
    transform while it moves: the centre first, then outwards). Under html.hm the scene waits for it; without html.hm
    (no JS, reduced motion) the finished scene. */
 html.hm .hn-scene { --h: 0; --r: 0; }
+html.hm .hn.is-near :is(.hn-sky, .hn-rays, .hn-sun) { will-change: transform, opacity; }
 html.hm .hn-face { opacity: 0; }
 
 @media (max-width: 899px) {     /* the gutter lane's plane (the lane starts at 900 px) */
@@ -1967,13 +1978,73 @@ html.hm .fc__photo[data-clip] img { transform: scale(1.14); transition: transfor
 html.hm .fc__photo[data-clip].is-in { clip-path: inset(0 round var(--hm-r)); }
 html.hm .fc__photo[data-clip].is-in img { transform: none; }
 
+/* ---------------------------------------------------------------- 10 the lite tier */
+/* html.hm-lite: chosen in home.html's head (a phone with 3 GB or less, or 4 cores or fewer where Chromium reports both;
+   Save-Data; a 2G/3G link; ?lite=1; with html.hm-lite-boot) or switched on mid-visit by home.js's guards (scrolled
+   frames, or the hero's orbit at rest, once the scroll rests). The same page, its design, copy, flight path and plane,
+   with what the low-end profiles found costly cut: no grain, no per-frame blur, no floor reflections, the orbit at
+   rest (home.js), the 3D "0đ" one still layer that fades in, the panels' demos finished, the cards' rows switched once,
+   the dawn's glow and the arrival without filters or blends, the photo opening by a fade. Paint and compositing only,
+   never a box: the guard may switch it on mid-scroll and nothing may move. */
+html.hm-lite body.page-home { --hm-grain: none; }
+html.hm-lite :is(.hv, .fj, .hn)::after, html.hm-lite :is(.fts-bg__beam, .fts-bg__ground)::after { display: none; }
+/* the hero: the h1 there from the first paint (the page's largest text: no waiting on a slow phone's repaint), the
+   rest of the intro without blur; the faces' depth blur is the server's, never changed per frame */
+@keyframes hm-orb-l { from { opacity: 0; transform: scale(.92); } }
+/* (html.hm-lite-boot: lite chosen in the head, before the intro started. A guard's switch later in the visit adds
+   html.hm-lite alone: a changed animation-name would restart the intro, the copy and the orb blinking out and back) */
+html.hm-lite-boot .hv__line { animation: none; }
+html.hm-lite-boot .hv-in { animation-name: hm-fade; }
+html.hm-lite-boot .hv-orb img { animation-name: hm-orb-l; }
+html.hm-lite .hv-av { will-change: transform, opacity; }
+/* the plane: a soft cobalt glow painted into its own layer once, never a drop-shadow filter on every frame */
+html.hm-lite .fl-plane, html.hm-lite .fq__pin > .fl-plane { filter: none; }
+html.hm-lite .fl-plane::before {
+  content: ""; position: absolute; inset: -34% -20%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(76, 107, 255, .36), rgba(76, 107, 255, .12) 55%, rgba(76, 107, 255, 0));
+}
+/* 1B: the waiting replies' dots still */
+html.hm-lite .fq-bub__dots i { animation: none !important; opacity: .7; }
+/* 2B: no reflections; the extrusion one layer at its full depth (it fades in at the pop, home.js), the panels rise
+   with their demos finished */
+html.hm-lite :is(.fts-num__refl, .fts-refl, .fts-prefl) { display: none; }
+html.hm-lite .fts-ex__g { transform: translate(calc(var(--k0) / 24 * var(--fts-ex-dx)), calc(var(--k0) / 24 * var(--fts-ex-dy))); will-change: auto !important; }
+html.hm-lite .ft.is-near .fts-ex { will-change: opacity; }
+html.hm-lite .ft-panel { --rp: .58 !important; --cp: 1 !important; --rk: 1 !important; }
+html.hm-lite .ft-panel li, html.hm-lite .ft-panel mark { --ck: 1 !important; --li: 1 !important; --mk: 1 !important; }
+/* Chặng 02: a card's row empties into its slot once (home.js), in a short fade; its figures are there at once (no
+   count-up), and a waypoint or a toggle lights in a short step (a glow's or a colour's transition repaints it on every
+   frame) */
+html.hm-lite .fj-row--slot > *, html.hm-lite .fj-row--slot::after { transition: opacity .18s var(--hm-ease); }
+html.hm-lite .fl-wp { transition: transform .45s var(--hm-ease); }
+html.hm-lite .fj-check__name { transition: none; }
+/* a toggle: its lit face painted once on its ::before over the unlit track, and faded in (opacity: the compositor's),
+   never a colour and a glow repainted on every frame of the switch */
+html.hm-lite .fj-tog { transition: none; background: #2A2B33; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 3px rgba(0, 0, 0, .6); }
+html.hm-lite .fj-tog::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, #3A5CF2, #2343D6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .22), 0 0 22px -4px rgba(60, 92, 240, .7);
+  transition: opacity .3s var(--hm-ease);
+}
+html.hm-lite .fj-check:not(.is-lit) .fj-tog::before { opacity: 0; }
+/* the landing: the horizon's glow without a blur, the flare without a blend, no halo pulse on arrival */
+html.hm-lite .hn-hz__glow { filter: none; stroke-width: 12px; opacity: .28; }
+html.hm-lite .hn-hz__soft { stroke-width: 26px; opacity: .12; }
+html.hm-lite .hn-flare { mix-blend-mode: normal; }
+html.hm-lite .hn__pill.is-glow .hn__halo { animation: none; }
+/* Chặng 01's photo opens by a fade (a clip-path transition repaints the photo on every frame), still settling from
+   its slight zoom */
+html.hm-lite .fc__photo[data-clip] { clip-path: none; opacity: 0; transition: opacity .9s var(--hm-ease); }
+html.hm-lite .fc__photo[data-clip].is-in { opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
   .page-home *, .page-home *::before, .page-home *::after { animation: none !important; transition: none !important; }
 }
 @media print {
   .hv { margin-top: 0; }
   html.hm .page-home [data-fade], html.hm .fq-bub { opacity: 1 !important; translate: none !important; }
-  html.hm .hn-scene { --h: 1 !important; --r: 1 !important; }
+  html.hm .hn-scene, html.hm .hn-scene :is(.hn-sky, .hn-sun, .hn-rays, .hn-hz--line) { --h: 1 !important; --r: 1 !important; }
   html.hm .hn-face { transform: none !important; opacity: 1 !important; }
   html.hm .fq-bub { transform: none !important; }
   html.hm .fq-bub::before, html.hm .fq-bub .fq-bub__t, html.hm .fq-bub .fq-bub__av img { opacity: 1 !important; }
@@ -1987,11 +2058,12 @@ html.hm .fc__photo[data-clip].is-in img { transform: none; }
     --r: 1 !important; --o: 1 !important; --rp: .58 !important; --cp: 1 !important; --rk: 1 !important; --ck: 1 !important;
     --li: 1 !important; --mk: 1 !important;
   }
+  html.hm :is(.fts-bg__beam, .fts-bg__ground) { --fts-cone: 1 !important; --fts-pool: 1 !important; }
   html.hm .ft__zero { opacity: 1 !important; }
   html.hm .fc__num-svg { -webkit-mask-image: none !important; mask-image: none !important; }
   html.hm .fq__q, html.hm .fq__head { opacity: 1 !important; }
   html.hm .fj-card, html.hm .fj-row--slot { --pop: 1 !important; }
   html.hm .fj-card .fj-stamp { opacity: 1 !important; animation: none !important; }
-  html.hm .fc__photo[data-clip] { clip-path: none !important; }
+  html.hm .fc__photo[data-clip] { clip-path: none !important; opacity: 1 !important; transition: none !important; }
   html.hm .fl-plane { display: none; }
 }

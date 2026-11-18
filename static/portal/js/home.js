@@ -3,8 +3,9 @@
 
    html.hm          motion allowed: set in the page head (home.html) before the first paint when reduced motion is
                     off and IntersectionObserver exists; this file says it is running (VR.homeLive), otherwise the
-                    head lets the hero's intro play without it after 1.2 s (html.hm-free) and drops the class
-                    after 2.5 s, and the finished page shows. Every CSS start state and the pins (the hero's run,
+                    head lets the hero's intro play without it from 1.2 s (html.hm-free) and drops the class if
+                    this never ran by the end of the parse (DOMContentLoaded), or at 8 s at the latest, and the
+                    finished page shows. Every CSS start state and the pins (the hero's run,
                     1B's loop, 2B's hold) live under html.hm, so no-JS, failed JS and reduced motion all show the DOM's
                     final state: no pins, waypoints lit, toggles on, replies shown, 2B's finished stage, Chặng 02's
                     cards out and stamped, the dawn risen over the horizon, the plane resting in the final pill.
@@ -71,8 +72,12 @@
   const mq = (q) => (window.matchMedia ? window.matchMedia(q) : { matches: false });
   const canObserve = "IntersectionObserver" in window;
   const motion = canObserve && !mq("(prefers-reduced-motion: reduce)").matches && root.classList.contains("hm");
-  // running: the pins (html.hm-on) exist only from here, so a page whose script never ran has no sticky layer to drop
+  // running (the head set html.hm-on with html.hm, so the first layout has the pins; it drops both if this never says so)
   if (motion) { VR.homeLive = true; root.classList.add("hm-on"); }
+  // the lite tier (html.hm-lite: chosen in the head, or by the frame guard below mid-visit, so always read live): the
+  // same page with the costly effects cut (home.css section 10): the orbit rests, no per-frame blur, no reflections,
+  // the panels' demos finished, the cards' rows switched rather than scrubbed
+  const LITE = () => root.classList.contains("hm-lite");
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
@@ -84,8 +89,17 @@
   // an easing step of `rate` per 60 Hz frame, the same speed at 30, 60 or 120 frames a second
   const ease = (rate, dt) => 1 - Math.pow(1 - rate, dt / 16.67);
   const T1 = { p: 0 };                       // the hero's pin progress: flight() writes it, orbit() reads it
-  // the eased scroll every scrubbed effect follows: flight() writes it each frame (its task runs first), stage() reads it
-  const SCR = { sm: null };
+  const ORB = { spin: false };               // the orbit turning on screen this frame (orbit() writes it; the rest probe)
+  // the eased scroll every scrubbed effect follows: flight() writes it each frame (its task runs first), stage() reads it;
+  // y: the scroll itself, read ONCE per frame at the top of the ticker, before any task writes a style (a read after a
+  // write flushes the style early: the forced recalcs the low-end profile found in every task)
+  // (both are first read where the measures start, afterFonts: never while this file is evaluated, where a read laid
+  // the whole page out inside the script's own task, the web font's swap with it: 0.6-0.9 s on a slow phone)
+  const SCR = { sm: null, y: 0 };
+  // the window's height, read on resize only (on a phone innerHeight forces a style and layout pass)
+  const VP = { h: 0 };
+  const onSize = () => { VP.h = window.innerHeight; };
+  window.addEventListener("resize", onSize, { passive: true });
 
   /* ---------------------------------------------------------------- the ticker */
   const tasks = new Set();
@@ -93,13 +107,129 @@
   let last = 0;
   function tick(now) {
     raf = 0;
-    const dt = last ? Math.min(64, now - last) : 16.67;
+    const t0 = performance.now();
+    const gap = last ? now - last : 0;
+    const dt = last ? Math.min(64, gap) : 16.67;
     last = now;
+    const y0 = SCR.y;
+    SCR.y = window.scrollY;
     let again = false;
     tasks.forEach((fn) => { if (fn(dt)) again = true; });
+    if (gap) {
+      if (SCR.y !== y0 || SCR.sm !== SCR.y) watch(gap);     // a scrolled frame: the frame guard
+      else if (ORB.spin) atRest(gap, t0);                    // the orbit turning, the page at rest: the rest probe
+    }
     if (again) raf = requestAnimationFrame(tick); else last = 0;
   }
   const wake = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+  /* Two guards switch a device that cannot keep up to the lite tier on the fly (html.hm-lite: nothing moves, resizes
+     or jumps, the costly effects go) and keep it for the tab's session (home.html's head reads vr-lite-auto). Never
+     when the tier was forced (?lite=0 / ?lite=1).
+     The frame guard: armed once the page has loaded and settled; it samples the first 40 frames in a row while the
+     page scrolls (the gap between two ticks), drops the longest tenth (one slow raster or a collection is no verdict)
+     and switches when the rest average more than 28 ms (under ~36 frames a second). Near its limit on a 2018-2020
+     budget phone (a 6x slower CPU measured 18-27 ms): such a phone is mostly caught by the head's test or the probe.
+     The rest probe: the frame guard reads scrolled frames only, and the hero's orbit (the full tier's one effect that
+     runs with nothing scrolled) keeps its frames near 60 a second even where it keeps the main thread busy, so frame
+     times never show it. While the orbit turns with the page at rest (from 3 s after the load: the intro done), each
+     frame's own work is timed: from the ticker's start to a message posted from it, which runs once that frame is
+     styled, laid out and painted. Over 3 s of such frames, more than 35 % of the main thread switches to lite (the
+     orbit then rests, its faces where they are). Measured on a 360 px phone at 2x (Chromium, CPU slowed down from a
+     desktop's): 12-14 % at 1-2x, 22 % at 3x, 24-29 % at 4x, 31-40 % at 5x, 38-54 % at 6x (the 2018-2020 budget phone);
+     a 390 px phone at 3x and 4x: 36-45 %. One verdict each a page */
+  const TIER = VR.homeTier || {};
+  const G = { on: false, gaps: [] };
+  function watch(gap) {
+    if (!G.on || document.hidden || gap > 250) return;    // (a stall: a tab switch, a long task)
+    G.gaps.push(gap);
+    if (G.gaps.length < 40) return;
+    G.on = false;
+    const kept = G.gaps.sort((a, b) => a - b).slice(0, 36);
+    const mean = kept.reduce((a, b) => a + b, 0) / kept.length;
+    VR.homeGuard = { mean: Math.round(mean * 10) / 10, lite: mean > 28 };
+    if (mean <= 28 || LITE()) return;
+    toLite("frames");
+  }
+  const P = { on: false, span: 0, busy: 0, n: 0, port: null };
+  function atRest(gap, t0) {
+    if (!P.on || !P.port || document.hidden || gap > 250) return;
+    P.span += gap;
+    P.n++;
+    P.port.postMessage(t0);
+  }
+  if (motion && TIER.forced == null && !LITE()) {
+    if (typeof MessageChannel === "function") {
+      const ch = new MessageChannel();
+      P.port = ch.port2;
+      ch.port1.onmessage = (e) => {
+        if (!P.on) return;
+        P.busy += performance.now() - e.data;
+        if (P.span < 3000) return;
+        P.on = false;
+        const f = P.busy / P.span;
+        VR.homeProbe = { busy: Math.round(f * 100) / 100, frames: P.n, lite: f > 0.35 };
+        if (f > 0.35) toLite("rest");
+      };
+    }
+    const arm = () => {
+      setTimeout(() => { G.on = !LITE(); }, 600);
+      setTimeout(() => { P.on = !LITE(); }, 3000);
+    };
+    if (document.readyState === "complete") arm(); else window.addEventListener("load", arm, { once: true });
+  }
+  /* The switch (either guard): kept for the session at once (the next page starts lite), made only once the page
+     rests (a class on the root restyles the whole page: one long frame, never inside a scrolled one): no scroll event
+     or input for 300 ms and the scroll unmoved over the next 300 ms (a slow phone's events come in bursts; one read of
+     the scroll in a timer), then in an idle moment, and not while 2B's stage is in the window (its panels' demos would
+     jump to their finished state and its numeral to its full depth): then at the next rest. The hero's intro is never
+     replayed (its lite form belongs to the head's choice alone, html.hm-lite-boot) */
+  let switching = false;
+  function toLite(why) {
+    if (switching || LITE()) return;
+    switching = true;
+    try { sessionStorage.setItem("vr-lite-auto", "1"); } catch (e) {}
+    const ft = $("#cong-cu");
+    let stageIn = false, t = 0, y = -1, gen = 0;
+    const io = ft && new IntersectionObserver(([e]) => { stageIn = e.isIntersecting; });
+    if (io) io.observe(ft);
+    const idle = window.requestIdleCallback ? (fn) => window.requestIdleCallback(fn, { timeout: 500 }) : (fn) => setTimeout(fn, 1);
+    const evs = ["scroll", "wheel", "touchstart", "touchmove", "keydown"];
+    const go = () => {
+      if (stageIn) return;                                 // (the next rest: the next input arms it again)
+      evs.forEach((ev) => window.removeEventListener(ev, rested));
+      if (io) io.disconnect();
+      if (LITE()) return;
+      root.classList.add("hm-lite");
+      TIER.lite = why;
+      wake();
+    };
+    const look = () => {
+      const now = window.scrollY;
+      if (now !== y) { y = now; t = setTimeout(look, 300); return; }
+      const g = gen;
+      idle(() => { if (g === gen) go(); });
+    };
+    function rested() { gen++; clearTimeout(t); y = -1; t = setTimeout(look, 300); }
+    evs.forEach((ev) => window.addEventListener(ev, rested, { passive: true }));
+    rested();
+  }
+
+  // the web fonts still loading (their swap lays the page out again: a measure then is measured again once they are in)
+  const fontsLoading = () => !!(document.fonts && document.fonts.ready && document.fonts.status !== "loaded");
+  // fn once the web fonts are in (at most 1.5 s of waiting) and after the next frame: the swap's relayout is then the
+  // browser's own (never forced inside the first measure, on a slow phone 1-2 s of style and layout in one task) and
+  // the measures read a clean layout, once
+  function afterFonts(fn) {
+    let done = false;
+    const run = () => {
+      if (done) return;
+      done = true;
+      requestAnimationFrame(() => setTimeout(() => { SCR.y = window.scrollY; onSize(); fn(); }));
+    };
+    if (!fontsLoading()) run();
+    else { document.fonts.ready.then(run, run); setTimeout(run, 1500); }
+  }
 
   // runs fn once img is decoded (or failed, or after `wait` ms), at once when it already is
   function decoded(img, fn, wait = 2500) {
@@ -158,13 +288,19 @@
     // the stage's scale on screen: kx px per stage unit across, ky down (equal from 768 px, where the stage keeps its
     // ratio; phones stretch it taller); the portraits' radius (avR, px per unit of --k and scale: measured, as phones
     // size them larger) and the sphere's (orbR, px: the render's sphere fills 89 % of it)
-    let W = 0, H = 0, kx = 1, ky = 1, avR = 0, orbR = 0;
+    let W = 0, H = 0, kx = 1, ky = 1, avR = 0, orbR = 0, every = 0;
     const size = () => {
       if (!sky.clientWidth) return;                  // not laid out (hidden, printing): keep the last scale
       W = sky.clientWidth; H = sky.clientHeight || W * SY / SX; kx = W / SX; ky = H / SY;
       const f = movers.find((m) => m.face);
       avR = (f && f.el.offsetWidth ? f.el.offsetWidth / (f.k || 1) : (Number(sky.dataset.av) || 128) * kx) / 2;
       orbR = orb ? orb.offsetWidth * 0.89 / 2 : 120 * kx;
+      // the orbit's own pace: a step only once the fastest face has moved ~.4 px on screen. On a phone the whole
+      // picture is small and a face drifts ~11 px a second, so a step every other 60 Hz frame (.38 px) looks the same
+      // as one every frame for half the work; on a desktop (~40 px a second) every frame
+      const v = Math.max(...rings.map((r) => 2 * Math.PI * Math.max(r.rx * kx, r.ry * ky) / (r.period * 1000)));
+      const n = Math.floor(0.4 / (v || 1) / 16.67);
+      every = n >= 2 ? Math.min(3, n) * 16.67 - 2 : 0;
     };
     size();
     let onScreen = true, elapsed = 0, tx = 0, ty = 0, px = 0, py = 0, lastT = -1;
@@ -177,10 +313,22 @@
     // into it (no beat with only a glow point). The rings fold into the orb and are gone before they are small,
     // handing over to ONE clean hairline that draws out from the orb and shrinks back into the launch point; the orb
     // shrinks and fades into the flash as the plane appears (never a white plane on a blue disc)
+    // (a value is written only when its text changes: a write of the same transform still restyles the element)
+    const put = (el, k, v) => { if (el["_" + k] !== v) { el["_" + k] = v; el.style[k] = v; } };
+    let away = null;
     function place() {
-      const p = T1.p;
+      const p = T1.p, lite = LITE();
       const fold = smooth(0.08, 0.34, p);
       const gone = smooth(0.2, 0.36, p);            // the orb shrinks into the flash
+      // past T1 (from .58 everything in the sky is at 0: faces, dots, orb, rings, hairline, halo, flash) the sky's
+      // pieces are hidden and drop their layers (home.css .is-gone), and so do the faded copy and member line
+      // (.is-past): no layer of the covered hero is kept while the page runs on
+      const off = p >= 0.58;
+      if (off !== away) { away = off; sky.classList.toggle("is-gone", off); hero.classList.toggle("is-past", off); }
+      if (off) {                                     // (nothing to place: a dot's 3D move, its only layer, goes too)
+        movers.forEach((m) => { if (!m.face) put(m.el, "transform", ""); });
+        return;
+      }
       for (const m of movers) {
         // (the last face is in by p .31, before the flash passes .8 of its peak: the peak frame is the clean plane in
         // its bloom, review 18/11)
@@ -195,7 +343,9 @@
           y = (SY / 2 - m.y0) * ky + py + (rx * si + ry * co) * shrink;
         }
         const s = L.s * (1 - 0.72 * c);
-        m.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(3)})`;
+        // (a face is a layer by its will-change, a 2D move; a dot by its 3D move, as ever, cleared once T1 is past)
+        put(m.el, "transform", m.face ? `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(3)})`
+          : `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(3)})`);
         if (m.cut) {                                     // its ring's cut follows it (gone once T1 draws it in)
           const cx = pt.x.toFixed(1), cy = pt.y.toFixed(1), cr = (c > 0 ? 0 : avR / kx * m.k * L.s + 1).toFixed(1);
           if (cx !== m.cx) { m.cx = cx; m.cut.setAttribute("cx", cx); }
@@ -203,12 +353,19 @@
           if (cr !== m.cr) { m.cr = cr; m.cut.setAttribute("r", cr); }
         }
         if (m.face) {
-          const f = `blur(${q(L.b * (1 - c) + 1.5 * c, 0.25)}px)`;
-          if (f !== m.f) { m.f = f; m.el.style.filter = f; }
-          const w = q(L.w * (1 - c), 0.02);
-          if (w !== m.w) { m.w = w; m.el.style.setProperty("--w", w); }
-          // converging: in front of the orb all the way in, so they melt into the flash (never hidden behind it)
-          const z = c > 0.12 ? 32 : L.z;
+          // (lite: each face keeps the server's blur and wash for its place, never a filter changed per frame)
+          if (!lite) {
+            const f = `blur(${q(L.b * (1 - c) + 1.5 * c, 0.25)}px)`;
+            if (f !== m.f) { m.f = f; m.el.style.filter = f; }
+            const w = q(L.w * (1 - c), 0.02);
+            if (w !== m.w) { m.w = w; m.el.style.setProperty("--w", w); }
+          }
+          // converging: in front of the orb all the way in, so they melt into the flash (never hidden behind it).
+          // Two levels only, the near half's floor (32: over the orb, the near arcs, the flash and the near dots) and
+          // the far half's (10: over the far arcs and dots, under the orb): two faces never meet on their rings
+          // (views: the phases keep them apart all the way round), so their order among themselves never shows, and
+          // a face is restacked (the hero re-layered) only as it crosses the orb, not at every step of its depth
+          const z = c > 0.12 || pt.d >= 0 ? 32 : 10;
           if (z !== m.z) { m.z = z; m.el.style.zIndex = String(z); }
           // a face on the far half is hidden while it is inside the orb's silhouette (its last sliver showed through
           // the render's soft rim as a cobalt smudge) and comes out of it as it emerges past the rim
@@ -225,19 +382,19 @@
           if (L.dz !== m.z) { m.z = L.dz; m.el.style.zIndex = String(L.dz); }
         }
       }
-      const drift = `translate(-50%,-50%) translate3d(${px.toFixed(2)}px,${py.toFixed(2)}px,0)`;
+      const drift = `translate(-50%,-50%) translate(${px.toFixed(2)}px,${py.toFixed(2)}px)`;
       if (orb) {
-        orb.style.transform = gone ? `${drift} scale(${(1 - 0.86 * gone).toFixed(4)})` : drift;
+        put(orb, "transform", gone ? `${drift} scale(${(1 - 0.86 * gone).toFixed(4)})` : drift);
         // gone as the plane's wings open over it (T1K.form0 .27 → .42): never a white plane on a blue disc
-        orb.style.opacity = p > 0.2 ? (1 - smooth(0.24, 0.34, p)).toFixed(3) : "";
+        put(orb, "opacity", p > 0.2 ? (1 - smooth(0.24, 0.34, p)).toFixed(3) : "");
       }
       if (halo) {
-        halo.style.transform = p ? `${drift} scale(${(1 - 0.5 * gone).toFixed(4)})` : drift;
-        halo.style.opacity = p > 0.3 ? (1 - smooth(0.36, 0.56, p)).toFixed(3) : "";
+        put(halo, "transform", p ? `${drift} scale(${(1 - 0.5 * gone).toFixed(4)})` : drift);
+        put(halo, "opacity", p > 0.3 ? (1 - smooth(0.36, 0.56, p)).toFixed(3) : "");
       }
       ringEls.forEach((el) => {
-        el.style.transform = `translate3d(${px.toFixed(2)}px,${py.toFixed(2)}px,0)` + (fold ? ` scale(${(1 - 0.62 * fold).toFixed(4)}) rotate(${(24 * fold).toFixed(2)}deg)` : "");
-        el.style.opacity = p > 0.15 ? (1 - smooth(0.18, 0.32, p)).toFixed(3) : "";
+        put(el, "transform", `translate(${px.toFixed(2)}px,${py.toFixed(2)}px)` + (fold ? ` scale(${(1 - 0.62 * fold).toFixed(4)}) rotate(${(24 * fold).toFixed(2)}deg)` : ""));
+        put(el, "opacity", p > 0.15 ? (1 - smooth(0.18, 0.32, p)).toFixed(3) : "");
       });
       if (p !== lastT) {
         lastT = p;
@@ -255,20 +412,32 @@
       }
     }
 
+    // A frame only while something moves: the orbit turns (until T1 has eased it to a stop at .3; never in the lite
+    // tier, where the faces rest at the server's places), the pointer's offset settles, or T1's progress (flight()'s
+    // task runs first, so it is this frame's) has changed. Past T1, or held still in it, the ticker sleeps: the hero
+    // pinned under Chặng 01 costs nothing
+    // (the turn alone steps at the orbit's own pace, `every`; T1's scroll and the pointer's offset place at once)
+    let placed = "", acc = 0;
     tasks.add((dt) => {
-      if (!onScreen || document.hidden) return false;
-      elapsed += dt / 1000 * (1 - smooth(0, 0.3, T1.p));     // T1: the orbit eases to a stop
+      if (!onScreen || document.hidden) { ORB.spin = false; return false; }
+      const p = T1.p, spin = p < 0.3 && !LITE();
+      ORB.spin = spin;
+      if (spin) elapsed += dt / 1000 * (1 - smooth(0, 0.3, p));     // T1: the orbit eases to a stop
       const e = ease(0.06, dt);
       px += (tx - px) * e;
       py += (ty - py) * e;
-      place();
-      return true;
+      if (Math.abs(tx - px) < 0.02) px = tx;
+      if (Math.abs(ty - py) < 0.02) py = ty;
+      acc += dt;
+      const now = `${px}|${py}|${p}`;
+      if (now !== placed || (spin && acc >= every)) { placed = now; acc = 0; place(); }
+      return spin || px !== tx || py !== ty;
     });
     place();
 
     new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (onScreen) wake(); }).observe(hero);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
-    const measure = () => { size(); place(); };
+    const measure = () => { size(); placed = ""; place(); };
     if ("ResizeObserver" in window) new ResizeObserver(measure).observe(sky);
     else window.addEventListener("resize", measure, { passive: true });
     // the pointer parallax: mouse only (touch scrolls), the whole orbit ±8 px against the pointer
@@ -463,7 +632,7 @@
     const coarse = mq("(pointer: coarse)").matches;
     let geo = null;                        // everything measure() caches
     let sm = window.scrollY;               // the eased scroll every scrubbed effect follows
-    let angle = null, docked = false, fadeO = -1, floorO = -1, t2q = -1, drawV = -1, looping = null, lowV = "", dockV = "", lastSm = sm;
+    let angle = null, docked = false, fadeO = -1, floorO = -1, t2q = -1, drawV = -1, looping = null, lowV = "", dockV = "", foldV = "", planeO = "", lastSm = sm;
     let vhKeys = 0, lastW = 0;             // the window height the keys were measured with, and the width
     let vwC = document.documentElement.clientWidth;   // the window's width without its scrollbar (measure, resize)
 
@@ -492,6 +661,7 @@
 
     function measure() {
       const sy = window.scrollY, vw = window.innerWidth;
+      SCR.y = sy;
       // phones: the browser's bar shows and hides on every change of scroll direction (the window's height changes
       // by up to ~120 px); the keys keep the height they were measured with unless the width changes too
       if (!vhKeys || !coarse || vw !== lastW || Math.abs(window.innerHeight - vhKeys) > 150) vhKeys = window.innerHeight;
@@ -509,9 +679,9 @@
       if (qaSrc) { qaSrc.style.transform = ""; qaSrc.style.clipPath = ""; }
       fl.classList.add("is-measure");
       const flR = fl.getBoundingClientRect();
-      const g = { vh, flTop: flR.top + sy, W: fl.clientWidth, H: fl.offsetHeight, segs: [] };
+      const g = { vh, flTop: flR.top + sy, W: fl.clientWidth, H: fl.offsetHeight, segs: [], desk: vw >= 900 };
       geo = g;
-      const desk = vw >= 900;
+      const desk = g.desk;
       const sticky = (el) => withMotion && el && getComputedStyle(el).position === "sticky";
       const mkLayer = (wrap, el) => {
         const wr = wrap.getBoundingClientRect(), er = el.getBoundingClientRect();
@@ -839,23 +1009,41 @@
         const iIn = seg.pts.findIndex((pt) => pt.cut === "in"), iOut = seg.pts.findIndex((pt) => pt.cut === "out");
         const hide = seg.kind === "tools" ? numFade(Ly.rect.top, seg) : seg.kind === "doc" && !g.tools ? numFade(flR.top, seg) : null;
         if (withMotion && seg.kind === "doc") {
-          // the page's long stretch in bands about 0.6 window tall, each a small SVG of its own with the same
-          // path (clipped to its band): one page-tall masked SVG repainted all of itself every frame the tip moved
-          // (jank over Chặng 02's photo layers); now a band whose part of the path is all drawn, or not drawn yet,
-          // never changes
+          // the page's long stretch in bands about 0.6 window tall, each a small SVG of its own (clipped to its
+          // band): one page-tall masked SVG repainted all of itself every frame the tip moved (jank over Chặng 02's
+          // photo layers); now a band whose part of the path is all drawn, or not drawn yet, never changes. Each band
+          // holds only ITS stretch of the curve (the spans from the point before its first sample to the point after
+          // its last, so its whole visible part, mask and stroke, is there): a repaint dashes and masks ~one band of
+          // path, never the whole journey's (the low-end profile: 0.7 ms a tile, 400 ms of raster through 2B and
+          // Chặng 02). Its dots keep the journey's phase and its mask the journey's lengths: both from the browser's
+          // own length of the curve up to the stretch's first point (getTotalLength: the dashes' own measure), so
+          // every dot sits where the one long path put it
           const bh = Math.max(480, Math.round(vh * 0.6));
           const y0 = Math.floor(Math.min(...seg.ys) / bh) * bh, y1 = Math.max(...seg.ys);
-          seg.bands = [];
+          // (every length measured first, on one probe path, before any band is added: one layout for them all)
+          const probe = svgEl("path", {}, svg), lens = new Map();
+          const lenOf = (d) => { probe.setAttribute("d", d); return probe.getTotalLength(); };
+          const specs = [];
           for (let top = y0; top <= y1; top += bh) {
-            let lmin = Infinity, lmax = -Infinity;
-            seg.ys.forEach((y, i) => { if (y >= top - 24 && y <= top + bh + 24) { lmin = Math.min(lmin, seg.ls[i]); lmax = Math.max(lmax, seg.ls[i]); } });
-            if (lmax < lmin) continue;
+            let k0 = -1, k1 = -1;
+            seg.ys.forEach((y, k) => { if (y >= top - 24 && y <= top + bh + 24) { if (k0 < 0) k0 = k; k1 = k; } });
+            if (k0 < 0) continue;
+            const lmin = seg.ls[k0], lmax = seg.ls[k1];
+            let i = 0, j = seg.pts.length - 1;
+            while (i + 1 < j && seg.pts[i + 1].len <= lmin) i++;
+            while (j - 1 > i && seg.pts[j - 1].len >= lmax) j--;
+            if (!lens.has(i)) lens.set(i, i ? lenOf(subPath(seg, 0, i)) : 0);
+            const d = subPath(seg, i, j);
+            specs.push({ top, lmin, lmax, i, d, L0: lens.get(i), total: lenOf(d) });
+          }
+          probe.remove();
+          seg.bands = specs.map(({ top, lmin, lmax, i, d, L0, total }) => {
             // placed once here (measure), never per frame
             const el = svgEl("svg", { class: "fl-svg fl-svg--band", viewBox: `0 ${top} ${g.W} ${bh}`, style: `top:${top}px;height:${bh}px`, "aria-hidden": "true", focusable: "false" });
             fl.insertBefore(el, svg);
-            const mask = dashed(el, `${id}-${top}`, seg.d, seg.total, -60, top - 60, g.W + 120, bh + 120, "", null, { a: a0, ph, hide });
-            seg.bands.push({ el, mask, lmin: Math.max(0, lmin - 8), lmax: lmax + 8, v: -1 });
-          }
+            const mask = dashed(el, `${id}-${top}`, d, total, -60, top - 60, g.W + 120, bh + 120, "", null, { a: i ? at(seg, seg.pts[i].len + 0.5).a : a0, ph: ph + L0, hide });
+            return { el, mask, lmin: Math.max(0, lmin - 8), lmax: lmax + 8, v: -1, L0, total };
+          });
         } else if (withMotion && seg.kind === "loop" && iIn > 0 && iOut > iIn) {
           // 1B: the lane in, the loop and the lane out drawn as three stretches; while the plane flies the loop the
           // lane in dims to 30 % (CSS .is-looping), so the loop reads as one clean ellipse round the card. The loop
@@ -1013,7 +1201,7 @@
         const flat = vw < 768;
         const lag = (c) => (flat ? (popCards.length - 1 - c.i) * vh * 0.12 : c.i * vh * 0.07);
         g.pop = popCards.map((c) => ({ c, s0: s0 + lag(c), s1: s0 + lag(c) + span }));
-        popCards.forEach((c) => { c.v = -1; });
+        popCards.forEach((c) => { c.v = -1; c.rv = null; });
       }
       fl.classList.remove("is-measure");
       angle = null;
@@ -1028,7 +1216,7 @@
 
     function frame(force, dt) {
       if (!geo) return;
-      const s = window.scrollY;
+      const s = SCR.y;
       const g = geo;
       // T1: the hero's pin progress; the copy and the member line fade back as the faces converge
       if (g.hero) {
@@ -1036,13 +1224,16 @@
         // the copy and the member line stay through the first flick (phones too), then dissolve where they are: opacity
         // with a soft blur and a hair of scale on each block as a whole (the h1 never travels up under the header; the
         // pills fade as one group, so the white pill never reads as a grey, disabled one)
-        const o = Math.round((1 - smooth(0.08, 0.3, T1.p)) * 100) / 100;
+        // (lite: opacity and scale only, never a blur per frame, so it is gone sooner, by .2: never a sharp, faint
+        // copy over the orb and the flash)
+        const soft = !LITE();
+        const o = Math.round((1 - (soft ? smooth(0.08, 0.3, T1.p) : smooth(0.06, 0.2, T1.p))) * 100) / 100;
         if (o !== fadeO) {
           fadeO = o;
           fades.forEach((el) => {
             el.style.opacity = o === 1 ? "" : String(o);
             el.style.transform = o === 1 ? "" : `scale(${(1 - 0.03 * (1 - o)).toFixed(4)})`;
-            el.style.filter = o === 1 ? "" : `blur(${(8 * (1 - o)).toFixed(1)}px)`;
+            el.style.filter = o === 1 || !soft ? "" : `blur(${(8 * (1 - o)).toFixed(1)}px)`;
           });
         }
         // the hero's cobalt pool and floor glow go out with the orb, so its foot never shows as an edge where
@@ -1076,7 +1267,7 @@
           const v = clamp(L, b.lmin, b.lmax);
           if (force || Math.abs(v - b.v) > 0.4 || (v !== b.v && (v === b.lmin || v === b.lmax))) {
             b.v = v;
-            b.mask.setAttribute("stroke-dashoffset", maskOff(seg.total, v));
+            b.mask.setAttribute("stroke-dashoffset", maskOff(b.total, clamp(v - b.L0, 0, b.total)));
           }
         });
         if (withMotion) seg.wps.forEach((w) => {
@@ -1115,7 +1306,7 @@
         // first (no shadow-side ghost beside the mark), docked at land1
         const land1 = lk ? lk[n].S : 0;
         const arrive = lk && geo.hold && n >= 2 ? lk[n - 1].S : land1;
-        const land0 = arrive - (window.innerWidth >= 900 ? Math.max(260, geo.vh * 0.28) : 220);
+        const land0 = arrive - (g.desk ? Math.max(260, geo.vh * 0.28) : 220);
         const isDocked = !!(lastSeg && active === lastSeg && sm >= land1 - 0.5);
         if (!active && first && first.kind === "hero") {
           // T1: the plane forms where the faces meet, twice its cruising size, ALREADY on its launch heading (it
@@ -1213,12 +1404,19 @@
           // nor by the window's foot (a pin's door out sits there, and the line turns on it): gone before its lower
           // half-extent reaches the foot, back in as it rises clear of it
           const vy = (Math.abs(Math.sin(angle)) * 0.46 * g.pw + Math.abs(Math.cos(angle)) * 0.42 * g.ph) * sc;
-          const foot = window.innerHeight;
+          const foot = VP.h;
           op *= 1 - smooth(foot - vy - 26, foot - vy - 2, y);
         }
-        plane.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) rotate(${(angle / RAD).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
-        plane.style.opacity = op.toFixed(3);
-        plane.style.setProperty("--fold", fold.toFixed(3));
+        // (a plane that was and stays unseen is not moved: before T1, docked, past the landing, nothing is restyled)
+        const ov = op.toFixed(3);
+        if (ov !== "0.000" || planeO !== "0.000" || force) {
+          plane.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) rotate(${(angle / RAD).toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+          if (ov !== planeO) plane.style.opacity = ov;
+          planeO = ov;
+        }
+        // (inherited by the plane's paths: written only when it changes, never on every frame of the journey)
+        const fv = fold.toFixed(3);
+        if (fv !== foldV) { foldV = fv; plane.style.setProperty("--fold", fv); }
         const lv = low.toFixed(3);
         if (lv !== lowV) { lowV = lv; plane.style.setProperty("--low", lv); }
         // docked: the plane rests in the pill's right end (crossfaded in by scroll) and the pill glows once
@@ -1315,14 +1513,17 @@
         if (v === c.v) return;
         c.v = v;
         c.el.style.setProperty("--pop", String(v));
-        if (c.row) c.row.style.setProperty("--pop", String(v));
+        // (the row empties into its slot over the lift's first 7 %: lite switches it once there, home.css fading it,
+        // so the phone's screen is repainted twice per card, not on every frame of the lift)
+        const rv = LITE() ? (v > 0.04 ? "1" : "0") : String(v);
+        if (c.row && rv !== c.rv) { c.rv = rv; c.row.style.setProperty("--pop", rv); }
         if (v >= 0.97 && !c.stamped) { c.stamped = true; c.el.classList.add("is-stamped"); }
       });
     }
 
     if (withMotion) {
       tasks.add((dt) => {
-        const s = window.scrollY;
+        const s = SCR.y;
         sm += (s - sm) * ease(0.22, dt);
         if (Math.abs(s - sm) < 0.4) sm = s;
         SCR.sm = sm;
@@ -1364,7 +1565,7 @@
       new ResizeObserver(() => { const h = fl.offsetHeight; if (h !== lastH) { lastH = h; remeasure(); } }).observe(fl);
     }
     measure();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => remeasure());
+    if (fontsLoading()) document.fonts.ready.then(() => remeasure());
     window.addEventListener("load", remeasure);
     wake();
     setTimeout(measured);
@@ -1481,7 +1682,8 @@
     /* the odometer: the price's cells (.ft__lead) left of the last digit, each digit on a wheel 0 … 9, 0 */
     const odo = $("[data-odo]", root), lead = odo && $(".ft__lead", odo);
     const numIn = $(".fts-num__in", root), zero = $(".ft__zero", root), ex = $(".fts-ex", root);
-    const bg = $(".fts-bg", root), was = $(".fts-was", root), flare = $(".fts-flare", root);
+    const was = $(".fts-was", root), flare = $(".fts-flare", root);
+    const beam = $(".fts-bg__beam", root), groundL = $(".fts-bg__ground", root);
     const ground = $$(".fts-num__contact, .fts-num__refl", root);
     const frame = $("[data-fts]", root), foot = $(".ft__foot", root);
     if (!odo || !lead || !numIn || !ex) return;
@@ -1585,15 +1787,17 @@
     const nums = panels.reduce((all, p) => all.concat(p.nums), []);
     // a counter keeps its final width (--cw, its layout width with the final figure: no shift while it counts)
     const fmtN = (v, f) => (f === "dec1" ? v.toFixed(1).replace(".", ",") : f === "usd" ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") : String(Math.round(v)));
-    const sizeNums = () => nums.forEach((n) => {
-      const shown = n.textContent;
-      n.style.removeProperty("--cw");
-      n.textContent = fmtN(Number(n.dataset.n) || 0, n.dataset.fmt);
-      const w = `${(n.offsetWidth + 0.5).toFixed(1)}px`;
-      n.textContent = shown;
-      n.style.setProperty("--cw", w);
-      if (n._twin) n._twin.style.setProperty("--cw", w);
-    });
+    // (all the writes, then all the reads, then the writes back: one layout for the four, not one each)
+    const sizeNums = () => {
+      const shown = nums.map((n) => n.textContent);
+      nums.forEach((n) => { n.style.removeProperty("--cw"); n.textContent = fmtN(Number(n.dataset.n) || 0, n.dataset.fmt); });
+      const ws = nums.map((n) => `${(n.offsetWidth + 0.5).toFixed(1)}px`);
+      nums.forEach((n, i) => {
+        n.textContent = shown[i];
+        n.style.setProperty("--cw", ws[i]);
+        if (n._twin) n._twin.style.setProperty("--cw", ws[i]);
+      });
+    };
     const count = (n, x) => {
       const sv = fmtN(lerp(Number(n.dataset.from) || 0, Number(n.dataset.n) || 0, x), n.dataset.fmt);
       if (sv !== n._last) { n._last = sv; n.textContent = sv; if (n._twin) n._twin.textContent = sv; }
@@ -1607,6 +1811,10 @@
       const r = span(x, 0, B.rise);
       setVar(p.el, "--r", eio(r));
       setVar(p.el, "--o", lit(sstep(span(r, 0, 0.5))));
+      // lite: each card rises with its demo already finished (home.css holds the demo's values; the figures are
+      // written once), so a frame restyles one card, never its rows, chips and counters
+      if (LITE()) { if (!p.fin) { p.fin = true; p.nums.forEach((n) => count(n, 1)); } return; }
+      p.fin = false;
       const d = span(x, B.rise, 1);
       if (p.kind === "rate") {
         const e = eio(span(d, 0, D(800)));
@@ -1629,12 +1837,14 @@
     /* the stage: the lights and the price by the approach a, the numeral and the pop by p */
     function beats(p, a) {
       const c = eio(span(a, 0, 0.75));
-      setVar(bg, "--fts-cone", lit(c));
-      setVar(bg, "--fts-pool", lit(eio(span(a, 0.3, 1))));
+      // (on the two groups that read them: on .fts-bg every part of the light was restyled each frame)
+      setVar(beam, "--fts-cone", lit(c));
+      setVar(groundL, "--fts-pool", lit(eio(span(a, 0.3, 1))));
       const zo = sstep(span(a, 0.45, 0.9)).toFixed(3);
       if (zero._o !== zo) { zero._o = zo; zero.style.opacity = zo; }
       odometer(p);
-      setVar(ex, "--fts-depth", eio(span(p, B.depth[0], B.depth[1])));
+      // (lite: the extrusion is one still layer at its full depth that only fades in, home.css)
+      if (!LITE()) setVar(ex, "--fts-depth", eio(span(p, B.depth[0], B.depth[1])));
       setVar(ex, "--fts-ex-o", lit(sstep(span(p, B.exo[0], B.exo[1]))));
       const f = p < B.flare[1] ? sstep(span(p, B.flare[0], B.flare[1])) : 1 - sstep(span(p, B.flare[1], B.flare[2]));
       setVar(flare, "--fts-flare", 0.85 * f);
@@ -1742,7 +1952,7 @@
       return false;
     });
     const again = () => { measure(); wake(); };
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);
+    if (fontsLoading()) document.fonts.ready.then(again);
     // every measure of the path (load, fonts, resize, a change of the page's height) measures the stage too
     document.addEventListener("vr:flight-measured", again);
     window.addEventListener("scroll", () => wake(), { passive: true });
@@ -1794,15 +2004,20 @@
       shown = -1;
       wake();
     };
+    // (each value on the elements that read it, never on the scene: a write there restyled every face, the ground and
+    // the horizon on each frame of the dawn; home.css starts them from the scene's own --h, --r)
+    const hEls = $$(".hn-sky, .hn-sun, .hn-hz--line", el), rEls = $$(".hn-rays", el);
     const paint = (p) => {
       const h = smooth(0, 0.4, p).toFixed(3), rr = smooth(0.12, 0.6, p).toFixed(3);
-      if (h !== hv) { hv = h; el.style.setProperty("--h", h); }
-      if (rr !== rv) { rv = rr; el.style.setProperty("--r", rr); }
+      if (h !== hv) { hv = h; hEls.forEach((el) => el.style.setProperty("--h", h)); }
+      if (rr !== rv) { rv = rr; rEls.forEach((el) => el.style.setProperty("--r", rr)); }
       faces.forEach((o) => {
         const t = clamp((p - 0.26 - 0.085 * o.k) / 0.3, 0, 1);
         if (t === o.t) return;
         o.t = t;
         if (t >= 1) { o.el.style.transform = "none"; o.el.style.opacity = "1"; return; }
+        // (still under the horizon: hidden by home.css, and no layer of its own until it starts to rise)
+        if (t <= 0) { o.el.style.transform = ""; o.el.style.opacity = ""; return; }
         const e = 1 - Math.pow(1 - t, 3);
         o.el.style.transform = `translate3d(0,${(o.drop * (1 - e)).toFixed(1)}px,0) scale(${(0.86 + 0.14 * e).toFixed(4)})`;
         o.el.style.opacity = Math.min(1, t * 2.5).toFixed(3);
@@ -1811,7 +2026,7 @@
     // (the first frame after a measure always paints, in or out of the window: never a stale state)
     tasks.add((dt) => {
       if (!on && shown >= 0) return false;
-      const target = clamp((window.scrollY - s0) / (s1 - s0), 0, 1);
+      const target = clamp((SCR.y - s0) / (s1 - s0), 0, 1);
       cur = cur < 0 ? target : cur + (target - cur) * ease(0.22, dt);
       if (Math.abs(target - cur) < 0.0015) cur = target;
       const v = Math.round(cur * 1000) / 1000;
@@ -1823,16 +2038,21 @@
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
       io.disconnect();
-      $$("img[loading=lazy]", el).forEach((img) => { img.loading = "eager"; });
+      // (only the faces this width shows: the four desktop-only ones stay lazy, never fetched on a phone)
+      $$("img[loading=lazy]", el).forEach((img) => { if (img.getClientRects().length) img.loading = "eager"; });
     }, { rootMargin: "150% 0px 150% 0px" });
     io.observe(el);
     const nudge = () => { if (on) wake(); };
     window.addEventListener("scroll", nudge, { passive: true });
-    window.addEventListener("resize", measure, { passive: true });
+    // (a resize is measured once it settles: on a phone the browser's bar fires one at each turn of the scroll, and a
+    // measure then would lay the page out in the middle of the scroll)
+    let rz = 0;
+    const settle = () => { clearTimeout(rz); rz = setTimeout(measure, 120); };
+    window.addEventListener("resize", settle, { passive: true });
     // the dock's scroll is flight()'s, measured 150 ms after a resize, the fonts or the load: measured again then
     document.addEventListener("vr:flight-measured", measure);
     window.addEventListener("load", measure);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    if (fontsLoading()) document.fonts.ready.then(measure);
     window.addEventListener("beforeprint", () => { paint(1); shown = 1; cur = 1; });
     measure();
   }
@@ -1854,6 +2074,8 @@
     el.dataset.counted = "1";
     const to = Number(el.dataset.hmCount), from = Number(el.dataset.from || 0);
     if (!Number.isFinite(to)) return;
+    // (lite: the real figure at once: a count-up rewrites the text, so lays out and paints its line, on every frame)
+    if (LITE()) { el.textContent = fmt(el, to); return; }
     let t = 0;
     tasks.add(function step(dt) {
       t = Math.min(1, t + dt / 1300);
@@ -1865,22 +2087,21 @@
   }
   function counters() {
     const els = $$("[data-hm-count]");
-    const size = (el) => {                           // the final figure's width (whatever is shown just now)
-      const shown = el.textContent;
-      el.style.removeProperty("--cw");
-      el.textContent = fmt(el, Number(el.dataset.hmCount));
-      const w = el.offsetWidth;                     // its layout width
-      el.textContent = shown;
-      el.style.setProperty("--cw", `${Math.ceil(w) + 1}px`);
+    // the final figures' widths (whatever is shown just now): all the writes, then all the reads (one layout)
+    const sizeAll = () => {
+      const shown = els.map((el) => el.textContent);
+      els.forEach((el) => { el.style.removeProperty("--cw"); el.textContent = fmt(el, Number(el.dataset.hmCount)); });
+      const ws = els.map((el) => el.offsetWidth);   // their layout widths
+      els.forEach((el, i) => { el.textContent = shown[i]; el.style.setProperty("--cw", `${Math.ceil(ws[i]) + 1}px`); });
     };
+    els.forEach((el) => el.classList.add("hm-num"));     // their boxes first (tabular figures), then their widths
+    sizeAll();
     els.forEach((el) => {
-      el.classList.add("hm-num");                    // its box first (tabular figures), then its width
-      size(el);
       // a real count (no data-from) starts at 80 % of itself: it never shows a false 0, only the last stretch counts
       if (el.dataset.from == null) el.dataset.from = String(Math.floor(Number(el.dataset.hmCount) * 0.8));
       el.textContent = fmt(el, Number(el.dataset.from));
     });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => els.forEach(size));
+    if (fontsLoading()) document.fonts.ready.then(sizeAll);
     const io = new IntersectionObserver((entries) => entries.forEach((e) => {
       if (e.isIntersecting) { io.unobserve(e.target); countUp(e.target); }
     }), { threshold: 0 });
@@ -1969,25 +2190,46 @@
     });
   }
 
+  /* ---------------------------------------------------------------- layers only near the window */
+  // Each section is .is-near while it is within about a window and a half of the window (home.css gives its moving
+  // parts their layers, will-change, only then; 1B's typing dots run only while 1B is on screen): the page keeps the layers of
+  // the section in view and its neighbours, never all of them (the low-end profile: ~105 layers, 114-125 MB at 2x on
+  // a 360 px phone, re-layered every frame). A layer is made well before its section shows, so its first raster is
+  // done off screen
+  function near() {
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("is-near", e.isIntersecting)),
+      { rootMargin: "150% 0px 150% 0px" });
+    $$(".hv-pin, .fl > section").forEach((el) => io.observe(el));
+    // 1B's typing dots run only while 1B is in the window itself (.is-seen): never as layers held below it
+    const fq = $(".fq");
+    if (fq) new IntersectionObserver(([e]) => fq.classList.toggle("is-seen", e.isIntersecting)).observe(fq);
+  }
+
   ready(() => {
     let finish = () => {};
     // each part on its own: an error in one never leaves a section in its start state (dark, hidden, waiting): the
     // motion classes go and the finished page shows (the DOM's final state), the error still reported
     const safe = (fn) => {
       try { return fn(); } catch (err) {
-        root.classList.remove("hm", "hm-on", "hm-free");
+        root.classList.remove("hm", "hm-on", "hm-free", "hm-lite", "hm-lite-boot");
         setTimeout(() => { throw err; });
         return undefined;
       }
     };
     safe(focusCards);
     if (motion) {
+      safe(near);
       safe(reveals);
-      safe(orbit);
-      finish = safe(() => flight(true)) || finish;
-      safe(counters);
-      safe(() => stage(true));
-      safe(dawn);
+      // the parts that measure the page: once the web fonts are in, after a frame (afterFonts)
+      // (the path first: its task eases the scroll and writes T1's progress, which the orbit's task then reads in the
+      // same frame)
+      afterFonts(() => {
+        finish = safe(() => flight(true)) || finish;
+        safe(orbit);
+        safe(counters);
+        safe(() => stage(true));
+        safe(dawn);
+      });
     } else {
       safe(() => flight(false));
       safe(() => stage(false));

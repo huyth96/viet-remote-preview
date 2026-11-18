@@ -33,6 +33,9 @@
   
   
   <link rel="stylesheet" href="static/portal/css/superapp.css?v=1794746242">
+  <link rel="stylesheet" href="static/portal/css/home.css?v=1795035317">
+  <link rel="preload" as="image" href="static/portal/img/obj/orb-640.webp" imagesrcset="static/portal/img/obj/orb-256.webp 256w, static/portal/img/obj/orb-384.webp 384w, static/portal/img/obj/orb-640.webp 640w, static/portal/img/obj/orb-1200.webp 1200w" imagesizes="(max-width: 767px) 30vw, 240px">
+  
   <script>
     document.documentElement.classList.add("js");
     /* Short job title: drops (…) notes and everything after a dash, pipe, comma or ": ".
@@ -80,13 +83,46 @@
       });
     };
   </script>
-  <link rel="stylesheet" href="static/portal/css/home.css?v=1795001707">
-  <link rel="preload" as="image" href="static/portal/img/obj/orb-640.webp" imagesrcset="static/portal/img/obj/orb-640.webp 640w, static/portal/img/obj/orb-1200.webp 1200w" imagesizes="(max-width: 767px) 30vw, 240px">
   
   
-  
-  
-  <script>(function (d) { try { if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) { d.classList.add("hm"); var live = function () { return window.VR && VR.homeLive; }; setTimeout(function () { if (!live()) d.classList.add("hm-free"); }, 1200); setTimeout(function () { if (!live()) { d.classList.remove("hm-free"); d.classList.remove("hm"); } }, 2500); } } catch (e) {} })(document.documentElement);</script>
+  <script>(function (d) { try {
+    var w = window, VR = w.VR = w.VR || {}, ss = null, f = null;
+    if (w.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in w)) return;
+    d.classList.add("hm"); d.classList.add("hm-on");
+    try { ss = w.sessionStorage; } catch (e) {}
+    var m = /[?&]lite=([01])(?:&|#|$)/.exec(location.search);
+    try { if (m) { f = m[1]; if (ss) ss.setItem("vr-lite", f); } else if (ss) f = ss.getItem("vr-lite"); } catch (e) {}
+    var n = navigator, c = n.connection || {}, small = Math.min(screen.width, screen.height) < 600, why = "";
+    if (f === "1") why = "forced";
+    else if (f !== "0") {
+      if (n.deviceMemory && n.deviceMemory <= 3) why = "memory";
+      else if (n.deviceMemory && n.hardwareConcurrency && n.hardwareConcurrency <= 4 && small) why = "cores";
+      else if (c.saveData) why = "save-data";
+      else if (/^(?:slow-2g|2g|3g)$/.test(c.effectiveType || "")) why = "network";
+      else { try { if (ss && ss.getItem("vr-lite-auto") === "1") why = "frames"; } catch (e) {} }
+    }
+    VR.homeTier = { forced: f, lite: why };
+    if (why) { d.classList.add("hm-lite"); d.classList.add("hm-lite-boot"); }
+    var live = function () { return VR.homeLive; };
+    var drop = function () { if (!live()) { d.classList.remove("hm-free"); d.classList.remove("hm-lite-boot"); d.classList.remove("hm-lite"); d.classList.remove("hm-on"); d.classList.remove("hm"); } };
+    setTimeout(function () { if (!live()) d.classList.add("hm-free"); }, 1200);
+    document.addEventListener("DOMContentLoaded", function () { setTimeout(drop, 50); });
+    setTimeout(drop, 8000);
+    /* the hero's pictures pop in once decoded, on their own load (inline onload): a portrait and its ring's cut
+       (home_atom_rings.html: the front rings' svg.hm-rings--front), the orb and its halo (home.css .is-ready, .is-orb);
+       home.js does the same for any it finds already loaded */
+    VR.heroImg = function (img) {
+      var go = function () {
+        var av = img.closest(".hv-av"), sky = img.closest(".hv__sky"), cut;
+        if (av) {
+          av.classList.add("is-ready");
+          cut = sky && sky.querySelector('.hm-rings--front [data-cut="' + av.style.getPropertyValue("--i").trim() + '"]');
+          if (cut) cut.classList.add("is-ready");
+        } else if (sky) sky.classList.add("is-orb");
+      };
+      if (img.decode) img.decode().then(go, go); else go();
+    };
+  } catch (e) {} })(document.documentElement);</script>
 </head>
 <body class="page-home">
   <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
@@ -246,6 +282,12 @@
     </div>
 
     
+    <div class="wrap hv__foot hv-in" style="--d:6" data-t1-fade>
+      <p class="hv__members">Hơn 2.100 thành viên đang hỏi đáp, chia sẻ và kết nối</p>
+      <a class="hv__more" href="/viec-lam/">Xem 1.336 việc remote đã kiểm tra</a>
+    </div>
+
+    
     
     <div class="hv__sky" data-sky data-rings="[{&quot;rx&quot;:280,&quot;ry&quot;:89.6,&quot;tilt&quot;:-4,&quot;period&quot;:84,&quot;dir&quot;:1},{&quot;rx&quot;:420,&quot;ry&quot;:134.4,&quot;tilt&quot;:-4,&quot;period&quot;:84,&quot;dir&quot;:1},{&quot;rx&quot;:572,&quot;ry&quot;:183.0,&quot;tilt&quot;:-4,&quot;period&quot;:84,&quot;dir&quot;:1}]" data-stage="1240 500" data-av="128" data-rmax="572" role="img" aria-label="Tám gương mặt bay trên ba vòng quỹ đạo quanh quả cầu Việt Remote.">
       <svg class="hm-rings hm-rings--back hv-rings" viewBox="0 0 1240 500" preserveAspectRatio="none" aria-hidden="true" focusable="false">
@@ -260,8 +302,8 @@
 </svg>
 
       <span class="hv-halo" aria-hidden="true"></span>
-      <span class="hv-orb"><img src="static/portal/img/obj/orb-640.webp" srcset="static/portal/img/obj/orb-640.webp 640w, static/portal/img/obj/orb-1200.webp 1200w" sizes="(max-width: 767px) 30vw, 240px" width="640" height="650" alt="" fetchpriority="high" decoding="async" onerror="this.hidden=true"></span>
-      <span class="hv-av" data-ring="0" data-phase="60" style="left:61.699%;top:63.528%;--k:1.0;--s:0.826;--b:0.0px;--w:0.11;--i:0;z-index:35"><img src="static/portal/img/ph/avatar-1-96.webp" srcset="static/portal/img/ph/avatar-1-96.webp 96w, static/portal/img/ph/avatar-1.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="0" data-phase="340" style="left:70.995%;top:40.215%;--k:1.0;--s:0.699;--b:0.75px;--w:0.347;--i:1;z-index:17"><img src="static/portal/img/ph/avatar-9-96.webp" srcset="static/portal/img/ph/avatar-9-96.webp 96w, static/portal/img/ph/avatar-9.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="1" data-phase="115" style="left:36.406%;top:76.779%;--k:1.0;--s:0.878;--b:0.0px;--w:0.014;--i:2;z-index:37"><img src="static/portal/img/ph/avatar-6-96.webp" srcset="static/portal/img/ph/avatar-6-96.webp 96w, static/portal/img/ph/avatar-6.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="1" data-phase="165" style="left:17.559%;top:62.6%;--k:1.0;--s:0.776;--b:0.02px;--w:0.204;--i:3;z-index:34"><img src="static/portal/img/ph/avatar-3-96.webp" srcset="static/portal/img/ph/avatar-3-96.webp 96w, static/portal/img/ph/avatar-3.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="1" data-phase="220" style="left:23.631%;top:37.253%;--k:1.0;--s:0.634;--b:1.38px;--w:0.469;--i:4;z-index:14"><img src="static/portal/img/ph/avatar-8-96.webp" srcset="static/portal/img/ph/avatar-8-96.webp 96w, static/portal/img/ph/avatar-8.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="2" data-phase="20" style="left:93.594%;top:54.989%;--k:1.0;--s:0.809;--b:0.0px;--w:0.143;--i:5;z-index:35"><img src="static/portal/img/ph/avatar-5-96.webp" srcset="static/portal/img/ph/avatar-5-96.webp 96w, static/portal/img/ph/avatar-5.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="2" data-phase="260" style="left:40.995%;top:15.43%;--k:1.0;--s:0.523;--b:2.43px;--w:0.674;--i:6;z-index:10"><img src="static/portal/img/ph/avatar-2-96.webp" srcset="static/portal/img/ph/avatar-2-96.webp 96w, static/portal/img/ph/avatar-2.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span><span class="hv-av" data-ring="2" data-phase="295" style="left:68.514%;top:13.537%;--k:1.0;--s:0.54;--b:2.27px;--w:0.643;--i:7;z-index:11"><img src="static/portal/img/ph/avatar-10-96.webp" srcset="static/portal/img/ph/avatar-10-96.webp 96w, static/portal/img/ph/avatar-10.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async"></span>
+      <span class="hv-orb"><img src="static/portal/img/obj/orb-640.webp" srcset="static/portal/img/obj/orb-256.webp 256w, static/portal/img/obj/orb-384.webp 384w, static/portal/img/obj/orb-640.webp 640w, static/portal/img/obj/orb-1200.webp 1200w" sizes="(max-width: 767px) 30vw, 240px" width="640" height="650" alt="" fetchpriority="high" decoding="async" onload="VR.heroImg&&VR.heroImg(this)" onerror="this.hidden=true"></span>
+      <span class="hv-av" data-ring="0" data-phase="60" style="left:61.699%;top:63.528%;--k:1.0;--s:0.826;--b:0.0px;--w:0.11;--i:0;z-index:35"><img src="static/portal/img/ph/avatar-1-96.webp" srcset="static/portal/img/ph/avatar-1-96.webp 96w, static/portal/img/ph/avatar-1-128.webp 128w, static/portal/img/ph/avatar-1-192.webp 192w, static/portal/img/ph/avatar-1.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="0" data-phase="340" style="left:70.995%;top:40.215%;--k:1.0;--s:0.699;--b:0.75px;--w:0.347;--i:1;z-index:17"><img src="static/portal/img/ph/avatar-9-96.webp" srcset="static/portal/img/ph/avatar-9-96.webp 96w, static/portal/img/ph/avatar-9-128.webp 128w, static/portal/img/ph/avatar-9-192.webp 192w, static/portal/img/ph/avatar-9.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="1" data-phase="115" style="left:36.406%;top:76.779%;--k:1.0;--s:0.878;--b:0.0px;--w:0.014;--i:2;z-index:37"><img src="static/portal/img/ph/avatar-6-96.webp" srcset="static/portal/img/ph/avatar-6-96.webp 96w, static/portal/img/ph/avatar-6-128.webp 128w, static/portal/img/ph/avatar-6-192.webp 192w, static/portal/img/ph/avatar-6.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="1" data-phase="165" style="left:17.559%;top:62.6%;--k:1.0;--s:0.776;--b:0.02px;--w:0.204;--i:3;z-index:34"><img src="static/portal/img/ph/avatar-3-96.webp" srcset="static/portal/img/ph/avatar-3-96.webp 96w, static/portal/img/ph/avatar-3-128.webp 128w, static/portal/img/ph/avatar-3-192.webp 192w, static/portal/img/ph/avatar-3.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="1" data-phase="220" style="left:23.631%;top:37.253%;--k:1.0;--s:0.634;--b:1.38px;--w:0.469;--i:4;z-index:14"><img src="static/portal/img/ph/avatar-8-96.webp" srcset="static/portal/img/ph/avatar-8-96.webp 96w, static/portal/img/ph/avatar-8-128.webp 128w, static/portal/img/ph/avatar-8-192.webp 192w, static/portal/img/ph/avatar-8.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="2" data-phase="20" style="left:93.594%;top:54.989%;--k:1.0;--s:0.809;--b:0.0px;--w:0.143;--i:5;z-index:35"><img src="static/portal/img/ph/avatar-5-96.webp" srcset="static/portal/img/ph/avatar-5-96.webp 96w, static/portal/img/ph/avatar-5-128.webp 128w, static/portal/img/ph/avatar-5-192.webp 192w, static/portal/img/ph/avatar-5.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="2" data-phase="260" style="left:40.995%;top:15.43%;--k:1.0;--s:0.523;--b:2.43px;--w:0.674;--i:6;z-index:10"><img src="static/portal/img/ph/avatar-2-96.webp" srcset="static/portal/img/ph/avatar-2-96.webp 96w, static/portal/img/ph/avatar-2-128.webp 128w, static/portal/img/ph/avatar-2-192.webp 192w, static/portal/img/ph/avatar-2.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span><span class="hv-av" data-ring="2" data-phase="295" style="left:68.514%;top:13.537%;--k:1.0;--s:0.54;--b:2.27px;--w:0.643;--i:7;z-index:11"><img src="static/portal/img/ph/avatar-10-96.webp" srcset="static/portal/img/ph/avatar-10-96.webp 96w, static/portal/img/ph/avatar-10-128.webp 128w, static/portal/img/ph/avatar-10-192.webp 192w, static/portal/img/ph/avatar-10.webp 320w" sizes="(max-width: 767px) 60px, 128px" width="96" height="96" alt="" decoding="async" onload="VR.heroImg&&VR.heroImg(this)"></span>
       <span class="hv-dot" data-ring="0" data-phase="150" style="left:30.744%;top:62.321%;--s:0.788;--o:0.758;z-index:31" aria-hidden="true"></span><span class="hv-dot" data-ring="0" data-phase="250" style="left:41.822%;top:34.538%;--s:0.636;--o:0.533;z-index:9" aria-hidden="true"></span><span class="hv-dot" data-ring="1" data-phase="300" style="left:66.239%;top:23.848%;--s:0.598;--o:0.477;z-index:9" aria-hidden="true"></span><span class="hv-dot" data-ring="1" data-phase="30" style="left:79.64%;top:58.333%;--s:0.814;--o:0.797;z-index:31" aria-hidden="true"></span><span class="hv-dot" data-ring="2" data-phase="100" style="left:43.023%;top:87.342%;--s:0.947;--o:0.995;z-index:31" aria-hidden="true"></span><span class="hv-dot" data-ring="2" data-phase="180" style="left:3.983%;top:57.98%;--s:0.735;--o:0.68;z-index:31" aria-hidden="true"></span>
       <svg class="hm-rings hm-rings--front hv-rings" viewBox="0 0 1240 500" preserveAspectRatio="none" aria-hidden="true" focusable="false">
   <defs>
@@ -282,10 +324,6 @@
     </div>
     
 
-    <div class="wrap hv__foot hv-in" style="--d:6" data-t1-fade>
-      <p class="hv__members">Hơn 2.100 thành viên đang hỏi đáp, chia sẻ và kết nối</p>
-      <a class="hv__more" href="/viec-lam/">Xem 1.336 việc remote đã kiểm tra</a>
-    </div>
   </div>
   
   <span class="fl-a fl-a--d fl-a--h1" data-anchor data-motion data-p="1" data-tan="150" aria-hidden="true"></span>
@@ -310,7 +348,7 @@
     </div>
     <div class="fc__art">
       <div class="fc__frame">
-        <figure class="fc__photo" data-clip><img src="static/portal/img/ph/night-train-v2.webp" srcset="static/portal/img/ph/night-train-v2-640.webp 640w, static/portal/img/ph/night-train-v2.webp 1100w, static/portal/img/ph/night-train-v2-1536.webp 1536w, static/portal/img/ph/night-train-v2-2048.webp 2048w" sizes="(max-width: 899px) calc(122vw - 66px), (max-width: 1199px) 690px, 810px" alt="" width="1100" height="1467" loading="lazy" decoding="async"></figure>
+        <figure class="fc__photo" data-clip><img src="static/portal/img/ph/night-train-v2.webp" srcset="static/portal/img/ph/night-train-v2-640.webp 640w, static/portal/img/ph/night-train-v2-860.webp 860w, static/portal/img/ph/night-train-v2.webp 1100w, static/portal/img/ph/night-train-v2-1536.webp 1536w, static/portal/img/ph/night-train-v2-2048.webp 2048w" sizes="(max-width: 899px) calc(122vw - 66px), (max-width: 1199px) 690px, 810px" alt="" width="1100" height="1467" loading="lazy" decoding="async"></figure>
         <span class="fl-a fl-a--d fl-a--c2" data-anchor data-tan="-20" data-f=".7" aria-hidden="true"></span>
         <span class="fl-wp fl-wp--d fc__pin" data-anchor data-wp data-tan="0" data-f=".68" aria-hidden="true"></span>
         <div class="qa fc__qa" data-qa-src aria-hidden="true">
@@ -362,31 +400,31 @@
         <div class="fq__bubs" role="list" aria-label="Năm câu trả lời">
           
           <div class="fq-bub fq-bub--designer" role="listitem" data-lit data-bub-key="designer" style="--i:0">
-            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-1-96.webp" srcset="static/portal/img/ph/avatar-1-96.webp 96w, static/portal/img/ph/avatar-1.webp 320w" sizes="76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-1-96.webp" srcset="static/portal/img/ph/avatar-1-96.webp 96w, static/portal/img/ph/avatar-1-128.webp 128w, static/portal/img/ph/avatar-1-192.webp 192w, static/portal/img/ph/avatar-1.webp 320w" sizes="(max-width: 899px) 52px, 76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
             <p class="fq-bub__t"><span class="fq-bub__who">Designer · Đà Nẵng</span> <span class="fq-bub__say">Bắt đầu thấp một chút, xin đánh giá 5 sao.</span></p>
             <span class="fl-a fl-a--m fq-bub__wp" data-anchor data-wp aria-hidden="true"></span>
           </div>
           
           <div class="fq-bub fq-bub--content" role="listitem" data-lit data-bub-key="content" style="--i:1">
-            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-3-96.webp" srcset="static/portal/img/ph/avatar-3-96.webp 96w, static/portal/img/ph/avatar-3.webp 320w" sizes="76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-3-96.webp" srcset="static/portal/img/ph/avatar-3-96.webp 96w, static/portal/img/ph/avatar-3-128.webp 128w, static/portal/img/ph/avatar-3-192.webp 192w, static/portal/img/ph/avatar-3.webp 320w" sizes="(max-width: 899px) 52px, 76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
             <p class="fq-bub__t"><span class="fq-bub__who">Content · Sài Gòn</span> <span class="fq-bub__say">Gửi mẫu bài trước khi báo giá.</span></p>
             <span class="fl-a fl-a--m fq-bub__wp" data-anchor data-wp aria-hidden="true"></span>
           </div>
           
           <div class="fq-bub fq-bub--video" role="listitem" data-lit data-bub-key="video" style="--i:2">
-            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-5-96.webp" srcset="static/portal/img/ph/avatar-5-96.webp 96w, static/portal/img/ph/avatar-5.webp 320w" sizes="76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-5-96.webp" srcset="static/portal/img/ph/avatar-5-96.webp 96w, static/portal/img/ph/avatar-5-128.webp 128w, static/portal/img/ph/avatar-5-192.webp 192w, static/portal/img/ph/avatar-5.webp 320w" sizes="(max-width: 899px) 52px, 76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
             <p class="fq-bub__t"><span class="fq-bub__who">Video · Đà Lạt</span> <span class="fq-bub__say">Chia nhỏ thành từng mốc thanh toán.</span></p>
             <span class="fl-a fl-a--m fq-bub__wp" data-anchor data-wp aria-hidden="true"></span>
           </div>
           
           <div class="fq-bub fq-bub--marketing" role="listitem" data-lit data-bub-key="marketing" style="--i:3">
-            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-2-96.webp" srcset="static/portal/img/ph/avatar-2-96.webp 96w, static/portal/img/ph/avatar-2.webp 320w" sizes="76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-2-96.webp" srcset="static/portal/img/ph/avatar-2-96.webp 96w, static/portal/img/ph/avatar-2-128.webp 128w, static/portal/img/ph/avatar-2-192.webp 192w, static/portal/img/ph/avatar-2.webp 320w" sizes="(max-width: 899px) 52px, 76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
             <p class="fq-bub__t"><span class="fq-bub__who">Marketing · Huế</span> <span class="fq-bub__say">Hỏi rõ phạm vi công việc trước.</span></p>
             <span class="fl-a fl-a--m fq-bub__wp" data-anchor data-wp aria-hidden="true"></span>
           </div>
           
           <div class="fq-bub fq-bub--developer" role="listitem" data-lit data-bub-key="developer" style="--i:4">
-            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-4-96.webp" srcset="static/portal/img/ph/avatar-4-96.webp 96w, static/portal/img/ph/avatar-4.webp 320w" sizes="76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+            <span class="fq-bub__av"><img src="static/portal/img/ph/avatar-4-96.webp" srcset="static/portal/img/ph/avatar-4-96.webp 96w, static/portal/img/ph/avatar-4-128.webp 128w, static/portal/img/ph/avatar-4-192.webp 192w, static/portal/img/ph/avatar-4.webp 320w" sizes="(max-width: 899px) 52px, 76px" alt="" width="96" height="96" loading="lazy" decoding="async"><span class="fq-bub__dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
             <p class="fq-bub__t"><span class="fq-bub__who">Developer · Hà Nội</span> <span class="fq-bub__say">Tính theo giờ, đừng bán rẻ quá.</span></p>
             <span class="fl-a fl-a--m fq-bub__wp" data-anchor data-wp aria-hidden="true"></span>
           </div>
@@ -646,7 +684,7 @@
         <li class="hn-face hn-face--d" style="--k:5;--x:480;--y:121;--s:59"><img src="static/portal/img/ph/wall/m-12.webp" alt="" width="160" height="160" loading="lazy" decoding="async"></li>
         </ul>
       <span class="hn-ground"><svg class="hn-hz" viewBox="0 0 1440 400" preserveAspectRatio="none" focusable="false"><defs><linearGradient id="hn-hz-g" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#2C4FE6" stop-opacity="0"/><stop offset=".22" stop-color="#4C6BFF" stop-opacity=".85"/><stop offset=".42" stop-color="#C9D4FF"/><stop offset=".5" stop-color="#FFF4E6"/><stop offset=".58" stop-color="#C9D4FF"/><stop offset=".78" stop-color="#4C6BFF" stop-opacity=".85"/><stop offset="1" stop-color="#2C4FE6" stop-opacity="0"/></linearGradient><linearGradient id="hn-hz-e" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0A1640"/><stop offset=".18" stop-color="#050A22"/><stop offset=".6" stop-color="#000"/></linearGradient></defs><path class="hn-hz__earth" d="M0 60Q720-20 1440 60V400H0z" fill="url(#hn-hz-e)"/></svg></span>
-      <svg class="hn-hz hn-hz--line" viewBox="0 0 1440 400" preserveAspectRatio="none" focusable="false"><path class="hn-hz__glow" d="M0 60Q720-20 1440 60" stroke="url(#hn-hz-g)"/><path class="hn-hz__line" d="M0 60Q720-20 1440 60" stroke="url(#hn-hz-g)"/></svg>
+      <svg class="hn-hz hn-hz--line" viewBox="0 0 1440 400" preserveAspectRatio="none" focusable="false"><path class="hn-hz__soft" d="M0 60Q720-20 1440 60" stroke="url(#hn-hz-g)"/><path class="hn-hz__glow" d="M0 60Q720-20 1440 60" stroke="url(#hn-hz-g)"/><path class="hn-hz__line" d="M0 60Q720-20 1440 60" stroke="url(#hn-hz-g)"/></svg>
       <span class="hn-flare"></span>
       <span class="fl-a fl-a--d fl-a--n1" data-anchor data-tan="v" data-f=".6" aria-hidden="true"></span>
       <span class="fl-a fl-a--d fl-a--n2" data-anchor data-tan="183" data-f=".7" aria-hidden="true"></span>
@@ -719,8 +757,8 @@
   </footer>
 
   <div class="toast" role="status" aria-live="polite" data-toast></div>
-  <script src="static/portal/js/common.js?v=1794919403" defer></script>
-  <script src="static/portal/js/home.js?v=1795001416" defer></script>
+  <script src="static/portal/js/common.js?v=1795010039" defer></script>
+  <script src="static/portal/js/home.js?v=1795037294" defer></script>
 
 <script>
 /* Preview build (GitHub Pages): only the home page exists. Every other page of the site shows a short notice. */

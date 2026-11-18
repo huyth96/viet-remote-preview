@@ -750,9 +750,20 @@
     VR.refreshRel();
     const header = document.querySelector("[data-header]");
     if (header) {
-      const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 8);
-      requestAnimationFrame(onScroll);  // after the first layout: reading scrollY in the deferred-script task forces one
-      window.addEventListener("scroll", onScroll, { passive: true });
+      /* scrolled past the first 8 px: watched by an IntersectionObserver on a 9 px sentinel at the page's top, never by
+         a read of scrollY in every scroll event (each read after a page's own style writes forced a style pass:
+         5-62 ms a section on a slow phone) */
+      if ("IntersectionObserver" in window) {
+        const top = document.createElement("span");
+        top.setAttribute("aria-hidden", "true");
+        top.style.cssText = "position:absolute;left:0;top:0;width:1px;height:9px;pointer-events:none;visibility:hidden";
+        document.body.prepend(top);
+        new IntersectionObserver(([e]) => header.classList.toggle("is-scrolled", !e.isIntersecting)).observe(top);
+      } else {
+        const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 8);
+        requestAnimationFrame(onScroll);  // after the first layout: reading scrollY in the deferred-script task forces one
+        window.addEventListener("scroll", onScroll, { passive: true });
+      }
       const toggle = header.querySelector("[data-menu-toggle]");
       const menu = document.querySelector("[data-menu]");
       /* While the full-screen menu is open, the page behind it is inert (no focus, no clicks) and Tab
