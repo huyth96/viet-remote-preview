@@ -1,0 +1,1325 @@
+/* =====================================================================
+   Việt Remote — base.css  (design system v2; V4 fonts, tokens, buttons, header fields and view
+   transitions: portal/HOME_V4_SPEC.md §3, §4, §6. One family: TikTok Sans, self-hosted)
+   ---------------------------------------------------------------------
+   Binding rules live in portal/DESIGN_SYSTEM.md. In short:
+   matte, calm, precise. No gloss, no glow, no glass, no coloured shadows.
+   One hairline + at most a quiet two-layer shadow. Blue is the brand;
+   sunflower only as the .mark highlight; mint = verified, coral = risk.
+
+   Sections
+     1  Tokens            9  Badges, logo tiles, save button
+     2  Reset & base     10  Job card / job row  (sync with VR.jobRow)
+     3  Type             11  Phone frame
+     4  Layout           12  Stat, notice, empty, breadcrumb, pager
+     5  Header & menu    13  Forms & fields, search bar, tabs, range
+     6  Footer           14  Prose (guides)
+     7  Buttons, links   15  Rails, marquee, toast, utilities
+     8  Chips, eyebrow,  16  Reveal & motion
+        mark, cards, tiles
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 fonts
+   TikTok Sans (SIL OFL, fonts/OFL.txt), one variable family, self-hosted: wdth 100–130 %, wght 400–760,
+   opsz 12–36. Subset files and unicode ranges are the Google Fonts css2 output, copied verbatim, so a
+   Vietnamese page loads latin + vietnamese (both preloaded in base.html) and nothing else. Order matters:
+   for overlapping ranges the LAST declared face is tried first, so vietnamese comes after latin-ext (Ơ ư Đ
+   never pull the 75 KB latin-ext file) and latin comes last.
+   The fallback faces are metric-matched (size-adjust measured on a Vietnamese sentence, ascent/descent
+   = TikTok Sans 1.00/0.30 em divided by it), so the swap at font load does not move a line. */
+@font-face {
+  font-family: "TikTok Sans"; src: url("../fonts/tiktok-sans-latin-ext.woff2") format("woff2");
+  font-weight: 400 760; font-stretch: 100% 130%; font-style: normal; font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "TikTok Sans"; src: url("../fonts/tiktok-sans-vietnamese.woff2") format("woff2");
+  font-weight: 400 760; font-stretch: 100% 130%; font-style: normal; font-display: swap;
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: "TikTok Sans"; src: url("../fonts/tiktok-sans-latin.woff2") format("woff2");
+  font-weight: 400 760; font-stretch: 100% 130%; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "TikTok Sans Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 400 599;
+  size-adjust: 94.5%; ascent-override: 105.8%; descent-override: 31.7%; line-gap-override: 0%;
+}
+@font-face {
+  font-family: "TikTok Sans Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 600 900;
+  size-adjust: 92.9%; ascent-override: 107.6%; descent-override: 32.3%; line-gap-override: 0%;
+}
+/* wide display fallback: Arial cannot stretch, so it is scaled to TikTok Sans 740 at 128 % width */
+@font-face {
+  font-family: "TikTok Sans Wide Fallback"; src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 114.1%; ascent-override: 87.6%; descent-override: 26.3%; line-gap-override: 0%;
+}
+
+/* ---------------------------------------------------------------- 1 tokens */
+:root {
+  /* V4 fields (HOME_V4_SPEC.md §4.1). Day ground = porcelain; paper only for artefacts. */
+  --porcelain: #F4F6FA;
+  --paper: #FFFFFF;
+  --canvas: var(--porcelain);
+  --surface: #FFFFFF;
+  --surface-2: #EEF1F6;
+  --ink: #0B1530;
+  --ink-2: #3A4560;
+  --muted: #5F6987;          /* 5.3:1 on porcelain, 5.6:1 on white */
+  --faint: #98A0B6;          /* decorative text only (< 4.5:1) */
+  --line: #E3E7EF;
+  --line-2: #D5DBE6;
+
+  --night: #0A1230;          /* the community room, the footer */
+  --night-2: #121C46;        /* raised surfaces on night */
+  --on-night: #FFFFFF;
+  --on-night-2: #B9C3E6;     /* 10.4:1 on night */
+  --night-line: rgba(255, 255, 255, .10);
+  --ultra: #2B5BF0;
+  --ultra-2: #1F45D9;
+  --ultra-3: #1736B8;
+  --ultra-ink: #1F45D9;      /* emphasis text on light fields (6.6:1 on porcelain) */
+  /* V5 home bars: horizontal, so a header laid on them matches the field under it at any scroll position */
+  /* cobalt lifts toward #3570F6 on the right (the concept's brighter field); the nav sits over #2350E2–#2B5EEE
+     (>= 4.9:1 for its 15 px links). sky: the join band, #2A5CEC across the middle (its copy, the nav), #3F80FF at the edges. */
+  --field-cobalt-bar: linear-gradient(90deg, #1F47D6 0%, #2350E2 38%, #2B5EEE 64%, #3570F6 100%);
+  --field-sky-bar: linear-gradient(90deg, #3F80FF 0%, #2F66F3 18%, #2A5CEC 32%, #2A5CEC 68%, #2F66F3 82%, #3F80FF 100%);
+  --field-navy-bar: linear-gradient(90deg, #122867 0%, #16307A 50%, #1A3584 100%);
+  --field-ultra:
+    radial-gradient(60% 50% at 18% 0%, rgba(255, 255, 255, .08), transparent 70%),
+    linear-gradient(160deg, var(--ultra) 0%, var(--ultra-2) 55%, var(--ultra-3) 100%);
+
+  --blue: #2453E8;
+  --blue-600: #1C43C9;
+  --blue-50: #EEF3FF;
+  --blue-100: #DDE6FF;
+  --blue-deep: #0E2A8A;
+
+  --sun: #FFC94A;
+  --sun-50: #FFF6DC;
+  --sun-ink: #7A5300;        /* text on sun-50 */
+  --mint: #12A46B;
+  --mint-50: #E6F7EF;
+  --mint-ink: #0A7B4F;       /* text on mint-50 / white */
+  --coral: #E5484D;          /* form errors site-wide; the home scam tile uses --tile-coral */
+  --coral-50: #FDECEC;
+  --coral-ink: #B8292F;      /* text on coral-50 / white */
+  --focus: var(--blue);
+
+  /* shape: 3 radii + the sheet; 999px only for dots, the arrow disc and the live dot */
+  --r-1: 10px;
+  --r-2: 16px;
+  --r-3: 28px;
+  --r-sheet: 44px;
+  --sh-rest: 0 1px 2px rgba(10, 18, 48, .06), 0 0 0 1px rgba(10, 18, 48, .06);
+  --sh-float: 0 40px 80px -32px rgba(10, 18, 48, .38), 0 12px 28px -14px rgba(10, 18, 48, .16);
+  /* legacy radii / shadows (inner pages) */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(11, 21, 48, .05), 0 1px 1px rgba(11, 21, 48, .03);
+  --shadow-2: 0 12px 32px -12px rgba(11, 21, 48, .18), 0 2px 6px rgba(11, 21, 48, .05);
+
+  /* motion (§6.2). --ease stays the UI-state curve. */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-expo: cubic-bezier(.16, 1, .3, 1);
+  --ease-quart: cubic-bezier(.25, 1, .5, 1);
+  --ease-in: cubic-bezier(.55, 0, 1, .45);
+  --ease-inout: cubic-bezier(.65, 0, .35, 1);
+  --spring-settle: linear(0, 0.006 1.7%, 0.047 5%, 0.146 9.6%, 0.297 15.2%, 0.476 21.7%, 0.652 29%, 0.8 37.1%, 0.905 46%, 0.969 55.5%, 1 65.7%, 1.01 76.5%, 1.011 82.2%, 1.009 93.9%, 1);
+  --spring-pop: linear(0, 0.01 1.7%, 0.082 5%, 0.249 9.6%, 0.49 15.2%, 0.745 21.7%, 0.946 29%, 1.057 37.1%, 1.083 46%, 1.059 55.5%, 1.024 65.7%, 1.001 76.5%, 0.993 88%, 1);
+  --d-press: 90ms; --d-micro: 160ms; --d-ui: 260ms; --d-base: 420ms; --d-reveal: 720ms; --d-hero: 1000ms; --d-count: 1300ms;
+  --rise-s: 8px; --rise: 16px; --rise-l: 40px;
+  --stagger-text: 90ms; --stagger-card: 70ms; --stagger-chip: 35ms; --stagger-cap: 420ms;
+  --t-fast: 160ms;
+  --t: 260ms;
+  --t-slow: 420ms;
+
+  /* type: TikTok Sans only. Width via font-stretch, weight via font-weight (400 · 500 · 640 · 740). */
+  --font: "TikTok Sans", "TikTok Sans Fallback", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-wide: "TikTok Sans", "TikTok Sans Wide Fallback", "TikTok Sans Fallback", system-ui, sans-serif;
+  --font-display: var(--font);
+  --font-body: var(--font);
+  --font-data: var(--font);  /* timestamps, source tags, axis labels (was Geist Mono) */
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;  /* prose code only */
+  --fs-h1: clamp(42px, 5.6vw, 80px);
+  --fs-xl: clamp(44px, 6.4vw, 96px);
+  --fs-h2l: clamp(36px, 5vw, 72px);
+  --fs-h2: clamp(32px, 3.9vw, 56px);
+  --fs-num-xl: clamp(112px, 16vw, 240px);
+  --fs-num-xl-long: clamp(88px, 11vw, 168px);
+  --fs-num-l: clamp(48px, 4.4vw, 64px);
+  --fs-30: 30px;
+  --fs-24: 24px;
+  --fs-20: 20px;
+  --fs-17: 17px;
+  --fs-15: 15px;
+  --fs-14: 14px;
+  --fs-13: 13px;
+
+  --wrap: 1240px;
+  --gutter: 24px;
+  --section: 112px;
+  --header-h: 72px;
+
+  /* V3 "Elevated" fills, still used by the inner pages (elevated.css). Text on coral / mint is ink. */
+  --tile-blue: #2453E8;      /* white text 6.0:1 */
+  --tile-blue-2: #3B6BFF;
+  --tile-sky: #CFE0FF;       /* ink 13.5:1 */
+  --tile-sun: #FFC94A;       /* ink 11.8:1 */
+  --tile-coral: #FF6B5E;     /* ink 6.5:1 · white fails (2.8) */
+  --tile-mint: #1FB57A;      /* ink 6.8:1 · white fails (2.6) */
+  --tile-mint-50: #D9F5E8;
+  --tile-navy: #0E1B45;      /* white 16.6:1 */
+  --tile-peach: #FFE3D3;
+  --tile-sun-soft: #FFF6DC;
+  --grad-blue:
+    radial-gradient(60% 80% at 85% 0%, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(135deg, #1D43D2 0%, #2A5FF0 55%, #3F7DFA 100%);
+  --shadow-3: 0 30px 60px -24px rgba(11, 21, 48, .28), 0 8px 18px -8px rgba(11, 21, 48, .10);
+  --r-2xl: 40px;
+}
+@media (max-width: 767px) {
+  :root {
+    --fs-h1: 42px; --fs-xl: 44px; --fs-h2l: 34px; --fs-h2: 30px;
+    --fs-num-xl: 112px; --fs-num-xl-long: min(22vw, 88px); --fs-num-l: 48px;
+    --fs-30: 26px; --fs-24: 20px; --fs-20: 18px; --fs-17: 16px;
+  }
+}
+@media (max-width: 360px) { :root { --fs-h1: 36px; } }
+/* laptops (1100–1366): a 40 px side gutter (the page reads as framed, not edge-to-edge); wider screens centre the
+   1240 px wrap anyway, narrower ones keep 24 px */
+@media (min-width: 1100px) { :root { --gutter: 40px; } }
+@media (max-width: 640px) {
+  :root { --gutter: 16px; --section: 72px; --header-h: 64px; }
+}
+
+/* ---------------------------------------------------------------- 2 reset & base */
+*, *::before, *::after { box-sizing: border-box; }
+/* Anchors land below the sticky header. A target's own scroll-margin-top ADDS to this padding,
+   so pages only set the extra space they want (e.g. 8px), never the header height again. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); }
+html.menu-open { overflow: hidden; }
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink-2);
+  font: 400 17px/1.6 var(--font-body);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, ul, ol, dl, dd { margin: 0; }
+ul[class], ol[class], .site-footer ul { list-style: none; padding: 0; }
+table { border-collapse: collapse; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+[hidden] { display: none !important; }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--focus, var(--blue)); outline-offset: 3px; border-radius: 6px; }
+[data-field="night"], [data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="navy"], [data-field="sky"] { --focus: var(--sun); }
+[data-field="porcelain"], [data-field="paper"] { --focus: var(--blue); }
+[data-field="sun"] { --focus: var(--ink); }
+/* On deep blue / night surfaces the blue ring is ~2:1. There the ring is white with a thin night
+   inner edge, so it reads on the dark panel and on any white UI nested in it (phone mocks, cards).
+   Pages with their own dark block add data-dark to it (or a class below). */
+:is(.site-footer, .section--night, .tile--blue, .tile--ink, .band__panel, .cta__panel, .skool__panel, .g-classroom,
+    .gi-room, .sl-cta, .date-tile--next, [data-dark]) :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--night);
+}
+::selection { background: var(--blue-100); color: var(--ink); }
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.skip-link {
+  position: absolute; left: 16px; top: -48px; z-index: 100;
+  padding: 10px 16px; border-radius: var(--r-pill); background: var(--ink); color: #fff;
+  font: 640 14px/1 var(--font-display);
+}
+.skip-link:focus { top: 12px; }
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Icons: <svg class="icon"><use href="#i-name"/></svg> */
+.icon {
+  width: 20px; height: 20px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.icon--xs { width: 14px; height: 14px; }
+.icon--sm { width: 16px; height: 16px; }
+.icon--lg { width: 24px; height: 24px; }
+.icon--xl { width: 28px; height: 28px; stroke-width: 1.4; }
+
+/* ---------------------------------------------------------------- 3 type */
+/* TikTok Sans: width via font-stretch, weight via font-weight (never font-variation-settings).
+   Line-height never below 1.04 so stacked Vietnamese marks (ệ, ở, ữ) are never clipped; tracking
+   never tighter than -0.035em (inner pages) / -0.032em (home). */
+.h1, .h2, .h3, .h4, .display {
+  font-family: var(--font-display);
+  color: var(--ink);
+  text-wrap: balance;
+  font-optical-sizing: auto;
+}
+.h1, .display {
+  font-size: clamp(44px, 5.6vw, 80px);
+  font-weight: 740;
+  font-stretch: 112%;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+.h2 {
+  font-size: clamp(32px, 3.6vw, 52px);
+  font-weight: 740;
+  font-stretch: 108%;
+  line-height: 1.1;
+  letter-spacing: -0.026em;
+}
+.h3 {
+  font-size: clamp(20px, 1.7vw, 24px);
+  font-weight: 640;
+  font-stretch: 104%;
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+}
+.h4 {
+  font-size: 18px;
+  font-weight: 640;
+  line-height: 1.3;
+  letter-spacing: -0.008em;
+}
+.lead { font-size: 19px; line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+.body { font-size: 17px; }
+.small { font-size: 14px; line-height: 1.5; }
+.micro { font-size: 12.5px; line-height: 1.45; }
+.mono { font: 500 13px/1.4 var(--font); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+/* Numbers: big figures proportional, data and odometers tabular (TikTok Sans has both). */
+.num { font-variant-numeric: lining-nums proportional-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.ink { color: var(--ink); }
+.strong { font-weight: 600; color: var(--ink); }
+p { text-wrap: pretty; }
+@media (max-width: 640px) {
+  .h1, .display { font-size: clamp(38px, 10.6vw, 46px); }
+  .h2 { font-size: clamp(29px, 8vw, 34px); }
+  .lead { font-size: 17px; }
+}
+
+/* ---------------------------------------------------------------- 4 layout */
+.wrap { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; }
+.wrap--narrow { width: min(100% - 2 * var(--gutter), 760px); }
+.wrap--wide { width: min(100% - 2 * var(--gutter), 1392px); }
+
+.section { padding-block: var(--section); }
+.section--tight { padding-block: calc(var(--section) * .64); }
+.section--white { background: var(--surface); }
+.section--rule { border-top: 1px solid var(--line); }
+.section--night { background: var(--night); color: rgba(255, 255, 255, .74); }
+.section--night .h1, .section--night .h2, .section--night .h3 { color: #fff; }
+
+/* Section head: eyebrow + h2 on the left, optional lead/actions on the right */
+/* the aside's last line sits on the h2's last baseline */
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  align-items: end;
+  align-items: last baseline;
+  gap: 20px 56px;
+  margin-bottom: 48px;
+}
+.section-head__title { display: grid; gap: 18px; justify-items: start; }
+.section-head__aside { display: grid; gap: 20px; justify-items: start; }
+.section-head__aside p { color: var(--ink-2); font-size: 17px; }
+.section-head--center { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+.section-head--center .section-head__title { justify-items: center; }
+@media (max-width: 880px) {
+  .section-head { grid-template-columns: 1fr; align-items: start; margin-bottom: 32px; }
+}
+
+.grid { display: grid; gap: 24px; }
+.grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid--12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+@media (max-width: 1024px) { .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .grid--2, .grid--3, .grid--4 { grid-template-columns: 1fr; } .grid { gap: 16px; } }
+
+.stack { display: grid; gap: var(--stack, 16px); align-content: start; }
+.cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap, 12px); }
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; align-items: center; }
+@media (max-width: 880px) { .split { grid-template-columns: 1fr; gap: 32px; } }
+
+/* ---------------------------------------------------------------- 5 header & menu */
+/* The header takes the colour of the field under its centre line: home sections carry
+   data-field="porcelain|night|ultra|sun" and common.js writes it to html[data-field]. Pages without
+   fields keep the V2 behaviour (transparent at the top, white with a hairline once scrolled). No blur. */
+.site-header {
+  --hdr-bg: transparent; --hdr-ink: var(--ink); --hdr-ink-2: var(--ink-2); --hdr-line: transparent;
+  --hdr-ctl: var(--surface); --hdr-ctl-line: var(--line);
+  position: sticky; top: 0; z-index: 50;
+  height: var(--header-h);
+  background-color: var(--hdr-bg);
+  color: var(--hdr-ink);
+  border-bottom: 1px solid var(--hdr-line);
+  transition: background-color var(--d-ui) var(--ease), border-color var(--d-ui) var(--ease), color var(--d-ui) var(--ease);
+  view-transition-name: site-header;
+}
+.site-header.is-scrolled { --hdr-bg: var(--surface); --hdr-line: var(--line); }
+html[data-field="porcelain"] .site-header { --hdr-bg: var(--porcelain); }
+html[data-field="porcelain"] .site-header.is-scrolled { --hdr-line: var(--line); }
+html[data-field="night"] .site-header,
+html[data-field="ultra"] .site-header,
+html[data-field="deep"] .site-header,
+html[data-field="cobalt"] .site-header,
+html[data-field="navy"] .site-header,
+html[data-field="sky"] .site-header {
+  --hdr-ink: #fff; --hdr-ink-2: rgba(255, 255, 255, .78); --hdr-line: transparent;
+  --hdr-ctl: transparent; --hdr-ctl-line: rgba(255, 255, 255, .24); --focus: var(--sun);
+}
+html[data-field="night"] .site-header { --hdr-bg: var(--night); }
+html[data-field="ultra"] .site-header { --hdr-bg: #2250E7; }
+/* "deep": the dark end of an ultramarine field and its blends into night (the S3 entry, the S8 close and
+   the footer's top), so the header never sits as a bright band over a darker field */
+html[data-field="deep"] .site-header { --hdr-bg: var(--ultra-3); }
+/* V5 home fields (portal/HOME_V5 in home.html): "paper" = white body; "cobalt" and "navy" are horizontal bars,
+   the same gradients the hero, the join band and the tools band lay their glows on, so the header reads as
+   part of the field at any scroll position. Over the hero's top (not scrolled) the bar is the hero itself. */
+html[data-field="paper"] .site-header { --hdr-bg: #fff; }
+/* nav links at 15 px need 4.5:1: on these brighter bars the secondary ink is nearly white (4.9:1 on #2A5BEA) */
+html:is([data-field="cobalt"], [data-field="navy"], [data-field="sky"]) .site-header { --hdr-ink-2: rgba(255, 255, 255, .92); }
+html[data-field="cobalt"] .site-header { --hdr-bg: #2350E2; background-image: var(--field-cobalt-bar); }
+/* transparent over the hero only while JS can bring the bar back on scroll; without JS (the home renders
+   data-field="cobalt" on <html>) the header keeps the cobalt bar, white links stay >= 4.9:1 at any scroll */
+html.js[data-field="cobalt"] .site-header:not(.is-scrolled) { background-image: none; --hdr-bg: transparent; }
+/* back at the top of a cobalt hero the bar vanishes at once: fading the previous field's bar (white over a paper
+   section) to transparent left a pale bar behind the already-white logo and links for ~150 ms */
+html.js[data-field="cobalt"] .site-header:not(.is-scrolled):not(.is-open) { transition-property: border-color, color; }
+html[data-field="navy"] .site-header { --hdr-bg: #16307A; background-image: var(--field-navy-bar); }
+html[data-field="sky"] .site-header { --hdr-bg: #2A5CEC; background-image: var(--field-sky-bar); }
+html[data-field] .site-header.is-open { background-image: none; }
+html[data-field="sun"] .site-header { --hdr-bg: var(--sun); --hdr-line: transparent; --hdr-ctl: transparent; --hdr-ctl-line: rgba(11, 21, 48, .2); }
+html[data-field] .site-header.is-open {
+  --hdr-bg: var(--surface); --hdr-ink: var(--ink); --hdr-ink-2: var(--ink-2); --hdr-line: var(--line);
+  --hdr-ctl: var(--surface); --hdr-ctl-line: var(--line); --focus: var(--blue);
+}
+html:is([data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="sky"]) .site-header:not(.is-open) .brand__mark rect { fill: #fff; }
+html:is([data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="sky"]) .site-header:not(.is-open) .brand__mark path { fill: var(--ultra-2); }
+/* three columns so the nav sits on the true page centre, whatever the brand/actions widths */
+.site-header__inner { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; }
+.site-header__inner > .brand { grid-column: 1; justify-self: start; }
+.site-header__inner > .nav { grid-column: 2; }
+.site-header__inner > .header-actions { grid-column: 3; justify-self: end; }
+
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--hdr-ink, var(--ink)); flex: none; }
+.brand__mark { width: 32px; height: 32px; border-radius: var(--r-1); flex: none; }  /* never shrinks on narrow headers */
+.brand__name {
+  font: 740 20px/1 var(--font-display);
+  font-stretch: 108%;
+  letter-spacing: -0.026em;
+  white-space: nowrap;
+  padding-block: 4px 3px;   /* room for the ệ stack */
+}
+
+.nav { display: flex; align-items: center; gap: 4px; }
+.nav a {
+  position: relative;
+  padding: 10px 14px; border-radius: var(--r-1);
+  font: 640 15px/1.2 var(--font-display); font-stretch: 102%;
+  color: var(--hdr-ink-2, var(--ink-2));
+  white-space: nowrap;
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.nav a:hover { color: var(--hdr-ink, var(--ink)); background: color-mix(in srgb, currentColor 8%, transparent); }
+.nav a[aria-current="page"] { color: var(--hdr-ink, var(--ink)); }
+.nav a[aria-current="page"]::after {
+  content: ""; position: absolute; left: 50%; bottom: 1px; width: 4px; height: 4px; margin-left: -2px;
+  border-radius: 50%; background: var(--blue);
+}
+
+.header-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.saved-link {
+  position: relative;
+  width: 40px; height: 40px; border-radius: var(--r-1);
+  display: grid; place-items: center;
+  /* a quiet glyph, not a boxed square beside the one header action (the count badge still shows saved jobs) */
+  background: transparent; border: 0; color: var(--hdr-ink, var(--ink));
+  transition: background-color var(--d-micro, 160ms) var(--ease);
+}
+.saved-link:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+.saved-link__count {
+  position: absolute; top: -3px; right: -4px;
+  min-width: 20px; height: 20px; padding: 0 5px; border-radius: var(--r-pill);
+  display: grid; place-items: center;
+  background: var(--blue); color: #fff; border: 2px solid var(--canvas);
+  font: 500 var(--fs-13, 13px)/1 var(--font); font-variant-numeric: tabular-nums;  /* on the type scale (13/500) */
+}
+.saved-link__count[data-saved-count="0"] { display: none; }
+.menu-toggle {
+  display: none;
+  width: 40px; height: 40px; border-radius: var(--r-1);
+  place-items: center; color: var(--hdr-ink, var(--ink));
+  border: 1px solid var(--hdr-ctl-line, var(--line)); background: var(--hdr-ctl, var(--surface));
+}
+.menu-toggle .icon-close { display: none; }
+
+/* Full-screen mobile menu */
+.site-menu {
+  position: fixed; inset: 0; z-index: 49;
+  padding: calc(var(--header-h) + 16px) var(--gutter) 24px;
+  display: flex; flex-direction: column; gap: 24px;
+  background: var(--surface);
+  opacity: 0; visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity var(--t) var(--ease), transform var(--t) var(--ease), visibility 0s linear var(--t);
+}
+.site-menu__nav { display: grid; border-top: 1px solid var(--line); }
+.site-menu__nav a {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 2px; border-bottom: 1px solid var(--line);
+  font: 740 var(--fs-30, 30px)/1.15 var(--font-display); font-stretch: 104%; letter-spacing: -0.025em; color: var(--ink);
+}
+.site-menu__nav a .icon { color: var(--faint); }
+/* current page: blue text, a small blue dot in the left gutter and a blue arrow */
+.site-menu__nav a[aria-current="page"] { position: relative; padding-left: 20px; color: var(--blue); }
+.site-menu__nav a[aria-current="page"]::before {
+  content: ""; position: absolute; left: 2px; top: 50%; width: 8px; height: 8px; margin-top: -4px;
+  border-radius: 50%; background: var(--blue);
+}
+.site-menu__nav a[aria-current="page"] .icon { color: var(--blue); }
+.site-menu__foot { margin-top: auto; display: grid; gap: 12px; }
+.site-menu__foot .btn { width: 100%; }
+.site-menu__note { font-size: var(--fs-13, 13px); color: var(--muted); text-align: center; }
+
+/* .hdr-cta: "Vào cộng đồng" with the verified Skool member count as a --r-1 badge. Ink on light fields,
+   sun on night / ultramarine. */
+.hdr-cta { gap: 8px; padding: 0 6px 0 14px; background: var(--ink); color: #fff; }
+.hdr-cta:not(:has(.hdr-cta__badge)) { padding: 0 14px; }
+.hdr-cta:hover { background: #1B2747; }
+.hdr-cta__badge {
+  display: inline-grid; place-items: center; height: 28px; padding: 0 8px; border-radius: var(--r-1);
+  background: var(--sun); color: var(--ink);
+  font: 640 13px/1 var(--font); font-variant-numeric: tabular-nums;
+  transition: background-color var(--d-ui) var(--ease), color var(--d-ui) var(--ease);
+}
+html:is([data-field="night"], [data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="navy"], [data-field="sky"]) .site-header:not(.is-open) .hdr-cta { background: var(--sun); color: var(--ink); }
+html:is([data-field="night"], [data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="navy"], [data-field="sky"]) .site-header:not(.is-open) .hdr-cta:hover { background: #FFD466; }
+html:is([data-field="night"], [data-field="ultra"], [data-field="deep"], [data-field="cobalt"], [data-field="navy"], [data-field="sky"]) .site-header:not(.is-open) .hdr-cta__badge { background: var(--ink); color: #fff; }
+/* tablets keep "Vào cộng đồng" in the header (there is room); phones move it into the menu */
+@media (max-width: 640px) { .header-actions .btn--community { display: none; } }
+@media (max-width: 960px) {
+  .nav { display: none; }
+  .menu-toggle { display: grid; }
+  .site-header.is-open { background: var(--surface); border-bottom-color: var(--line); }
+  .site-header.is-open + .site-menu { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .site-header.is-open .menu-toggle .icon-open { display: none; }
+  .site-header.is-open .menu-toggle .icon-close { display: block; }
+}
+@media (min-width: 961px) { .site-menu { display: none; } }
+
+/* ---------------------------------------------------------------- 6 footer */
+.site-footer {
+  background: var(--night);
+  color: rgba(255, 255, 255, .64);
+  padding: 88px 0 32px;
+  font-size: 15px;
+}
+.footer-top { display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(4, minmax(0, 1fr)); gap: 40px; }
+.footer-brand { display: grid; gap: 18px; align-content: start; max-width: 300px; }
+.footer-brand .brand { color: #fff; }
+.footer-brand p { font-size: 14px; line-height: 1.6; }
+.footer-col h3 {
+  margin-bottom: 16px;
+  font: 640 13px/1.2 var(--font-display); letter-spacing: .01em; color: #fff;
+}
+.footer-col ul { display: grid; gap: 10px; }
+.footer-col a { transition: color var(--t-fast) var(--ease); }
+.footer-col a:hover { color: #fff; }
+.footer-col .icon { display: inline; vertical-align: -2px; }
+/* one real stat line instead of a giant watermark */
+.footer-stats {
+  display: flex; flex-wrap: wrap; gap: 10px 0;
+  margin: 64px 0 0; padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  font-size: 14px; color: rgba(255, 255, 255, .56);
+}
+.footer-stats li + li::before { content: ""; display: inline-block; width: 1px; height: 12px; margin: 0 18px; background: rgba(255, 255, 255, .16); vertical-align: -1px; }
+.footer-stats strong { font: 640 15px/1 var(--font-display); color: #fff; margin-right: 4px; }
+.footer-bottom {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px;
+  padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .08);
+  font-size: 13px; color: rgba(255, 255, 255, .5);
+}
+.footer-bottom a:hover { color: #fff; }
+/* no giant wordmark under the footer on any page (the concept's compact footer; tests/test_home.py checks it) */
+@media (max-width: 960px) {
+  .footer-top { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 24px; }
+  .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 699px) {
+  .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* tablet: the three stats wrap; a two-column grid instead of a second line that starts with a divider */
+@media (min-width: 641px) and (max-width: 960px) {
+  .footer-stats { display: grid; grid-template-columns: repeat(2, max-content); gap: 10px 40px; }
+  .footer-stats li + li::before { display: none; }
+}
+@media (max-width: 640px) {
+  .site-footer { padding-top: 64px; }
+  .footer-top { gap: 32px 20px; }
+  .footer-stats { margin-top: 44px; display: grid; gap: 8px; }
+  .footer-stats li + li::before { display: none; }
+}
+
+/* ---------------------------------------------------------------- 7 buttons, links */
+/* .btn  --primary (blue) | --dark (ink) | --ghost (outline) | --light (white on dark)
+         --ghost-light (outline on dark) | --sm | --lg | --block */
+.btn {
+  --btn-h: 48px;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: var(--btn-h); padding: 0 20px;
+  border-radius: var(--r-2); border: 1.5px solid transparent;
+  font: 640 15px/1 var(--font-display); font-stretch: 102%; letter-spacing: -0.005em;
+  white-space: nowrap; cursor: pointer;
+  transition: background-color var(--d-micro) var(--ease), border-color var(--d-micro) var(--ease),
+              color var(--d-micro) var(--ease), transform var(--d-press) var(--ease);
+}
+/* press: 97 % in 90 ms, released on the pop spring */
+.btn:active { transform: scale(.97); }
+@media (prefers-reduced-motion: no-preference) {
+  .btn:not(:active) { transition: background-color var(--d-micro) var(--ease), border-color var(--d-micro) var(--ease),
+                                  color var(--d-micro) var(--ease), transform 520ms var(--spring-pop); }
+}
+.btn .icon { width: 18px; height: 18px; }
+.btn--sm { --btn-h: 40px; padding: 0 14px; font-size: 14px; border-radius: var(--r-1); }
+.btn--lg { --btn-h: 56px; padding: 0 24px; }
+/* .btn__disc: the 28px arrow disc (sun on light fields, ink on dark ones). Two arrows: on hover the
+   first slides out and the clone slides in (§6.5). <span class="btn__disc" aria-hidden="true">
+   <svg class="icon"><use href="#i-external"/></svg><svg class="icon"><use href="#i-external"/></svg></span> */
+.btn:has(.btn__disc) { padding-right: 10px; }
+.btn--lg:has(.btn__disc) { padding-right: 14px; }
+.btn__disc {
+  position: relative; overflow: hidden;
+  width: 28px; height: 28px; flex: none; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--sun); color: var(--ink);
+}
+.btn__disc .icon { grid-area: 1 / 1; width: 16px; height: 16px; stroke-width: 2; }
+.btn__disc .icon + .icon { transform: translate(-150%, 150%); }
+.btn__disc--fwd .icon + .icon { transform: translateX(-150%); }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .btn__disc .icon { transition: transform var(--d-ui) var(--ease-expo); }
+  .btn:hover .btn__disc .icon:first-child { transform: translate(150%, -150%); }
+  .btn:hover .btn__disc--fwd .icon:first-child { transform: translateX(150%); }
+  .btn:hover .btn__disc .icon + .icon { transform: none; }
+}
+.btn--sun .btn__disc, .btn--light .btn__disc { background: var(--ink); color: #fff; }
+.btn--block { width: 100%; }
+.btn--primary { background: var(--blue); color: #fff; }
+.btn--primary:hover { background: var(--blue-600); }
+.btn--dark { background: var(--ink); color: #fff; }
+.btn--dark:hover { background: #1B2747; }
+.btn--ghost { background: transparent; color: var(--ink); border-color: color-mix(in srgb, currentColor 20%, transparent); }
+.btn--ghost:hover { border-color: color-mix(in srgb, currentColor 60%, transparent); }
+.btn--white { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.btn--white:hover { border-color: var(--line-2); }
+.btn--light { background: #fff; color: var(--ink); }
+.btn--light:hover { background: var(--blue-50); }
+.btn--ghost-light { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .32); }
+.btn--ghost-light:hover { border-color: #fff; background: rgba(255, 255, 255, .06); }
+.btn[disabled], .btn.is-disabled { opacity: .45; pointer-events: none; }
+@media (max-width: 640px) { .btn { --btn-h: 48px; } .btn--sm { --btn-h: 40px; } .btn--lg { --btn-h: 56px; } }
+
+.link {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 640 15px/1.3 var(--font-display); font-stretch: 102%; color: var(--blue);
+}
+.link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px;
+  background: currentColor; transform: scaleX(0); transform-origin: 100% 50%;
+  transition: transform var(--d-ui) var(--ease-in);
+}
+.link:hover::after { transform: scaleX(1); transform-origin: 0 50%; transition: transform var(--d-base) var(--ease-quart); }
+.link:hover { color: var(--blue-600); }
+.link .icon { width: 16px; height: 16px; transition: transform var(--t-fast) var(--ease); }
+.link:hover .icon { transform: translateX(3px); }
+.link--ink { color: var(--ink); }
+.link--ink:hover { color: var(--blue); }
+.text-link { color: var(--blue); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  color: var(--ink-2); border: 1px solid var(--line); background: var(--surface);
+  transition: color var(--t-fast), border-color var(--t-fast), background-color var(--t-fast);
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--line-2); }
+@media (max-width: 960px), (pointer: coarse) { .icon-btn { width: 40px; height: 40px; } }
+
+/* ---------------------------------------------------------------- 8 chips, eyebrow, mark, cards, tiles */
+/* .chip — filter / field chip.  <a class="chip">Video <span class="chip__count">338</span></a>
+   .is-on (or aria-pressed="true") = selected. */
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 16px;
+  border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--line);
+  font: 560 14.5px/1 var(--font-display); color: var(--ink);
+  white-space: nowrap;
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), color var(--t-fast);
+}
+.chip:has(.chip__count) { padding-right: 6px; }
+.chip:hover { border-color: var(--line-2); }
+.chip__count {
+  min-width: 28px; height: 28px; padding: 0 8px;
+  display: inline-grid; place-items: center;
+  border-radius: var(--r-pill); background: var(--surface-2);
+  font: 500 12.5px/1 var(--font-body); font-variant-numeric: tabular-nums; color: var(--ink-2);
+}
+.chip.is-on, .chip[aria-pressed="true"] { background: var(--blue-50); border-color: #C9D7FF; color: var(--blue-600); }
+.chip.is-on .chip__count, .chip[aria-pressed="true"] .chip__count { background: #fff; color: var(--blue-600); }
+.chip--quiet { background: transparent; border-color: transparent; color: var(--ink-2); }
+.chip--quiet:hover { color: var(--ink); border-color: var(--line); }
+.chip--sm { height: 32px; padding: 0 12px; font-size: 13.5px; }
+/* touch: 36px chip with an invisible hit area that reaches 44px (neighbours sit 8px apart, so the
+   areas overlap rows only by the 4px above/below, never the chip next door) */
+@media (max-width: 960px), (pointer: coarse) {
+  .chip--sm { position: relative; height: 36px; }
+  .chip--sm::after { content: ""; position: absolute; inset: -4px 0; }
+}
+
+/* .eyebrow — small pill above section titles.  --plain (no pill) | --dark (on blue/night) */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 32px; padding: 0 14px 0 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--line);
+  font: 500 13.5px/1 var(--font-body); color: var(--ink-2);
+  white-space: nowrap;
+}
+.eyebrow::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex: none;
+}
+.eyebrow--plain { height: auto; padding: 0; background: none; border: 0; }
+.eyebrow--dark { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .14); color: rgba(255, 255, 255, .86); }
+.eyebrow--dark::before { background: var(--sun); }
+.eyebrow--live::before { display: none; }
+.live-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); flex: none; }
+.live-dot::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 1.5px solid var(--mint); opacity: 0;
+  animation: live-ring 2.6s var(--ease) infinite;
+}
+@keyframes live-ring { 0% { transform: scale(.5); opacity: .55; } 80%, 100% { transform: scale(1.35); opacity: 0; } }
+
+/* .mark — flat sunflower highlight behind ONE key phrase per screen */
+.mark {
+  background: var(--sun);
+  color: var(--ink);
+  border-radius: var(--r-sm);
+  padding: .02em .2em .04em;
+  margin-inline: -.04em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* In headlines the marker is a tight block around the word (never a full line-box slab) */
+.h1 .mark, .h2 .mark, .display .mark {
+  display: inline-block;
+  line-height: 1;
+  padding: .06em .14em .1em;
+  margin-inline: -.02em;
+  border-radius: .18em;
+}
+
+/* .card — white surface with hairline. a.card / .card--hover lift on hover */
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding: 24px;
+}
+.card--lg { padding: 32px; }
+.card--flat { box-shadow: none; }
+.card--inset { background: var(--surface-2); border-color: transparent; box-shadow: none; }
+a.card, .card--hover { transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease); }
+a.card:hover, .card--hover:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: var(--line-2); }
+.card__title { font: 680 18px/1.3 var(--font-display); letter-spacing: -0.015em; color: var(--ink); }
+.card__text { margin-top: 6px; font-size: 15px; color: var(--ink-2); }
+.card__icon {
+  width: 44px; height: 44px; border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  background: var(--blue-50); color: var(--blue);
+  margin-bottom: 18px;
+}
+
+/* .tile — bento tile.  --blue | --sun | --mint | --ink | --white
+   Put a stretched link on the title (.tile__link) so the whole tile is clickable;
+   interactive mini-UIs inside get position:relative + z-index:2. */
+.tile {
+  position: relative;
+  display: flex; flex-direction: column;
+  border-radius: var(--r-xl);
+  padding: 28px;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.tile--white { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1); }
+.tile--blue { background: var(--blue) radial-gradient(120% 90% at 85% 0%, #2B5BEE 0%, rgba(36, 83, 232, 0) 60%); color: rgba(255, 255, 255, .82); }
+.tile--sun { background: var(--sun-50); }
+.tile--mint { background: var(--mint-50); }
+.tile--ink { background: var(--night); color: rgba(255, 255, 255, .72); }
+.tile--blue .tile__title, .tile--ink .tile__title { color: #fff; }
+.tile__icon {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+}
+.tile--blue .tile__icon, .tile--ink .tile__icon { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .16); color: #fff; }
+.tile__title { font: 720 22px/1.2 var(--font-display); font-stretch: 102%; letter-spacing: -0.022em; color: var(--ink); text-wrap: balance; }
+.tile__text { font-size: 15px; line-height: 1.5; max-width: 34ch; }
+.tile__link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.tile__more {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 600 14.5px/1 var(--font-display); color: var(--ink);
+}
+.tile--blue .tile__more, .tile--ink .tile__more { color: #fff; }
+.tile__more .icon { width: 16px; height: 16px; transition: transform var(--t-fast) var(--ease); }
+.tile:hover .tile__more .icon { transform: translateX(3px); }
+@media (max-width: 640px) { .tile { padding: 22px; border-radius: var(--r-lg); } }
+
+/* ---------------------------------------------------------------- 9 badges, logo tiles, save button */
+/* .badge  --ok (mint) | --risk (coral) | --info (blue) | --sun | default neutral.
+   Catalog tones map directly: badge--accent | --brand | --good | --neutral */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 24px; padding: 0 9px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2); color: var(--ink-2);
+  font: 500 12.5px/1 var(--font-body);
+  white-space: nowrap;
+}
+.badge .icon { width: 13px; height: 13px; stroke-width: 2; }
+.badge--ok, .badge--good { background: var(--mint-50); color: var(--mint-ink); }
+.badge--risk { background: var(--coral-50); color: var(--coral-ink); }
+.badge--info, .badge--accent { background: var(--blue-50); color: var(--blue-600); }
+.badge--sun { background: var(--sun-50); color: var(--sun-ink); }
+.badge--brand { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
+.badge--neutral { background: var(--surface-2); color: var(--ink-2); }
+.badge--solid { background: var(--ink); color: #fff; }
+.badge--lg { height: 28px; padding: 0 11px; font-size: 13.5px; }
+
+/* .logo — company logo, or initials in one neutral treatment (ink on --surface-2).
+   No per-company tints: random pastels read as placeholder confetti. */
+.logo {
+  width: 40px; height: 40px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: var(--surface-2); color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: 680 13.5px/1 var(--font-display); letter-spacing: -0.01em;
+  overflow: hidden;
+}
+.logo:has(img) { background: #fff; }
+.logo img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
+/* Locally cached logos (manage.py cache_logos, job|icon_logo, VR.iconLogo) are already trimmed and
+   re-padded to one optical size, or are full-bleed brand tiles: they fill the tile edge to edge. */
+.logo img[src*="/img/logos/"] {
+  padding: 0; object-fit: cover;
+  border-radius: inherit; outline: 1px solid rgb(16 24 40 / 0.07); outline-offset: -1px;  /* the tile's hairline, drawn over the image */
+}
+.logo--sm { width: 32px; height: 32px; border-radius: 9px; font-size: 12px; }
+.logo--lg { width: 56px; height: 56px; border-radius: 14px; font-size: 18px; }
+/* Anonymous client (Upwork hides most names): catalog.describe() leaves initials empty, so the
+   tile is empty and draws one neutral line glyph (i-user) instead of a "KH" monogram repeated on
+   three rows out of four. Works for every template and VR.jobRow/jobCard without extra markup. */
+.logo:empty::before {
+  content: ""; width: 50%; height: 50%;
+  background: var(--muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='3.75'/%3E%3Cpath d='M5 20c.8-3.55 3.6-5.75 7-5.75s6.2 2.2 7 5.75'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='3.75'/%3E%3Cpath d='M5 20c.8-3.55 3.6-5.75 7-5.75s6.2 2.2 7 5.75'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* .save-btn — bookmark toggle wired by common.js ([data-save] inside [data-job-id]) */
+.save-btn {
+  position: relative; z-index: 2;
+  width: 36px; height: 36px; flex: none;
+  display: inline-grid; place-items: center;
+  border-radius: 50%;
+  color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
+  transition: color var(--t-fast), background-color var(--t-fast), border-color var(--t-fast);
+}
+.save-btn .icon { width: 18px; height: 18px; }
+.save-btn:hover { color: var(--ink); border-color: var(--line-2); }
+.save-btn.is-on { color: var(--blue); background: var(--blue-50); border-color: transparent; }
+.save-btn.is-on .icon { fill: currentColor; }
+.save-btn--text { width: auto; padding: 0 14px 0 11px; gap: 6px; border-radius: var(--r-pill); font: 600 14px/1 var(--font-display); display: inline-flex; align-items: center; height: 38px; }
+/* touch: 40px button, 48px hit area. It sits above the card's stretched title link (z-index 2),
+   so a slightly-off tap still saves instead of opening the job. */
+@media (max-width: 960px), (pointer: coarse) {
+  .save-btn:not(.save-btn--text) { width: 40px; height: 40px; }
+  .save-btn::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; }
+}
+
+/* ---------------------------------------------------------------- 10 job card / job row */
+/* Markup: templates/portal/includes/job_card.html + job_row.html, mirrored by
+   VR.jobCard() / VR.jobRow() in common.js. The title link stretches over the card. */
+.job-card {
+  position: relative;
+  display: flex; flex-direction: column; gap: 14px;
+  min-height: 248px;
+  padding: 20px 20px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.job-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: var(--line-2); }
+.job-card__head { display: flex; align-items: center; gap: 12px; }
+.job-card__org { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.job-card__company {
+  font: 600 14px/1.35 var(--font-body); color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.job-card__meta { font-size: 12.5px; line-height: 1.4; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.job-card__head:not(:has(.job-card__meta)) .job-card__org { align-self: center; }
+.job-age.is-new { color: var(--blue-600); font-weight: 500; }
+.job-card__title {
+  font: 660 18px/1.36 var(--font-display);
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden;
+  padding-top: 2px;
+  text-wrap: balance;  /* no one-word orphan ("Executive Assistant for / Director"); Chromium's "pretty" leaves them on 2-line titles */
+}
+.job-card__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; }
+.job-card__title a:focus-visible { outline: none; }
+.job-card:has(.job-card__title a:focus-visible) { outline: 2px solid var(--blue); outline-offset: 2px; }
+.job-card__badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.job-card__foot {
+  margin-top: auto;
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+.job-card__pay { font: 700 16.5px/1.25 var(--font-display); letter-spacing: -0.01em; color: var(--ink); }
+.job-card__pay .muted { font-weight: 560; font-size: 15px; }
+/* age · source, right of the pay; wraps under it (still right-aligned) when the pay is long */
+.job-card__info { margin-left: auto; display: inline-flex; align-items: baseline; gap: 0; font: 400 12.5px/1.3 var(--font-body); color: var(--muted); white-space: nowrap; }
+.job-card__info > * + *::before { content: "·"; margin: 0 6px; color: var(--faint); font-family: var(--font-body); }
+.job-card__source { font: 500 12.5px/1 var(--font-data); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+/* Feet line up across a row (3-card rails, home picks): from 641px every foot is one line. The pay
+   never wraps (a touch smaller in narrow cards, via cqi of the foot); a long pay ("24.000–36.000
+   USD/năm") pushes the source name into an ellipsis, never the age. Under 320px of card every foot
+   in the row stacks pay over age · source alike, since cards in a row share one width. Phones keep
+   the wrapping foot: one card per row, nothing to line up with. */
+@media (min-width: 641px) {
+  .job-card__foot { container-type: inline-size; }
+  .job-card__pay { flex: none; white-space: nowrap; font-size: clamp(15px, 4.3cqi, 16.5px); }
+  .job-card__info { flex: 1 1 0; min-width: 0; justify-content: flex-end; }
+  .job-card__info > .job-age { flex: none; }
+  .job-card__source { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
+@container (max-width: 320px) {
+  .job-card__pay { flex: 0 1 auto; white-space: normal; }
+  .job-card__info { flex-basis: 100%; justify-content: flex-start; }
+}
+.job-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 1024px) { .job-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* tablet: a block of exactly three cards ("Việc tương tự", saved-page suggestions) stays one row of
+   three compact cards instead of 2 + a lone third card beside an empty cell */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .job-cards:has(> .job-card:nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .job-cards:has(> .job-card:nth-child(3):last-child) > .job-card { min-height: 0; padding: 16px 16px 14px; gap: 12px; }
+  .job-cards:has(> .job-card:nth-child(3):last-child) .job-card__meta { display: none; }
+  .job-cards:has(> .job-card:nth-child(3):last-child) .job-card__head { gap: 10px; }
+  .job-cards:has(> .job-card:nth-child(3):last-child) .job-card__head .logo { width: 32px; height: 32px; border-radius: 9px; font-size: 12px; }
+  .job-cards:has(> .job-card:nth-child(3):last-child) .job-card__title { font-size: 16.5px; }
+}
+@media (max-width: 640px) { .job-cards { grid-template-columns: 1fr; gap: 12px; } }
+
+.job-row {
+  position: relative;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t) var(--ease);
+}
+.job-row:hover { border-color: var(--line-2); box-shadow: var(--shadow-2); }
+.job-row__main { min-width: 0; display: grid; gap: 6px; }
+.job-row__title {
+  font: 640 17px/1.35 var(--font-display); letter-spacing: -0.012em; color: var(--ink);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+  text-wrap: balance;
+}
+.job-row__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; }
+.job-row__meta {
+  display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13.5px; color: var(--muted);
+  /* every item draws its "·" in a 16px gutter on its left; the list is pulled 16px left and that
+     gutter is clipped, so the separator of whichever item starts a line (the first one, or one that
+     wrapped) is never visible: no line ever begins with "·" */
+  margin-left: -16px; clip-path: inset(-6px -6px -6px 16px);
+}
+.job-row__meta span::before { content: "·"; display: inline-block; width: 16px; text-align: center; color: var(--faint); }
+.job-row__meta span:first-child { color: var(--ink-2); font-weight: 500; }
+.job-row__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.job-row__note { font-size: 13.5px; color: var(--muted); }
+.job-row__side { display: grid; justify-items: end; gap: 4px; text-align: right; }
+.job-row__pay { font: 700 16px/1.25 var(--font-display); color: var(--ink); white-space: nowrap; }
+.job-row__pay small { display: block; font: 400 12px/1.3 var(--font-body); color: var(--muted); white-space: normal; max-width: 220px; }
+.job-row__pay .muted { font-weight: 560; font-size: 14.5px; }
+.job-row__age { font: 400 12.5px/1.3 var(--font-body); color: var(--muted); white-space: nowrap; }
+.job-row__age > * + *::before { content: "·"; margin: 0 6px; color: var(--faint); font-family: var(--font-body); }
+.job-row__source { font: 500 12.5px/1 var(--font-data); }  /* the source tag, as on .job-card__info */
+.job-rows { display: grid; gap: 10px; }
+@media (max-width: 720px) {
+  .job-row { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 16px; }
+  .job-row__side { grid-column: 2 / 3; justify-items: start; text-align: left; grid-row: 2; }
+  .job-row .save-btn { grid-column: 3; grid-row: 1; }
+}
+
+/* ---------------------------------------------------------------- 11 phone frame */
+/* CSS-only device: matte graphite bezel, no reflections. Put real HTML UI in .phone__screen */
+.phone {
+  --phone-w: 300px;
+  position: relative;
+  width: var(--phone-w);
+  aspect-ratio: 300 / 620;
+  flex: none;
+  padding: 10px;
+  border-radius: 44px;
+  background: #1B2133;
+  box-shadow: 0 0 0 1px #262D42, 0 40px 80px -36px rgba(3, 8, 30, .55), 0 10px 24px -12px rgba(3, 8, 30, .35);
+}
+.phone__screen {
+  position: relative;
+  height: 100%;
+  border-radius: 34px;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.4;
+  display: flex; flex-direction: column;
+}
+.phone__notch {
+  position: absolute; top: 9px; left: 50%; z-index: 3;
+  width: 84px; height: 24px; margin-left: -42px;
+  border-radius: var(--r-pill); background: #1B2133;
+}
+.phone__status {
+  height: 44px; flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 22px 0 26px;
+  font: 640 13px/1 var(--font-display); color: var(--ink);
+}
+.phone__status .icon { width: 54px; height: 12px; }
+.phone__body { flex: 1; min-height: 0; padding: 6px 14px 0; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.phone__title { font: 740 21px/1.15 var(--font-display); letter-spacing: -0.025em; color: var(--ink); padding-top: 2px; }
+.phone__tabbar {
+  flex: none;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 8px 6px 20px;
+  background: var(--surface); border-top: 1px solid var(--line);
+}
+.phone__tabbar span { display: grid; justify-items: center; gap: 3px; font: 500 10px/1 var(--font-body); color: var(--muted); }
+.phone__tabbar span.is-on { color: var(--blue); }
+.phone__tabbar .icon { width: 20px; height: 20px; }
+.phone--sm { --phone-w: 268px; }
+
+/* ---------------------------------------------------------------- 12 stat, notice, empty, breadcrumb, pager */
+.stat { display: grid; gap: 6px; align-content: start; }
+.stat__num {
+  font: 760 clamp(36px, 3.6vw, 48px)/1.04 var(--font-display);
+  font-stretch: 104%; letter-spacing: -0.035em; color: var(--ink);
+}
+.stat__label { font-size: 14.5px; color: var(--muted); }
+
+/* .notice  --ok | --risk | --sun   (default: info blue) */
+.notice {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--blue-50); color: var(--ink-2);
+  font-size: 15px;
+}
+.notice > .icon { color: var(--blue); margin-top: 2px; }
+.notice strong { color: var(--ink); font-weight: 600; }
+.notice--ok { background: var(--mint-50); }
+.notice--ok > .icon { color: var(--mint-ink); }
+.notice--risk { background: var(--coral-50); }
+.notice--risk > .icon { color: var(--coral-ink); }
+.notice--sun { background: var(--sun-50); }
+.notice--sun > .icon { color: var(--sun-ink); }
+
+.empty {
+  display: grid; justify-items: center; gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+  border: 1px dashed var(--line-2); border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.empty__icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); margin-bottom: 6px; }
+.empty__title { font: 680 19px/1.3 var(--font-display); color: var(--ink); }
+.empty__text { max-width: 44ch; color: var(--muted); font-size: 15px; }
+.empty .btn { margin-top: 10px; }
+
+.breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; list-style: none; padding: 0; margin: 0; font-size: 13.5px; color: var(--muted); }
+.breadcrumb li { display: inline-flex; align-items: center; gap: 6px; }
+.breadcrumb li + li::before { content: ""; width: 5px; height: 5px; border-right: 1.5px solid var(--faint); border-top: 1.5px solid var(--faint); transform: rotate(45deg); margin-right: 4px; }
+.breadcrumb a:hover { color: var(--ink); }
+.breadcrumb [aria-current] { color: var(--ink-2); }
+
+.pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pager a, .pager span {
+  min-width: 40px; height: 40px; padding: 0 12px;
+  display: inline-grid; place-items: center;
+  border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface);
+  font: 560 14px/1 var(--font-display); color: var(--ink-2);
+}
+.pager a:hover { border-color: var(--line-2); color: var(--ink); }
+.pager [aria-current="page"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pager .is-gap { border: 0; background: none; }
+
+/* ---------------------------------------------------------------- 13 forms & fields, search, tabs, range */
+.field { display: grid; gap: 7px; }
+.field__label { font: 600 14px/1.3 var(--font-body); color: var(--ink); }
+.field__hint { font-size: 13px; color: var(--muted); }
+.field__error { font-size: 13px; color: var(--coral-ink); }
+.input, .select, .textarea,
+.field input[type="text"], .field input[type="email"], .field input[type="url"], .field input[type="number"],
+.field input[type="search"], .field input[type="tel"], .field input[type="password"],
+.field input[type="date"], .field input[type="time"], .field input[type="datetime-local"], .field input[type="month"],
+.field select, .field textarea {
+  width: 100%; min-height: 48px;
+  padding: 11px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px; line-height: 1.45;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.textarea, .field textarea { min-height: 120px; resize: vertical; }
+.select, .field select {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7591' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.75 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;
+}
+.input::placeholder, .textarea::placeholder, .field input::placeholder, .field textarea::placeholder { color: var(--faint); }
+.input:hover, .select:hover, .textarea:hover, .field input:hover, .field select:hover, .field textarea:hover { border-color: #C3CBDA; }
+.input:focus, .select:focus, .textarea:focus, .field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-50);
+}
+input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
+/* .field.field--error outranks .field input[type="…"] (0,2,1 + later in the file) so the coral border shows on every input type */
+.field.field--error :is(input, select, textarea) { border-color: var(--coral); }
+.field.field--error :is(input, select, textarea):focus { box-shadow: 0 0 0 3px var(--coral-50); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.form-grid > .field { align-content: start; }  /* a taller neighbour must not stretch a select box */
+.form-grid .field--full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* Checkbox / radio as a selectable row: <label class="check"><input type="checkbox"> Text</label> */
+.check { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: var(--ink-2); cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--blue); flex: none; }
+.option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-radius: var(--r-md);
+  border: 1px solid var(--line-2); background: var(--surface); cursor: pointer;
+  transition: border-color var(--t-fast), background-color var(--t-fast);
+}
+.option:has(input:checked) { border-color: var(--blue); background: var(--blue-50); }
+.option input { accent-color: var(--blue); }
+
+/* .search — pill search bar with the submit button inside */
+.search {
+  display: flex; align-items: center; gap: 8px;
+  height: 64px; padding: 7px 7px 7px 20px;
+  border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-50), var(--shadow-2); }
+.search > .icon { color: var(--muted); width: 22px; height: 22px; }
+.search input {
+  flex: 1; min-width: 0; height: 100%;
+  border: 0; background: none; outline: none;
+  font-size: 17px; color: var(--ink);
+}
+.search input::placeholder { color: var(--muted); }
+.search input::-webkit-search-cancel-button { display: none; }
+.search .btn { height: 100%; padding: 0 26px; font-size: 16px; }
+.search--sm { height: 52px; padding: 5px 5px 5px 16px; box-shadow: var(--shadow-1); }
+@media (max-width: 640px) {
+  .search { height: 58px; padding: 6px 6px 6px 16px; }
+  .search input { font-size: 16px; }
+  .search .btn { padding: 0 18px; }
+}
+
+/* .tabs — segmented control. JS: [data-tabs] with [role=tab][aria-controls] (VR.tabs) */
+.tabs {
+  display: inline-flex; gap: 2px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  max-width: 100%;
+  overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 16px;
+  border-radius: var(--r-pill);
+  font: 580 14.5px/1 var(--font-display); color: var(--ink-2);
+  white-space: nowrap;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), box-shadow var(--t-fast);
+}
+.tab:hover { color: var(--ink); }
+/* touch: segmented tabs are at least 40px tall, page overrides with a fixed 34px included */
+@media (max-width: 960px), (pointer: coarse) { .tab { min-height: 40px; } }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1), 0 0 0 1px var(--line); }
+.tab__count { font: 500 12.5px/1 var(--font-body); font-variant-numeric: tabular-nums; color: var(--muted); }
+[role="tabpanel"]:focus-visible { outline-offset: 8px; }
+
+/* range slider */
+.range { width: 100%; height: 24px; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; --p: 50%; }
+.range::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--blue) var(--p), var(--line-2) var(--p)); }
+.range::-moz-range-track { height: 6px; border-radius: 3px; background: var(--line-2); }
+.range::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--blue); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #fff; border: 1px solid var(--line-2); box-shadow: var(--shadow-2); }
+.range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 1px solid var(--line-2); box-shadow: var(--shadow-2); }
+.range:focus-visible { outline: none; }
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--blue-100); }
+
+/* ---------------------------------------------------------------- 14 prose (guides) */
+.prose { max-width: 68ch; font-size: 17.5px; line-height: 1.75; color: var(--ink-2); }
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { margin-top: 2em; font: 740 30px/1.18 var(--font-display); font-stretch: 103%; letter-spacing: -0.026em; color: var(--ink); }
+.prose h3 { margin-top: 1.7em; font: 700 22px/1.25 var(--font-display); letter-spacing: -0.018em; color: var(--ink); }
+.prose h2 + *, .prose h3 + * { margin-top: .6em; }
+.prose a { color: var(--blue); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose ul, .prose ol { padding-left: 1.3em; }
+.prose li + li { margin-top: .45em; }
+.prose li::marker { color: var(--muted); }
+.prose blockquote { padding: 4px 0 4px 20px; border-left: 3px solid var(--blue); color: var(--ink); font-size: 19px; }
+.prose code { font-family: var(--font-mono); font-size: .86em; padding: .1em .35em; border-radius: 6px; background: var(--surface-2); color: var(--ink); }
+.prose img, .prose figure img { border-radius: var(--r-md); }
+.prose figcaption { margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+.prose table { width: 100%; font-size: 15px; }
+.prose th, .prose td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.prose th { font-weight: 600; color: var(--ink); background: var(--surface-2); }
+.prose .notice { margin-block: 1.5em; }
+
+/* ---------------------------------------------------------------- 15 rails, marquee, toast, utilities */
+/* .rail — horizontal snap scroller on small screens; a grid on desktop is up to the page */
+.rail {
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--rail-w, 82%);
+  gap: 12px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter);
+  padding-inline: var(--gutter); margin-inline: calc(-1 * var(--gutter));
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+.rail > * { scroll-snap-align: start; }
+
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee__track { display: flex; width: max-content; animation: marquee var(--marquee-s, 60s) linear infinite; }
+.marquee:hover .marquee__track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 80;
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: var(--r-pill);
+  background: var(--ink); color: #fff;
+  font: 500 14.5px/1.35 var(--font-body);
+  box-shadow: var(--shadow-2);
+  opacity: 0; pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+.center { text-align: center; }
+.mt-0 { margin-top: 0 !important; }
+.mt-s { margin-top: 12px; }
+.mt-m { margin-top: 24px; }
+.mt-l { margin-top: 40px; }
+.mx-auto { margin-inline: auto; }
+.w-full { width: 100%; }
+.nowrap { white-space: nowrap; }
+.divider { height: 1px; background: var(--line); border: 0; margin: 0; }
+.pill-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+@media (max-width: 640px) { .hide-mobile { display: none !important; } }
+@media (min-width: 641px) { .show-mobile { display: none !important; } }
+
+/* ---------------------------------------------------------------- 16 reveal & motion */
+/* Add .reveal to any block; common.js adds .is-in when it scrolls into view, then drops .reveal
+   once the fade has played so the block's own transitions and hover lift (.tile, a.card) apply
+   again (.is-in stays for child animations). Stagger with style="--d: 1..6".
+   Without JS (no html.js) everything is visible. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease);
+  transition-delay: calc(var(--d, 0) * 70ms);
+}
+.js .reveal.is-in { opacity: 1; transform: none; }
+
+/* Line masks for every line reveal (CSS hero lines, SplitText lines). The mask is padded .16em above and
+   .08em below and pulled back by the same margins, so stacked Vietnamese marks (Ỡ Ặ Ữ, ệ) and the
+   descender of "g" are never clipped while the inner line travels from translateY(112%). */
+.line, .vr-line-mask {
+  display: block;
+  padding: .16em 0 .08em; margin: -.16em 0 -.08em;
+  overflow: clip;
+}
+.line > span, .vr-line-mask > .vr-line { display: block; }
+
+/* Cross-document view transitions (Chromium 126+, Safari 18.2+; other browsers navigate normally).
+   The header stays put; a job card title morphs into the job page h1 (common.js names the pair). */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out 180ms var(--ease-in) both; }
+::view-transition-new(root) { animation: vt-in 420ms var(--ease-expo) both; }
+::view-transition-group(vt-job-title) { animation-duration: 520ms; animation-timing-function: var(--ease-expo); }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(12px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .js .reveal { opacity: 1; transform: none; }
+  .marquee__track { animation: none; }
+}

@@ -1,0 +1,1997 @@
+/* =====================================================================
+   Việt Remote — home.css  (HOME V6.4 "Đường bay", round 4: portal/HOME_ROUND4_SPEC.md over HOME_ROUND3_SPEC.md,
+   HOME_FLIGHT_SPEC.md §4 and HOME_V6_SPEC.md; the hero is round 2's airy orbit (.runtime/snapshots/home-r2-pre-atom)
+   with its rings aligned; the concepts gen-v4/a-flight-path/fold-1.png, gen-v5/community/1b-many-answers.png,
+   gen-v6/2b-v1-stage.png (2B, HOME_ROUND5_SPEC.md), j-e-phone-pop.png (Chặng 02) and l-f-horizon.png (the landing)). Every rule here is scoped to
+   body.page-home or to the home's own classes (hv, fl, fc, fq, ft, fj, hn, qa, hm-), so no other page changes.
+   ---------------------------------------------------------------------
+   Sections
+     0  Tokens (one easing family, the grain), page, header and footer on the home
+     1  Shared pieces: pills (white or outlined, one height, no arrows; a gentle lift and glow on hover and focus)
+     2  Hero: the orbit (.hv): the orb, three concentric coplanar rings (.hm-rings), eight portraits on them
+     3  The journey: the flight path's SVG, anchors, waypoints, the plane; shared type; the Q&A card
+     4  Chặng 01 · Hỏi người đã đi trước (.fc)
+     5  1B · Hỏi đáp (.fq): the question and five replies on the loop; 2B · Bộ công cụ (.ft): the product stage
+        (the lit floor, the 3D "0đ", four panels in an arc, the pill)
+     6  Chặng 02 · Cất cánh với việc đã kiểm tra (.fj): the phone, three real jobs popped out, five toggles
+     7  Thiếu mỗi bạn (.hn): dawn over the horizon, an arc of member portraits rising like the sun's rays; the plane
+        lands on the pill on the horizon
+     8  Responsive (desktop curve from 900 px; below it the gutter line)
+     9  Motion (start states only under html.hm): T1 pin, the plane, waypoints, T2, the 1B pin and its replies, the
+        2B stage's sequence and pin, the cards' pop and stamps, the toggles, the landing's faces, reveals
+   Revolut's grammar: black, white and grey UI, colour from photographs; headings weight 500 with tight tracking;
+   20 px cards and photos; pill buttons 48 px (44 on phones); hairlines (1 px white ~8 %) and a top inner highlight
+   on graphite cards, soft layered shadows; no glass on text. Nothing on the home heavier than 600. One accent:
+   brand cobalt #2C4FE6 (the path, the orb, the "0đ", the toggles, the stamps).
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 tokens, page, header, footer */
+.page-home {
+  --hm-night: #000;
+  --hm-ink: #0B0B0C;
+  --hm-mist: #F5F5F7;
+  --hm-text: #1F1F1F;
+  --hm-grey-d: #A1A1AA;          /* grey on black: 8.1:1 */
+  --hm-grey-l: #5F6368;          /* grey on white: 6.1:1, on mist 5.6:1 */
+  --hm-cobalt: #2C4FE6;
+  --hm-cobalt-l: #8EA2FF;        /* cobalt on black (focus, small highlights): 7.9:1 */
+  --hm-r: 20px;
+  --hm-h1: clamp(44px, 5.2vw, 76px);    /* one line from 900 px up, as the concept (about 1140 px wide at 76 px) */
+  --hm-h2: clamp(32px, 4vw, 56px);
+  --hm-sec: clamp(88px, 10vw, 144px);
+  --hm-ease: cubic-bezier(.2, .8, .2, 1);   /* the home's one easing family (HOME_ROUND3_SPEC §8) */
+  /* a faint grain over the large dark gradients, so they never band (white specks at ~4 %, tiled) */
+  --hm-grain-mask: radial-gradient(60% 55% at 50% 50%, #000 0%, rgba(0, 0, 0, .5) 55%, transparent 100%);
+  --hm-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .055 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --focus: var(--hm-cobalt);
+  background: #fff;
+  color: var(--hm-text);
+}
+.page-home [data-field="night"], .page-home .site-footer { --focus: var(--hm-cobalt-l); }
+.page-home :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.fl a, .fl button { scroll-margin: calc(var(--header-h) + 24px) 0 24px; }
+/* the footer's links too: the browser's own focus scroll leaves the ring (5 px outside the box) inside the window */
+.page-home .site-footer a { scroll-margin-block: calc(var(--header-h) + 24px) 24px; }
+/* The header's field swap (common.js writes html[data-field] at every section boundary) must not change an
+   inherited property on the root: base.css sets --focus per [data-field], which matches <html> too, so every
+   element would restyle at each swap. On the home the root's --focus is held constant and the header takes its
+   own (cobalt on white, light cobalt on black). */
+html[data-field]:has(> body.page-home) { --focus: #2C4FE6; }
+html[data-field="night"] body.page-home .site-header:not(.is-open) { --focus: var(--hm-cobalt-l); }
+@media (prefers-reduced-motion: no-preference) { html:has(body.page-home) { scroll-behavior: smooth; } }
+
+/* header: transparent over the black hero (only while JS can bring the bar back on scroll), black on the black
+   sections once scrolled, white over the white ones. Links 15/500; the join pill white on black, ink on white. */
+/* the bar switches at once at every section boundary: a 260 ms fade from white to black showed a grey bar */
+.page-home .site-header, .page-home .site-header .hdr-cta, .page-home .site-header .nav a { transition: none; }
+.page-home .site-header { --hdr-ctl-line: transparent; }
+/* nav links and the saved-jobs glyph: pill hovers, as every other control on the home */
+.page-home .nav a, .page-home .saved-link { border-radius: 999px; }
+.page-home .skip-link { font-weight: 600; }
+.page-home .menu-toggle { border-color: transparent; background: transparent; border-radius: 999px; }
+.page-home .nav a { font-weight: 500; font-stretch: 100%; }
+.page-home .nav a[aria-current="page"]::after { background: var(--hm-cobalt); }
+.page-home .brand__name { font-weight: 600; font-stretch: 100%; letter-spacing: -0.02em; }
+/* the mark on the home: the plane alone, no tile, in the wordmark's colour (white on night, ink on paper), so it
+   never pairs a blue tile and a white plane with the cobalt orb (no Telegram read) */
+.page-home .brand__mark { border-radius: 0; }
+.page-home .brand__mark rect { fill: transparent; }
+.page-home .brand__mark path { fill: currentColor; }
+html[data-field="night"] body.page-home .site-header { --hdr-bg: #000; --hdr-ink-2: rgba(255, 255, 255, .86); --hdr-line: rgba(255, 255, 255, .08); }
+html[data-field="night"] body.page-home .site-header:not(.is-scrolled):not(.is-open) { --hdr-line: transparent; }
+html.js[data-field="night"] body.page-home .site-header:not(.is-scrolled):not(.is-open) { --hdr-bg: transparent; --hdr-line: transparent; }
+html[data-field="paper"] body.page-home .site-header { --hdr-bg: #fff; --hdr-ink: var(--hm-text); --hdr-ink-2: #3C4043; --hdr-line: #EBEBED; }
+.page-home .hdr-cta {
+  height: 40px; padding: 0 18px; border-radius: 999px; border: 0;
+  font: 500 15px/1 var(--font); font-stretch: 100%;
+  background: var(--hm-text); color: #fff;
+}
+.page-home .hdr-cta:hover { background: #000; }
+html:is([data-field="night"]) body.page-home .site-header:not(.is-open) .hdr-cta { background: #fff; color: #000; }
+html:is([data-field="night"]) body.page-home .site-header:not(.is-open) .hdr-cta:hover { background: #E6E6EA; }
+.page-home .site-menu__nav a { font-weight: 500; font-stretch: 100%; }
+.page-home .site-menu__foot .btn { border-radius: 999px; font-weight: 500; }
+
+/* the site footer, black on the home (its night is #000 here, as the hero and the checks) */
+.page-home .site-footer { background: #000; }
+.page-home .footer-col h3, .page-home .footer-stats strong { font-weight: 600; }
+.page-home .footer-brand .brand__name { font-weight: 600; }
+/* tap targets on touch layouts (header controls and footer links at least 44 px), home only */
+@media (max-width: 899px) {
+  .page-home .site-header .saved-link, .page-home .site-header .menu-toggle { min-width: 44px; min-height: 44px; }
+  .page-home .site-header .brand { min-height: 44px; }
+  .page-home .footer-col li a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+  .page-home .footer-brand .brand { min-height: 44px; }
+}
+
+@media (min-width: 768px) and (max-width: 899px) { .page-home .site-header .hdr-cta { min-height: 44px; } }
+/* touch screens at desktop widths (iPads at 1024 and 1100): the same 44 px targets, and the header's links, its join
+   pill and the footer's links too (the footer list keeps its pitch: the targets touch, never overlap) */
+@media (pointer: coarse) {
+  .page-home .site-header .saved-link, .page-home .site-header .menu-toggle { min-width: 44px; min-height: 44px; }
+  .page-home .site-header .brand, .page-home .footer-brand .brand { min-height: 44px; }
+  .page-home .site-header .nav a { display: inline-flex; align-items: center; min-height: 44px; }
+  .page-home .site-header .hdr-cta { min-height: 44px; }
+  .page-home .footer-col li a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+  .page-home .footer-col ul { gap: 0; }
+}
+
+/* ---------------------------------------------------------------- 1 shared pieces */
+.hm-pill {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 28px; border-radius: 999px; border: 1.5px solid transparent;
+  font: 500 16px/1 var(--font); letter-spacing: -0.005em; white-space: nowrap;
+  transition: background-color .3s var(--hm-ease), color .3s var(--hm-ease), border-color .3s var(--hm-ease),
+              box-shadow .4s var(--hm-ease), translate .4s var(--hm-ease), transform .4s var(--hm-ease);
+}
+.hm-pill:active { transform: scale(.97); }
+.hm-pill--white { background: #fff; color: #000; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .3); }
+/* a gentle lift with a soft cobalt glow (hover, keyboard focus) */
+.hm-pill--white:hover, .hm-pill--white:focus-visible { background: #F1F2F6; translate: 0 -1px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 8px 22px -8px rgba(0, 0, 0, .6), 0 0 34px -6px rgba(110, 138, 255, .55); }
+.hm-pill--line:hover, .hm-pill--line:focus-visible { translate: 0 -1px; }
+/* light text on black blooms: the outlined pill a little lighter, so the pair reads at one weight */
+.hm-pill--line { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .62); font-weight: 460; }
+.hm-pill--line:hover { border-color: #fff; background: rgba(255, 255, 255, .08); }
+.hm-pill--ink { background: var(--hm-text); color: #fff; }
+.hm-pill--ink:hover { background: #000; }
+
+.hm-head { max-width: 860px; margin: 0 auto; text-align: center; }
+.hm-title {
+  font: 500 var(--hm-h2)/1.08 var(--font); letter-spacing: -0.025em; color: var(--hm-text);
+  text-wrap: balance; padding-block: .04em;     /* room for stacked marks (ể, ẫ, ộ) */
+}
+.hm-sub { margin: 16px auto 0; max-width: 36em; font: 400 clamp(17px, 1.35vw, 19px)/1.5 var(--font); color: var(--hm-grey-l); text-wrap: pretty; }
+.hm-head--dark .hm-title { color: #fff; }
+.hm-head--dark .hm-sub { color: var(--hm-grey-d); }
+
+/* ---------------------------------------------------------------- 2 hero: the orbit */
+/* Black from the top of the window (pulled up under the sticky header). One soft cobalt pool round the orb, a
+   fainter one on the floor, a faint grain over both (no banding); the copy centred, then the wide orbit, then the
+   member line, with air between them (HOME_ROUND4_SPEC §1: the airy composition of round 2). */
+.hv {
+  position: relative; isolation: isolate;
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + clamp(16px, 2.6vh, 44px)) 0 clamp(20px, 2.4vh, 56px);
+  min-height: 100svh;
+  display: flex; flex-direction: column;
+  background: #000; color: #fff;
+  overflow: clip;
+}
+.hv::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: var(--floor, 1);
+  background:
+    radial-gradient(40% 34% at 50% 62%, rgba(44, 79, 230, .25) 0%, rgba(44, 79, 230, .085) 52%, rgba(44, 79, 230, 0) 100%),
+    radial-gradient(70% 30% at 50% 100%, rgba(28, 44, 120, .22), rgba(28, 44, 120, 0) 100%);
+}
+.hv::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--hm-grain); opacity: var(--floor, 1); -webkit-mask-image: var(--hm-grain-mask); mask-image: var(--hm-grain-mask); }
+.hv__inner { flex: 1; display: flex; flex-direction: column; justify-content: center; transform-origin: 50% 24%; }
+.hv__copy { position: relative; z-index: 2; text-align: center; }
+.hv__title {
+  font: 500 var(--hm-h1)/1.06 var(--font); letter-spacing: -0.035em; color: #fff;
+  text-wrap: balance;
+}
+.hv__line { display: block; }
+@media (min-width: 900px) { .hv__line { display: inline-block; } }   /* one line, as the concept (the space between
+                                                                        the two spans keeps it one line); inline-block
+                                                                        so each half's intro rise is a real transform */
+.hv__lead { margin: 16px auto 0; max-width: 32em; font: 400 clamp(18px, 1.55vw, 22px)/1.45 var(--font); color: var(--hm-grey-d); text-wrap: balance; }
+.hv__actions { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* The stage: 1240 × 500 stage units (views.HOME_STAGE), kept at exactly that ratio from 768 px, so the orbit is
+   only ever scaled (its three rings stay concentric and coplanar): wide and flat, across almost the whole content
+   width (about 1130 px at 1440 × 900, the outer ring about 1040), its size following the window's height, so the h1, the pills, the orbit and
+   the member line share the first screen with air between them. --av: a portrait's base diameter, .1032 of the
+   stage's width (views.HOME_AV / 1240). */
+.hv__sky {
+  --sky-h: clamp(240px, calc(100svh - 446px), 500px);   /* the h1, pills, orbit, member line and link fit the window,
+                                                         the link's box clear of its foot (the hero never taller than
+                                                         the window: nothing scrolls under the header before T1) */
+  --sky-w: min(100vw - 2 * var(--gutter), calc(var(--sky-h) * 1240 / 500), 1240px);
+  --av: calc(var(--sky-w) * .1032);
+  position: relative; z-index: 1;
+  width: var(--sky-w); aspect-ratio: 1240 / 500;
+  margin: clamp(12px, 2.2vh, 36px) auto 0;
+}
+/* the rings (home_atom_rings.html): the far halves under the orb (z 5), the near halves over it (z 25), each half a
+   gradient along its ring (faint far away, bright near the viewer) on a soft cobalt glow */
+.hm-rings { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; transform-origin: 50% 50%; }
+.hm-rings--back { z-index: 5; }
+.hm-rings--front { z-index: 25; }
+.hm-ring { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.hm-ring--back { stroke-width: 1; }
+.hm-ring--front { stroke-width: 1.2; }
+.hm-ring--hi { stroke-width: 1.7; }
+.hm-ring--glow { stroke: rgba(88, 120, 255, .34); stroke-width: 6; opacity: var(--glow, 1); }
+.hm-rings--back .hm-ring--glow { stroke: rgba(88, 120, 255, .11); }
+
+/* the orb (a transparent render with its own soft rim light) on a breathing cobalt halo: its sphere's radius is
+   views.HOME_ORB_R (120 units), larger than every ring's half-height, so every ring's near half passes over its lower
+   edge and its far half behind its top: the sphere is 19.35 % of the stage's width, the render (the sphere fills
+   89 % of it) 21.75 % */
+.hv-halo {
+  position: absolute; left: 50%; top: 50%; z-index: 3; pointer-events: none;
+  width: 52%; aspect-ratio: 1.7; transform: translate(-50%, -50%);
+}
+.hv-halo::before {      /* the glow (on a child: home.js moves the halo with the orb, the intro scales this) */
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(closest-side, rgba(52, 88, 245, .34) 0%, rgba(44, 79, 230, .13) 44%, rgba(44, 79, 230, 0) 100%);
+}
+.hv-orb { position: absolute; left: 50%; top: 50%; z-index: 20; width: 21.75%; transform: translate(-50%, -50%); pointer-events: none; }
+.hv-orb img { width: 100%; height: auto; }
+/* sphere shading over the render (the sphere fills x 5.5-94.5 %, y 6-94.6 % of it): a lit top left and a shadow
+   side with a terminator, so it reads as a matte ball, not a disc; it also mutes the carved plane on the shaded
+   half (never a Telegram-like flat mark) */
+.hv-orb::before, .hv-orb::after { content: ""; position: absolute; inset: 6% 5.5% 5.4% 5.5%; border-radius: 50%; pointer-events: none; }
+.hv-orb::before {       /* the shadow side: a soft terminator, darkest at the lower-right limb (multiply) */
+  background:
+    radial-gradient(118% 118% at 30% 24%, rgba(255, 255, 255, 0) 40%, rgba(40, 52, 140, .5) 70%, rgba(10, 14, 64, .82) 100%),
+    radial-gradient(circle at 68% 80%, rgba(3, 8, 48, .45), rgba(3, 8, 48, 0) 64%);
+  mix-blend-mode: multiply;
+}
+.hv-orb::after {        /* the lit top left (soft light) */
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 40%);
+  mix-blend-mode: soft-light;
+}
+
+/* portraits: placed by the server at their phase (left/top %, never changed again), moved by home.js with a
+   translate from there, their centres always on their ring. Always opaque (nothing shows through a face): depth is
+   scale, blur and a cool cobalt-black wash (::after at --w: far faces sink into the night, never a muddy brown;
+   none on the near half). Each photo is graded into the night (a little less saturated, a cool rim, a hairline). */
+.hv-av {
+  position: absolute; width: calc(var(--av) * var(--k, 1)); aspect-ratio: 1;
+  margin: calc(var(--av) * var(--k, 1) / -2) 0 0 calc(var(--av) * var(--k, 1) / -2);
+  transform: scale(var(--s)); filter: blur(var(--b));
+  pointer-events: none;
+}
+.hv-av::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(120% 120% at 50% 26%, #16247E 0%, #0A1246 50%, #02040F 100%);
+  opacity: min(.45, calc(var(--w, 0) * 1.1));   /* a cool wash, up to .45 at the far point: far faces keep their skin tones */
+}
+.hv-av img {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #1A1B22;
+  filter: saturate(max(.45, .86 - .6 * var(--w, 0))) contrast(1.03);
+  box-shadow: 0 0 0 1px rgba(214, 224, 255, .3), 0 18px 36px -14px rgba(0, 0, 0, .9), 0 0 30px -8px rgba(92, 124, 255, .5);
+}
+.hv-dot { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; transform: scale(var(--s)); opacity: var(--o); pointer-events: none; }
+.hv-dot::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 2px rgba(150, 175, 255, .8); }
+/* T1's hairline: when the rings have folded away, one clean line (a gradient, no blur) draws out from the orb, then
+   shrinks back into the launch point (home.js --ls, --lo; nothing without motion) */
+.hv-line {
+  position: absolute; left: 0; right: 0; top: 50%; z-index: 24; height: 2px; margin-top: -1px; pointer-events: none;
+  background: linear-gradient(90deg, rgba(142, 162, 255, 0), rgba(196, 208, 255, .9) 50%, rgba(142, 162, 255, 0));
+  transform: scaleX(var(--ls, 0)); opacity: var(--lo, 0);
+}
+
+.hv__foot { position: relative; z-index: 2; margin-top: clamp(14px, 1.8vw, 28px); text-align: center; }
+.hv__members { font: 400 clamp(18px, 1.7vw, 24px)/1.4 var(--font); color: rgba(255, 255, 255, .84); text-wrap: balance; }
+.hv__members, .hv__more { font-variant-numeric: tabular-nums; }
+.hv__more {
+  min-height: 44px; display: inline-flex; align-items: center;
+  font: 400 16px/1.4 var(--font); color: #fff;
+  text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .38); text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: text-decoration-color .3s var(--hm-ease);
+}
+.hv__more:hover { text-decoration-color: #fff; }
+
+
+/* ---------------------------------------------------------------- 3 the journey: the path, waypoints, plane */
+/* .fl holds the hero and every section below it; one SVG (.fl-svg, sized and drawn by home.js) lies over it all
+   (z 5): over the section backgrounds and photos, under what must stay on top of the line (the waypoints, the
+   final pill and the 2B stage: z 6; the Q&A card: z 7). The pinned 1B (z 6) draws its stretch in its own SVG, under
+   its replies (z 9) and its card (z 10: over the replies' soft shadows, which never fall on the white card). The sections set no z-index of their own, so those children can rise above
+   the line. The plane is one fixed element (z 8, over all of those, under the header's 50) that home.js moves along
+   the tip of the drawn path. */
+.fl { position: relative; overflow-x: clip; background: #000; color: #fff; }
+.fl-svg { position: absolute; left: 0; top: 0; z-index: 5; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.fl-svg path { fill: none; stroke-linecap: round; }
+.fl-svg .fl-dots { stroke: #5B78FF; stroke-width: 3.8; stroke-dasharray: .1 10; }
+.fl-svg .fl-glow { stroke: rgba(60, 92, 240, .14); stroke-width: 7; stroke-dasharray: .1 10; }
+.fl-svg .fl-mask { stroke: #fff; stroke-width: 26; stroke-linecap: butt; }
+.fl-svg--hero { z-index: 26; }
+/* the page's stretch is drawn in bands (home.js): each clipped to its own band, so none repaints the whole page */
+.fl-svg--band { overflow: hidden; }          /* the launch, over the stage (its faces and rings are gone by then) */
+/* below 900 px: the path is the left-gutter line; the content is indented beside it (--ind) and the line runs
+   at --lane from the viewport's left edge */
+.page-home { --lane: 52px; --ind: 0px; }
+
+/* anchor points the path is measured through (desktop set .fl-a--d, gutter set .fl-a--m) */
+.fl-a { position: absolute; width: 0; height: 0; pointer-events: none; }
+/* waypoints: a white core in a cobalt glow (lit). With motion they start unlit and light as the plane passes */
+.fl-wp {
+  position: absolute; z-index: 6; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 0 4px rgba(44, 79, 230, .62), 0 0 22px 6px rgba(76, 107, 255, .7);
+  transition: background-color .45s var(--hm-ease), box-shadow .45s var(--hm-ease), transform .45s var(--hm-ease);
+  pointer-events: none;
+}
+.fl-plane { display: none; }
+.fl-plane svg, .fl-dock svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.fl-plane .pl-top { fill: #fff; }
+.fl-plane .pl-low { fill: #D3DCFF; }
+.fl-plane .pl-keel { fill: #2C4FE6; }
+.fl-plane .pl-low, .fl-plane .pl-keel { transform-box: view-box; transform-origin: 50% 50%; transform: scaleY(var(--fold, 1)); opacity: var(--low, 1); }
+.fl-plane .pl-top { transform-box: view-box; transform-origin: 50% 50%; transform: scaleY(calc(.3 + .7 * var(--fold, 1))); }
+
+/* shared type: the stage chips ("Chặng 01", "Trong cộng đồng", "Chặng 02": one label system), the big section titles */
+.fl-chip {
+  display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 999px;
+  background: var(--hm-cobalt); color: #fff; font: 500 17px/1 var(--font); letter-spacing: -0.005em;
+}
+.fl-title {
+  margin-top: 14px; font: 500 clamp(40px, 5.2vw, 78px)/1.06 var(--font); letter-spacing: -0.032em; color: #fff;
+  text-wrap: balance; padding-block: .04em;
+}
+.fl-title--sm { margin-top: 0; font-size: var(--hm-h2); letter-spacing: -0.025em; }
+
+/* the illustrative Q&A card (Chặng 01; T2 turns it into 1B's question card, .fq__q). Every measure is in --u (1 on
+   the photo; 1B's stage sets its own), so from 900 px 1B's card is an exact scaled copy of the photo's: T2 swaps the
+   two in one frame with every line registered (no doubled text), then flies and grows it */
+.qa {
+  width: calc(254px * var(--u, 1)); padding: calc(15px * var(--u, 1)) calc(17px * var(--u, 1)) calc(16px * var(--u, 1));
+  border-radius: calc(var(--hm-r) / var(--qk, 1));     /* 20 px on screen, at rest and in T2's flight (home.js --qk) */
+  background: #fff; color: var(--hm-text);
+  box-shadow: 0 30px 50px -22px rgba(0, 0, 0, .75), 0 0 0 1px rgba(0, 0, 0, .04);
+}
+.qa > * { opacity: var(--qc, 1); }
+.qa__k { font: 500 calc(12.5px * var(--u, 1))/1.2 var(--font); color: var(--hm-grey-l); }
+.qa__q { margin-top: calc(6px * var(--u, 1)); font: 500 calc(19px * var(--u, 1))/1.15 var(--font); letter-spacing: -0.012em; text-wrap: balance; }
+.qa__a { margin-top: calc(11px * var(--u, 1)); display: flex; align-items: center; gap: calc(9px * var(--u, 1)); font: 400 calc(12.5px * var(--u, 1))/1.2 var(--font); color: var(--hm-grey-l); }
+.qa__avs { display: flex; }
+/* a card-white ring between the stacked faces */
+.qa__avs img { width: calc(22px * var(--u, 1)); height: calc(22px * var(--u, 1)); border-radius: 50%; object-fit: cover; background: #DDD; box-shadow: 0 0 0 calc(2px * var(--u, 1)) #fff; }
+.qa__avs img + img { margin-left: calc(-7px * var(--u, 1)); }
+
+/* ---------------------------------------------------------------- 4 Chặng 01 · Hỏi người đã đi trước (.fc) */
+.fc { position: relative; padding: clamp(150px, 15vw, 220px) 0 clamp(56px, 5.6vw, 88px); background: #000; }
+/* the hero's floor glow, mirrored, so the hero's foot never shows as an edge on the black below it */
+.fc::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 30vh; pointer-events: none;
+  background: radial-gradient(70% 100% at 50% 0%, rgba(28, 44, 120, .22), rgba(28, 44, 120, 0) 100%);
+}
+.fc__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: clamp(40px, 6vw, 96px); align-items: center; }
+.fc__copy { position: relative; }
+.fc__num {
+  position: relative; display: inline-block;
+  font: 500 clamp(112px, 12.6vw, 190px)/.86 var(--font); letter-spacing: -0.035em;
+  color: transparent;
+}
+.fc__num-t { display: inline-block; padding-right: .02em; }
+/* the outline is SVG text over the (transparent) layout text, so it can be drawn: with motion home.js draws it as the
+   plane comes in from T1 (--draw, stroke-dashoffset); the finished page shows it whole */
+.fc__num-svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.fc__num-svg text { fill: none; stroke: #4766FF; stroke-width: 2.5px; stroke-linejoin: round; font: inherit; letter-spacing: inherit; }
+.fc__wp { left: calc(100% + .99em); top: .89em; }        /* the turn's foot (.fl-a--c1 below) */
+.fc__chip { position: relative; display: flex; width: fit-content; margin-top: 18px; }
+.fc__sub { margin-top: 22px; max-width: 25em; font: 400 clamp(18px, 1.45vw, 21px)/1.5 var(--font); color: var(--hm-grey-d); text-wrap: pretty; }
+.fc__cta { margin-top: 34px; }
+.fc__art { position: relative; }
+.fc__frame { position: relative; }
+.fc__photo { position: relative; margin: 0; aspect-ratio: 1 / 1.04; border-radius: var(--hm-r); overflow: hidden; background: #2A1C12; }
+/* a little larger than the frame and shifted: her lit face and the laptop's glow lead, the labelled bottle slides to
+   the left edge and the cup leaves the frame */
+.fc__photo img { position: absolute; left: -18%; top: -6%; width: 122%; height: 122%; max-width: none; object-fit: cover; object-position: 50% 20%; }
+/* desktops (the frame nearly square): the picture whole in width at 1.28 x the frame, from the laptop's lit screen at
+   the left edge (the "working remotely" cue) to her face on the right; the frame's foot cuts the bottle to its top half
+   and leaves the cup out (home.html sizes: 1.28 x the frame) */
+@media (min-width: 900px) { .fc__photo img { left: -1%; top: -9%; width: 128%; height: auto; } }
+/* the card hangs from the waypoint over the dark window (left of the woman, above the laptop), on a short thread */
+/* z 7: over the path (z 5); the plane (z 8) flies over it, and the path runs over its top to the photo's right edge
+   (the card hangs below the path, as fold-1.png), so the plane never slides under or across the card */
+.fc__qa { position: absolute; left: 3.5%; top: 11%; z-index: 7; }
+@media (min-width: 900px) and (max-width: 1199px) { .fc__qa { --u: .88; } }
+.fc__qa::before, .fq__q::before {
+  content: ""; position: absolute; left: calc(56px * var(--u, 1)); top: calc(-6px * var(--u, 1));
+  width: calc(14px * var(--u, 1)); height: calc(14px * var(--u, 1)); border-radius: calc(2px * var(--u, 1));
+  background: #fff; transform: rotate(45deg);
+}
+.fc__pin { left: calc(3.5% + 63px); top: calc(11% - 30px); }
+.fc__pin::after {
+  content: ""; position: absolute; left: 6px; top: 14px; width: 2px; height: 12px; border-radius: 2px;
+  background: linear-gradient(rgba(255, 255, 255, .9), rgba(255, 255, 255, .5));
+}
+/* the path's anchors: the launch from the orb (down and left, toward the "01", in the pinned hero), a bend down
+   beside the "01" into its waypoint, into the photo's top left, the card's waypoint, along the dark top of the
+   window (above her head) and off the photo's right edge, down the right lane into 1B */
+.fl-a--h1 { left: 40%; top: 65%; }
+/* in .fc__num: the turn beside the "01" is one wide circle (r .77em: 140 px at 1440, never a hairpin; client 18/11
+   "cho nới ra"), clear of the numeral: its top (c1a, heading left), its left side (c1, down, .22em right of the "01"),
+   its foot (the waypoint, heading right) and on round to c1b (up and right at 45 degrees, toward the photo's left edge, which it enters
+   climbing gently: .fl-a--c2's data-tan -20) */
+.fl-a--c1a { left: calc(100% + .99em); top: -.65em; }
+.fl-a--c1 { left: calc(100% + .22em); top: .12em; }
+.fl-a--c1b { left: calc(100% + 1.534em); top: .664em; }
+/* the line crosses the photo clearly (never along its top edge or round its rounded corners): in through its left
+   edge level with the card's waypoint (about 45 px under the top), along the dark top of the window, then down
+   and out through its right edge well below the corner */
+.fl-a--c2 { left: -4%; top: calc(11% - 26px); }
+.fl-a--c2b { left: calc(100% - 96px); top: calc(11% + 8px); }
+.fl-a--c3 { left: calc(100% + var(--gutter) * .7); top: 84%; }
+
+/* ---------------------------------------------------------------- 5 1B · Hỏi đáp (.fq) and 2B · Bộ công cụ (.ft) */
+/* 1B, as 1b-many-answers.png: the question card in the centre of a stage, five reply bubbles round it in mirror pairs
+   (Designer and Developer high, Content and Marketing beside the card, Video under it). The loop (.fl-a--q*, below) runs
+   round the card and never under a reply, so the plane stays in sight. --bw: the bubbles' width; --u: the card's scale
+   (an exact copy of the photo's card, larger); --qm: the gap under the heading; the stage keeps 80 px from the window's
+   edges (the right lane runs 32 px outside it). The stage is as tall as the pinned window allows (--qh). */
+.fq { position: relative; padding: clamp(72px, 8vw, 120px) 0 clamp(80px, 8vw, 120px); background: #000; }
+.fq__run, .fq__pin { position: relative; }
+.fq__head { position: relative; z-index: 6; text-align: center; }
+.fq__title { margin-top: 18px; }
+.fq__stage {
+  --qh: clamp(400px, calc(100svh - 400px), 520px);
+  --bw: 28%; --u: 1.15; --bh: 50px; --qm: clamp(34px, 3.6vw, 54px);
+  --rx: calc(182px * var(--u) + 30px); --ry: calc(90px * var(--u) + 30px);
+  position: relative; flex: none; width: min(100% - 160px, 1280px); height: var(--qh);
+  margin: var(--qm) auto 0;
+}
+/* the question (T2 lands Chặng 01's card here): the photo's question crossfades to this one mid-flight (--qo, --gho,
+   home.js; the finished page shows this one only); its cobalt glow (::after) comes in as it lands (--glo) and the
+   thread's tip (::before, as on the photo) goes as it lifts off (--tip) */
+.fq__q {
+  position: absolute; inset: 0 0 6% 0; z-index: 10; margin: auto; height: fit-content;
+  transform-origin: 0 0;
+  box-shadow: 0 calc(30px * var(--u)) calc(50px * var(--u)) calc(-22px * var(--u)) rgba(0, 0, 0, .75), 0 0 0 1px rgba(0, 0, 0, .04);
+}
+.fq__q::before { opacity: var(--tip, 0); }
+.fq__q::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 90px -10px rgba(76, 107, 255, .4); opacity: var(--glo, 1);
+}
+.fq__qs { display: grid; margin-top: calc(6px * var(--u)); }
+.fq__qs > .qa__q { grid-area: 1 / 1; margin: 0; }
+.fq__qq { opacity: var(--qo, 1); }
+.fq__ghost { opacity: var(--gho, 0); }
+/* the replies: graphite, 20 px, over the loop (z 9). The plate is a layer of its own (::before), so with motion a
+   reply can wait as a typing indicator on the loop (its portrait's slot) and then spring out whole */
+.page-home .fq__bubs { margin: 0; }
+.fq-bub {
+  position: absolute; z-index: 9; display: flex; align-items: center; gap: 16px;
+  width: var(--bw); padding: 14px 20px 14px 14px; border-radius: var(--hm-r); color: #fff;
+  translate: 0 -50%; transform-origin: 50px 50%;
+}
+.fq-bub::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(160deg, #23252D, #17181E 70%);
+  box-shadow: 0 26px 44px -24px rgba(0, 0, 0, .95), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.fq-bub__av { position: relative; flex: none; width: 72px; height: 72px; }
+.fq-bub__av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #2A2B33; box-shadow: 0 0 0 2px rgba(142, 162, 255, .55); }
+.fq-bub__av::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 0 rgba(120, 146, 255, 0); }
+.fq-bub__dots { display: none; }
+.fq-bub__t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fq-bub__who { font: 500 17px/1.25 var(--font); color: #fff; }
+.fq-bub__say { font: 400 16px/1.4 var(--font); color: #C9C9D2; text-wrap: balance; }
+/* The loop is an ellipse round the card (centre 50 % 47 %, radii 209 x 115 px at --u 1: the card is 254 x about 133 px
+   at 1), never under a reply, so the plane stays in sight all the way; every reply sits 30 px or more outside it, its
+   portrait on the side that faces the loop (from 900 px the left pair is mirrored: portrait right, text right-aligned).
+   --bw, --bh: a reply's width and half height. The path comes in from the right lane over Developer's top, joins the
+   top of the ellipse, runs round it left, down, right and up, past Designer, Content, Video and Marketing, and leaves at
+   its right end, under Developer, round Marketing's top corner to the right lane and down to the pin's foot
+   (.fl-a--qe). The stretch in dims while the plane flies the loop (home.js); the review scripts check every clearance */
+.fq-bub--designer { right: calc(50% + .8 * var(--rx)); top: calc(47% - .6 * var(--ry) - 30px - var(--bh)); }
+.fq-bub--developer { left: calc(50% + .8 * var(--rx)); top: calc(47% - .6 * var(--ry) - 30px - var(--bh)); }
+.fq-bub--content { left: max(0px, 50% - var(--rx) - 42px - var(--bw)); top: calc(47% + 26px); }
+.fq-bub--marketing { right: max(0px, 50% - var(--rx) - 42px - var(--bw)); top: calc(47% + 26px); }
+.fq-bub--video { left: calc(50% - var(--bw) / 2); top: calc(47% + var(--ry) + var(--vg, 30px) + var(--bh)); }
+@media (min-width: 900px) {
+  .fq-bub--designer, .fq-bub--content { flex-direction: row-reverse; padding: 14px 14px 14px 20px; text-align: right; transform-origin: calc(100% - 50px) 50%; }
+}
+/* the way in runs half way between the heading's foot and Developer's top */
+.fl-a--q0 { left: 97.6%; top: calc((47% - .6 * var(--ry) - 30px - 2 * var(--bh) - var(--qm)) / 2 - 4px); }
+.fl-a--q1 { left: calc(50% + .8 * var(--rx) + var(--bw) * .55); top: calc((47% - .6 * var(--ry) - 30px - 2 * var(--bh) - var(--qm)) / 2); }
+.fl-a--q2 { left: calc(50% + .8 * var(--rx) - 8px); top: calc((47% - .6 * var(--ry) - 30px - 2 * var(--bh) - var(--qm)) / 2 + 4px); }
+.fl-a--q3 { left: 50%; top: calc(47% - var(--ry)); }
+.fl-a--q4 { left: calc(50% - .707 * var(--rx)); top: calc(47% - .707 * var(--ry)); }
+.fl-a--q5 { left: calc(50% - var(--rx)); top: 47%; }
+.fl-a--q6 { left: calc(50% - .707 * var(--rx)); top: calc(47% + .707 * var(--ry)); }
+.fl-a--q7 { left: 50%; top: calc(47% + var(--ry)); }
+.fl-a--q8 { left: calc(50% + .707 * var(--rx)); top: calc(47% + .707 * var(--ry)); }
+.fl-a--q9 { left: calc(50% + var(--rx)); top: 47%; }
+/* the way out: half way between Developer's foot and Marketing's top, round Marketing's top corner, down the lane */
+.fl-a--q10 { left: calc(50% + var(--rx) + 62px); top: calc(47% - .3 * var(--ry) - 2px - var(--bh) / 2); }
+.fl-a--q11 { left: calc(100% - 32px); top: calc(47% - .3 * var(--ry) - 2px - var(--bh) / 2); }
+.fl-a--q12 { left: calc(100% + 32px); top: calc(47% + 36px - var(--bh)); }
+/* the doors: into the pin at its very top (under the header), out of it at its foot (the window's foot), so the page's
+   stretch and the pin's always meet out of sight and the line never shows a gap */
+.fl-a--qd { left: calc(100% - 48px); top: 0; }
+.fl-a--qe { left: calc(100% - 114px); top: 100%; }   /* heading down-left: the path crosses the band over 2B's stage from here */
+.fl-svg--loop { z-index: 5; }
+/* the plane on 1B's loop flies BEHIND the replies, as the line does (z 8: over the loop's line, under the replies' z 9
+   and the card's z 10): where the loop meets a reply the plane slips under its opaque plate and comes out the other
+   side, so it never crosses a reply's text; a tighter contact shadow under it between them */
+html.hm .fq__pin > .fl-plane { z-index: 8; filter: drop-shadow(0 8px 6px rgba(0, 0, 0, .55)) drop-shadow(0 16px 18px rgba(0, 0, 0, .45)) drop-shadow(0 0 12px rgba(76, 107, 255, .45)); }
+.fl-svg .fl-ghost { stroke: #5B78FF; stroke-width: 3; stroke-dasharray: .1 10; opacity: calc(.2 * var(--fqh, 1)); }
+.fl-svg .fl-part { transition: opacity .6s var(--hm-ease); }
+.fl-svg--loop.is-looping .fl-part--in { opacity: .3; }
+.fq__foot { position: relative; z-index: 6; margin-top: clamp(26px, 3vw, 40px); text-align: center; }
+.fq__cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+@media (max-width: 1279px) and (min-width: 1200px) { .fq__stage { --u: .95; } }
+
+/* 2B · Bộ công cụ, round 5: the PRODUCT STAGE (HOME_ROUND5_SPEC.md, concept gen-v6/2b-v1-stage.png, the approved
+   prototype proto/2b-stage). One root (.ft#cong-cu); class names ft / ft-panel / ftd- / fts- (fts-: the stage's
+   own parts); motion only under html.hm (the finished stage is the no-JS and reduced-motion state).
+   Geometry: from 1200 px the whole picture is one 1440 × 900 design frame (.fts-frame) scaled by --u (1 unit = 1 px
+   at 1440 × 900): it fits the section's width, the pinned window's height (--fts-h: the window under the header) and
+   leaves a side lane for the path outside the outer panels (the frame's outer panels span 1320 u: never closer than
+   110 px to the window's edges), so the light, the numeral, the arc, the anchors and the path always line up. Sizes
+   are real lengths (calc(n * var(--u))), never a transform scale, so text stays crisp. Below 1200 px the stage is in
+   flow (a 2 × 2 grid from 768 px, one column on phones). The light and the floor (.fts-bg) live in the pin, so they
+   hold with the picture while it is pinned. */
+.ft {
+  /* the stage */
+  --fts-spot: 44, 79, 230;              /* the cobalt light, as rgb for the gradients */
+  --fts-spot-hi: 92, 124, 255;
+  --fts-beam: 32, 80, 232;              /* the spotlight's beam: a deeper, more saturated cobalt (matte, not lavender) */
+  /* the numeral: the front face (a light falloff from the spot), its one-step lit edge, and the extrusion (front to
+     back; each copy top-lit: lighter at the glyph tops, so the đ's bar and stem tops read lighter than the left faces) */
+  --fts-face-1: #2457FF;
+  --fts-face-2: #1747F0;
+  --fts-face-3: #0E3AD6;
+  --fts-edge: #1238D0;
+  --fts-ex-top: #1A44E6;
+  --fts-ex-1: #0A2DBE;
+  --fts-ex-2: #04114A;
+  --fts-ex-dx: -.0678em;                /* the full depth: back, a little left and up, as the concept (~27 × 10 u) */
+  --fts-ex-dy: -.0243em;
+  /* the panels */
+  --fts-card-1: #272A35;
+  --fts-card-2: #1B1D26;
+  --fts-card-3: #14161D;
+  --fts-red: #C8303B;                   /* white on it 5.3:1 */
+  --fts-green: #1E9E52;
+  /* the picture's height: the window under the sticky header (the pin) */
+  --fts-h: calc(100svh - var(--header-h));
+  position: relative; container-type: inline-size; background: #000; color: #fff;
+}
+/* 1 design unit: 1 px at 1440 × 900 (cqw: the section's width, no scrollbar), at most the window's height over 900
+   and small enough that the outer panels (1320 u across) leave 110 px each side for the path's lanes. --ux: the
+   horizontal SPREAD unit (the panels' offsets from the centre, the floor's pool and horizon, the lanes): on a short,
+   wide window --u is limited by the height and the set would sit small in the middle, so it spreads up to 1.22 u
+   (u × (w / 1.78 h) = w / 1600 when u = h / 900). */
+.ft > * {
+  --u: min(calc(100cqw / 1400), calc(var(--fts-h) / 900), calc((100cqw - 220px) / 1320));
+  --ux: clamp(var(--u), calc(100cqw / 1600), calc(1.22 * var(--u)));
+}
+/* the dark band over the stage (desktop): the path crosses it from 1B's right lane to the stage's left lane */
+@media (min-width: 900px) { .ft { padding-top: 230px; } }
+/* windows too short to pin the stage (it plays in flow there): the picture keeps a 660 px floor, so the panels' text
+   floors never push the cards into the pill (a frame of at least .73 u) */
+@media (min-width: 1200px) and (max-height: 759px) { .ft { --fts-h: max(calc(100svh - var(--header-h)), 660px); } }
+.ft__run { position: relative; }
+.ft__pin {
+  position: relative; z-index: 1; height: var(--fts-h); min-height: 560px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* the stage: the light in two groups, each ONE composited layer that its beat fades (the children paint into it,
+   none is a layer of its own): the beam (the box's own dark gradient with its side vignette and its seams, the
+   wall's glow, the cone, its source) and the ground (the floor, the pool, the sheen, the lit edge, the horizon).
+   Unlit, the stage is the black band it rises out of. Every part is placed on the frame's centre (the frame is
+   centred in the pin), so the light and the floor line up with the numeral and the panels at any size. Each part
+   rises out of the black at the top (the long ramp the box's seam has) and sinks into it at the foot by itself, so
+   no overlay is needed over them (a full-stage overlay was one more layer the size of the window). A faint grain
+   over each group's large gradients, so they never band. */
+.fts-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.fts-bg__beam, .fts-bg__ground { position: absolute; inset: 0; display: block; overflow: hidden; }   /* (each layer the stage's size: the wall and the source reach past it) */
+.fts-bg__beam > span, .fts-bg__ground > span { position: absolute; display: block; }
+.fts-bg__beam { opacity: var(--fts-cone, 1); background: linear-gradient(180deg, #04060F 0%, #04071A 40%, #060A1E 74%, #04060F 100%); }
+.fts-bg__ground { top: 50%; opacity: var(--fts-pool, 1); }
+.fts-bg__beam::after, .fts-bg__ground::after { content: ""; position: absolute; inset: 0; background: var(--hm-grain); opacity: .5; }
+.fts-bg__beam::after { bottom: 50%; }
+/* over the beam's light, in its own layer: the seams (the stage rises out of the black over it on a long soft ramp,
+   150 u, and sinks into Chặng 02's black at its foot) and the side vignette (the box goes black at the sides; the
+   floor and the pool have their own) */
+.fts-bg__beam::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background:
+    linear-gradient(180deg, #000 0, rgba(0, 0, 0, .9) calc(25 * var(--u)), rgba(0, 0, 0, .62) calc(55 * var(--u)), rgba(0, 0, 0, .3) calc(90 * var(--u)), rgba(0, 0, 0, .1) calc(120 * var(--u)), rgba(0, 0, 0, 0) calc(150 * var(--u)),
+      rgba(0, 0, 0, 0) calc(100% - 60 * var(--u)), #000 100%),
+    linear-gradient(90deg, rgba(2, 4, 14, .95) 0%, rgba(2, 4, 14, .60) 13%, rgba(2, 4, 14, 0) 34%, rgba(2, 4, 14, 0) 66%, rgba(2, 4, 14, .60) 87%, rgba(2, 4, 14, .95) 100%);
+}
+/* the back wall: a black box, only a faint cobalt glow right behind the numeral (the light is the cone, not fog) */
+.fts-bg__wall {
+  left: 50%; top: calc(50% - 430 * var(--u)); width: calc(1700 * var(--u)); height: calc(1000 * var(--u)); translate: -50% 0;
+  background:
+    radial-gradient(30% 36% at 50% 40%, rgba(var(--fts-spot), .30), rgba(var(--fts-spot), .09) 52%, rgba(var(--fts-spot), 0) 100%),
+    radial-gradient(50% 50% at 50% 46%, rgba(var(--fts-spot), .07), rgba(var(--fts-spot), .015) 60%, rgba(var(--fts-spot), 0) 100%),
+    radial-gradient(80% 70% at 50% 40%, rgba(var(--fts-spot), .03), rgba(var(--fts-spot), .009) 60%, rgba(var(--fts-spot), 0) 100%);
+}
+/* the spotlight cone: a broad beam from a source high above the top centre, brightest just under the seam's ramp,
+   widening down and fading out on the floor */
+.fts-bg__cone {
+  left: 50%; top: 0; width: calc(1200 * var(--u)); height: calc(50% + 200 * var(--u)); translate: -50% 0;
+  background: conic-gradient(from 180deg at 50% calc(-560 * var(--u)), rgba(var(--fts-beam), .60) 0deg, rgba(var(--fts-beam), .50) 6deg, rgba(var(--fts-beam), .30) 12deg, rgba(var(--fts-beam), .10) 19deg, rgba(var(--fts-beam), 0) 27deg,
+                             rgba(var(--fts-beam), 0) 333deg, rgba(var(--fts-beam), .10) 341deg, rgba(var(--fts-beam), .30) 348deg, rgba(var(--fts-beam), .50) 354deg, rgba(var(--fts-beam), .60) 360deg);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .85) 10%, rgba(0, 0, 0, .66) 26%, rgba(0, 0, 0, .4) 55%, rgba(0, 0, 0, .15) 80%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .85) 10%, rgba(0, 0, 0, .66) 26%, rgba(0, 0, 0, .4) 55%, rgba(0, 0, 0, .15) 80%, transparent 100%);
+}
+/* the source: the brightest point, just above the top centre (above the struck price), risen out of the seam's ramp */
+.fts-bg__hot {
+  left: 50%; top: calc(-190 * var(--u)); width: calc(560 * var(--u)); height: calc(380 * var(--u)); translate: -50% 0;
+  background: radial-gradient(closest-side, rgba(var(--fts-beam), .32), rgba(var(--fts-beam), .10) 50%, rgba(var(--fts-beam), 0));
+}
+/* the ground's parts are placed from the stage's middle (the group's top). The floor: from the horizon down, a faint
+   cobalt falloff under the numeral's foot (it stands on something), dark at the sides as the box is */
+.fts-bg__floor {
+  left: 0; right: 0; top: calc(84 * var(--u)); bottom: 0;
+  background: linear-gradient(180deg, rgba(22, 46, 150, 0) 0, rgba(22, 46, 150, .30) calc(26 * var(--u)), rgba(10, 26, 92, .30) calc(90 * var(--u)), rgba(8, 18, 60, .24) 50%, rgba(5, 8, 22, 0) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .05) 0%, rgba(0, 0, 0, .4) 13%, #000 34%, #000 66%, rgba(0, 0, 0, .4) 87%, rgba(0, 0, 0, .05) 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, .05) 0%, rgba(0, 0, 0, .4) 13%, #000 34%, #000 66%, rgba(0, 0, 0, .4) 87%, rgba(0, 0, 0, .05) 100%);
+}
+/* the floor's sheen: the lit near floor, matte deep cobalt (the far floor at the sides stays dark), with its own
+   gentler falloff at the sides, gone at the box's foot */
+.fts-bg__sheen {
+  left: 0; right: 0; top: calc(230 * var(--u)); bottom: 0;
+  background: linear-gradient(180deg, rgba(30, 46, 104, 0) 0, rgba(30, 46, 104, .28) calc(40 * var(--u)), rgba(30, 46, 104, .50) 48%, rgba(30, 46, 104, .58) 66%, rgba(30, 46, 104, .3) calc(100% - 60 * var(--u)), rgba(30, 46, 104, 0) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .4), #000 18%, #000 82%, rgba(0, 0, 0, .4));
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, .4), #000 18%, #000 82%, rgba(0, 0, 0, .4));
+}
+/* the floor's lit front edge: a soft band of light at the sides only, beside the outer panels */
+.fts-bg__edge {
+  left: 0; right: 0; top: calc(250 * var(--u)); height: calc(40 * var(--u));
+  background: linear-gradient(180deg, rgba(26, 43, 92, 0), rgba(26, 43, 92, .94) 50%, rgba(26, 43, 92, 0));
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .3) 0, rgba(0, 0, 0, .5) 7%, transparent 27%, transparent 73%, rgba(0, 0, 0, .5) 93%, rgba(0, 0, 0, .3) 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, .3) 0, rgba(0, 0, 0, .5) 7%, transparent 27%, transparent 73%, rgba(0, 0, 0, .5) 93%, rgba(0, 0, 0, .3) 100%);
+}
+/* the horizon: a soft lit band where the floor meets the wall (no hard rule), gone well before the sides */
+.fts-bg__horizon {
+  left: 50%; top: calc(68 * var(--u)); width: calc(1100 * var(--ux)); height: calc(36 * var(--u)); translate: -50% 0;
+  background: linear-gradient(180deg, rgba(110, 135, 255, 0), rgba(110, 135, 255, .10) 45%, rgba(110, 135, 255, 0));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+}
+/* the spotlight's pool on the floor, under the numeral and the panels, with the saturated core where the beam lands
+   (between the inner panels and under the pill); it sinks into the box's black at its foot (--fts-foot-y: the box's
+   foot in the pool's own box) */
+.fts-bg__pool {
+  left: 50%; top: calc(70 * var(--u)); width: calc(1300 * var(--ux)); height: calc(400 * var(--u)); translate: -50% 0;
+  background:
+    radial-gradient(calc(240 * var(--ux)) calc(60 * var(--u)) at 50% calc(225 * var(--u)), rgba(var(--fts-spot-hi), .22), rgba(var(--fts-spot-hi), 0)),
+    radial-gradient(calc(380 * var(--ux)) calc(130 * var(--u)) at 50% calc(225 * var(--u)), rgba(var(--fts-beam), .9), rgba(var(--fts-beam), .46) 30%, rgba(var(--fts-beam), 0) 60%),
+    radial-gradient(44% 55% at 50% 62%, rgba(var(--fts-beam), .58), rgba(var(--fts-beam), .24) 55%, rgba(var(--fts-beam), 0) 100%);
+  --fts-foot-y: calc(max(var(--fts-h), 560px) / 2 - 70 * var(--u));
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--fts-foot-y) - 80 * var(--u)), transparent var(--fts-foot-y));
+  mask-image: linear-gradient(180deg, #000 calc(var(--fts-foot-y) - 80 * var(--u)), transparent var(--fts-foot-y));
+}
+
+/* the frame and the head */
+.fts-frame { position: relative; flex: none; width: calc(1440 * var(--u)); height: calc(900 * var(--u)); }
+.ft__head { position: absolute; left: 0; right: 0; top: calc(66 * var(--u)); z-index: 4; text-align: center; }
+.ft__title {
+  font: 500 calc(60 * var(--u))/1.12 var(--font); letter-spacing: -0.028em; color: #fff;
+  text-wrap: balance; padding-block: .04em;     /* room for stacked marks (ộ, ễ) */
+}
+/* the paid price, small and struck (the strike draws left to right at the pop) */
+.fts-was {
+  position: relative; display: inline-block; margin-top: calc(12 * var(--u));
+  font: 500 calc(42 * var(--u))/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  color: #A7B2DA; opacity: var(--fts-was, 1);   /* 3.6:1 or more on the beam behind it */
+}
+.fts-was__n { display: block; padding-block: .06em; }
+.fts-was__strike {
+  position: absolute; left: -.12em; right: -.12em; top: 52%; height: max(1.5px, calc(2.5 * var(--u))); border-radius: 99px;
+  background: rgba(255, 255, 255, .7); box-shadow: 0 0 calc(5 * var(--u)) rgba(142, 162, 255, .22);
+  transform-origin: 0 50%; transform: scaleX(var(--fts-strike, 1)); opacity: min(1, calc(var(--fts-strike, 1) * 8));
+}
+/* the path's own SVG in the pin: over the stage's light, under the numeral (z 3), which occludes it; home.js fades
+   the line out where the numeral stands (it never shows through the counters). Clipped to the pin (the path runs
+   inside it, door to door), so its layer is the pin's size, never the mask's margins */
+.fl-svg--tools { z-index: 2; overflow: hidden; }
+
+/* the numeral: a matte cobalt 3D "0đ". The front face (.ft__zero, the odometer) is a cobalt gradient clipped to the
+   glyphs (each glyph has its own 1 em box, so the falloff is the same on every digit). The extrusion is its own layer
+   BEHIND it (.fts-ex: 24 copies of "0đ" at 1/24 depth steps, no text-shadow: the nearest is the flat lit edge, the
+   others a vertical top-lit gradient clipped to the glyphs, darker towards the back), in six groups of four
+   (.fts-ex__g, back to front): inside a group the copies sit at their full-depth steps; the groups slide out to their
+   places as the depth (--d) grows at the pop, so with motion the depth is scrubbed by moving six composited layers,
+   never by repainting the copies (at --d 0 a group's own .125 of the depth is hidden by the extrusion's opacity). Then
+   the contact shadow and the floor reflection. The row (.fts-num) carries the numeral's size, so the path's anchors
+   in it are placed in em. */
+.fts-num {
+  position: absolute; left: 0; right: 0; top: calc(186 * var(--u)); z-index: 3; display: flex; justify-content: center;
+  font-size: calc(404 * var(--u)); pointer-events: none;
+}
+.fts-num__in {
+  position: relative; display: block;
+  font: 760 1em/1 var(--font); font-stretch: 110%; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  /* the glyphs sit from .12 em to .87 em of each 1 em box (digits .75 em tall) */
+}
+.ft__zero { position: relative; z-index: 2; display: block; font: inherit; letter-spacing: inherit; }
+.ft__odo { position: relative; display: inline-flex; align-items: flex-start; transform-origin: 50% 50%; white-space: nowrap; }
+/* a digit's window: one digit tall (its sides padded, so a glyph wider than its advance is never cut) */
+.ft__cell { display: inline-block; height: 1em; padding: 0 .1em; margin: 0 -.1em; overflow: hidden; }
+.ft__strip { display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; }
+.ft__strip > span, .ft__cell, .ft__dong, .ft__sep { line-height: 1; }
+.ft__strip > span { display: block; height: 1em; }
+.ft__sep, .ft__dong { display: inline-block; height: 1em; }
+/* the đ's bar reaches past its advance: its box is padded so the face covers all of it */
+.ft__dong { padding-right: .12em; margin-right: -.12em; }
+.ft__lead { display: none; }
+/* the face: matte cobalt with a soft vertical falloff from the spot (no gloss) */
+.ft__cell, .ft__strip > span, .ft__dong, .ft__sep {
+  background: var(--hm-grain), linear-gradient(180deg, var(--fts-face-1) 12%, var(--fts-face-2) 40%, var(--fts-face-3) 66%);
+  background-size: calc(200 * var(--u)) calc(200 * var(--u)), auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ft__cell { background-origin: content-box; }
+/* the extrusion */
+.fts-ex { --d: var(--fts-depth, 1); position: absolute; left: 0; top: 0; z-index: 1; opacity: var(--fts-ex-o, 1); }
+.fts-ex__g {
+  position: absolute; left: 0; top: 0; display: block;
+  transform: translate3d(calc(var(--k0) / 24 * var(--fts-ex-dx) * var(--d)), calc(var(--k0) / 24 * var(--fts-ex-dy) * var(--d)), 0);
+}
+.fts-ex__l {
+  position: absolute; left: 0; top: 0; display: block; white-space: nowrap; line-height: 1;
+  --f: calc((var(--k) - 2) / 22);       /* 0 at the first side copy, 1 at the back */
+  background: linear-gradient(180deg, var(--fts-ex-top) 12%, var(--fts-ex-1) 46%, var(--fts-ex-2) 80%);   /* (no color-mix) */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--fts-ex-2) calc(var(--f) * 50%), var(--fts-ex-top)) 12%,
+    color-mix(in srgb, var(--fts-ex-2) calc(var(--f) * 100%), var(--fts-ex-1)) 46%,
+    var(--fts-ex-2) 80%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  /* a 2D move: each copy paints into its group's layer (a 3D one made every copy a layer of its own, ~4 MB each at
+     2x, and parts of the stage went unpainted on a 2x screen) */
+  transform: translate(calc((var(--k) - var(--k0)) / 24 * var(--fts-ex-dx)), calc((var(--k) - var(--k0)) / 24 * var(--fts-ex-dy)));
+}
+/* the glyphs come from here (the server sends empty copies: no "0đ0đ0đ…" for copy and paste, reader views or search) */
+.fts-ex__l::before { content: "0đ"; }
+/* the nearest copy: one flat step of lit edge where the face meets the sides (a crisp silhouette) */
+.fts-ex__l--edge { background: none; color: var(--fts-edge); }
+/* the contact shadow on the floor and the faint reflection (15 % at most, gone within ~35 % of its height) */
+.fts-num__contact {
+  position: absolute; left: -6%; right: -4%; top: .8em; height: .14em; z-index: 0; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .75), rgba(0, 0, 0, .35) 55%, rgba(0, 0, 0, 0));
+  opacity: var(--fts-ground, 1);
+}
+.fts-num__refl {
+  position: absolute; left: 0; top: 0; z-index: 0; display: block; white-space: nowrap; line-height: 1;
+  transform-origin: 50% .87em; transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(180deg, transparent .6em, #000 .87em); mask-image: linear-gradient(180deg, transparent .6em, #000 .87em);
+  filter: blur(calc(2 * var(--u))); opacity: calc(.15 * var(--fts-ground, 1));
+}
+.fts-num__refl > span::before { content: "0đ"; }   /* (from CSS, as the extrusion's copies) */
+.fts-num__refl > span {
+  background: linear-gradient(180deg, var(--fts-face-1) 12%, var(--fts-face-2) 40%, var(--fts-face-3) 66%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+/* the flare: the spot catching the numeral's top once, at the pop (a cobalt glint on the cap line) */
+.fts-flare {
+  position: absolute; left: 20%; right: 20%; top: calc(.12em - .16em); height: .32em; z-index: 3;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(70, 110, 255, .42), rgba(var(--fts-beam), .14) 50%, rgba(var(--fts-beam), 0));
+  opacity: var(--fts-flare, 0);   /* (plain alpha: no blend mode of its own to set up on the GPU at the pop) */
+}
+
+/* the panels: one arc on the floor. One shared perspective (the eye at the floor's horizon line). As the concept, the
+   OUTER two are the closest and biggest objects (z +55 u, turned in ±36°: near edge ~308 u tall, tops ~442, a side
+   lane outside them), the INNER two nearly frontal (±7°), further back (z −60 u) and a little lower at the top
+   (~477), standing in front of the numeral's foot. Each graphite card has its thickness (a stack of 1-unit shadows on
+   its outer side and under it), a contact shadow and a faint reflection projected on the floor. --x is the 1440
+   design position; its offset from the centre is spread by --ux on short wide windows. --r (rise) and --o are written
+   by home.js as the scroll scrubs the stage; at rest 1. */
+.page-home ul.ft__panels {
+  position: absolute; inset: 0; z-index: 5; margin: 0; padding: 0; list-style: none; pointer-events: none;
+  perspective: calc(1000 * var(--u)); perspective-origin: 50% calc(640 * var(--u));
+}
+.ft-panel {
+  --z: 0px; --ry: 0deg; --lx: 0; --r: 1; --o: 1;
+  position: absolute; left: calc(570 * var(--u) + (var(--x) - 570) * var(--ux)); top: calc(var(--y) * var(--u));
+  /* the height has a floor: on small frames the text floors (13 px) wrap the scam message to four lines, and the
+     cards grow a little instead of overflowing */
+  width: calc(300 * var(--u)); height: max(calc(264 * var(--u)), 230px); pointer-events: auto;
+  display: flex; flex-direction: column;
+  padding: calc(22 * var(--u));
+  border-radius: max(14px, calc(20 * var(--u)));
+  background:
+    radial-gradient(120% 70% at 30% 0%, rgba(120, 140, 255, .07), rgba(120, 140, 255, 0) 60%),
+    linear-gradient(162deg, var(--fts-card-1) 0%, var(--fts-card-2) 46%, var(--fts-card-3) 100%);
+  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .13), inset 0 -1px 0 rgba(0, 0, 0, .4),
+    /* the slab: 7 u of lighter graphite thickness (never darker than #15171C), a faint rim on its visible edge */
+    calc(var(--lx) * 1 * var(--u)) calc(1 * var(--u)) 0 #2C2F3A,
+    calc(var(--lx) * 2 * var(--u)) calc(2 * var(--u)) 0 #282A35,
+    calc(var(--lx) * 3 * var(--u)) calc(3 * var(--u)) 0 #23252F,
+    calc(var(--lx) * 4 * var(--u)) calc(4 * var(--u)) 0 #1F2129,
+    calc(var(--lx) * 5 * var(--u)) calc(5 * var(--u)) 0 #1C1E26,
+    calc(var(--lx) * 6 * var(--u)) calc(6 * var(--u)) 0 #1A1C23,
+    calc(var(--lx) * 7 * var(--u)) calc(7 * var(--u)) 0 #181A21,
+    calc(var(--lx) * 8 * var(--u)) calc(8 * var(--u)) 0 rgba(255, 255, 255, .06),
+    /* the contact shadow on the floor and the soft spread under it */
+    0 calc(30 * var(--u)) calc(30 * var(--u)) calc(-12 * var(--u)) rgba(0, 0, 0, .6),
+    0 calc(60 * var(--u)) calc(70 * var(--u)) calc(-30 * var(--u)) rgba(0, 0, 0, .55);
+  transform: translate3d(0, calc((1 - var(--r)) * 28 * var(--u)), 0) translateZ(var(--z)) rotateY(var(--ry));
+  opacity: var(--o);
+  scroll-margin: calc(var(--header-h) + 40px) 0 40px;
+  transition: background-color .3s var(--hm-ease);
+}
+/* 300 × 264 u. Projected at 1440 × 900 (faces): outer-left 60–408 × 442–750 (far edge 476–731), inner-left
+   418–704 × 477–730, mirrored on the right; a 32 u gap at the centre over the numeral's foot */
+.ft-panel--rate    { --x: 125.8;  --y: 470; --z: calc(55 * var(--u));  --ry: 36deg;  --lx: -1.1; }
+.ft-panel--cv      { --x: 403.9;  --y: 470; --z: calc(-60 * var(--u)); --ry: 7deg;   --lx: -.45; }
+.ft-panel--invoice { --x: 736.1;  --y: 470; --z: calc(-60 * var(--u)); --ry: -7deg;  --lx: .45; }
+.ft-panel--scam    { --x: 1014.2; --y: 470; --z: calc(55 * var(--u));  --ry: -36deg; --lx: 1.1; }
+.ft-panel__top { display: flex; align-items: center; gap: calc(14 * var(--u)); }
+/* one icon family: 24 u line icons, stroke 1.75, centred in their 44 u tiles */
+.ft-panel__ico {
+  flex: none; display: grid; place-items: center; width: calc(44 * var(--u)); height: calc(44 * var(--u)); border-radius: calc(12 * var(--u));
+  background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .045));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+.ft-panel__ico svg { width: calc(24 * var(--u)); height: calc(24 * var(--u)); fill: none; stroke: #fff; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ft-panel__t { flex: 0 1 auto; min-width: 0; font: 500 max(16px, calc(21 * var(--u)))/1.2 var(--font); letter-spacing: -0.012em; color: #fff; }
+/* the whole card is the link (a stretched hit area), with a full ring on keyboard focus */
+.ft-panel__t::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: max(14px, calc(20 * var(--u))); }
+.ft-panel__t:focus-visible { outline: none; }
+.ft-panel__t:focus-visible::after { outline: 3px solid var(--hm-cobalt-l); outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) { .ft-panel:hover { background-color: #22242D; } }
+.ft-panel__demo { position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+/* the reflection: the card PROJECTED on the floor under its foot (flipped about the slab's foot and squashed to .55),
+   soft (7 u blur), masked out within 30 % of its height, at 9 %. home.js clones the card's content into it ONCE
+   (aria-hidden, inert, links turned into spans), but only its colour accents show (the slider, the ring's arc, the
+   red chips and the verdict, the white total): soft coloured light on the floor, never mirrored text. Without JS: the
+   card's faint silhouette only. The demo values reach it by inheritance. */
+.fts-refl {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  display: flex; flex-direction: column; padding: inherit; border-radius: inherit;
+  background: linear-gradient(162deg, var(--fts-card-1) 0%, var(--fts-card-2) 46%, var(--fts-card-3) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
+  transform-origin: 50% calc(100% + 8 * var(--u)); transform: scaleY(-.55);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 30%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 30%);
+  filter: blur(calc(7 * var(--u))); opacity: .09;
+}
+.fts-refl .ft-panel__t::after { content: none; }
+.fts-refl > * { visibility: hidden; }
+.fts-refl .ftd-rate__fill, .fts-refl .ftd-rate__thumb, .fts-refl .ftd-cv__arc, .fts-refl mark,
+.fts-refl .ftd-scam__res > span, .fts-refl .ftd-inv__total { visibility: visible; }
+.fts-refl mark { color: transparent; }
+
+/* the four samples (real UI) */
+/* Tính giá freelance: the slider and the rate */
+.ftd-rate__track { --p: var(--rp, .58); position: relative; display: block; height: calc(8 * var(--u)); margin: calc(6 * var(--u)) calc(4 * var(--u)) 0; border-radius: 99px; background: rgba(255, 255, 255, .13); }
+.ftd-rate__fill {
+  position: absolute; inset: 0; border-radius: inherit; transform-origin: 0 50%; transform: scaleX(var(--p));
+  background: linear-gradient(90deg, #2C4FE6, #4D6CFF);
+}
+.ftd-rate__knob { position: absolute; inset: 0; transform: translateX(calc(var(--p) * 100%)); }
+.ftd-rate__thumb {
+  position: absolute; left: calc(-12 * var(--u)); top: 50%; width: calc(24 * var(--u)); height: calc(24 * var(--u)); margin-top: calc(-12 * var(--u));
+  border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff 0 55%, #E6E9F4 100%);
+  box-shadow: 0 calc(4 * var(--u)) calc(10 * var(--u)) rgba(0, 0, 0, .55), 0 0 0 calc(4 * var(--u)) rgba(77, 108, 255, .18);
+}
+.ftd-rate__out {
+  display: grid; place-items: center; margin-top: calc(36 * var(--u)); height: calc(82 * var(--u)); border-radius: calc(14 * var(--u));
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .04));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 1px 0 rgba(255, 255, 255, .06), 0 calc(2 * var(--u)) calc(8 * var(--u)) rgba(0, 0, 0, .25);
+  font: 600 calc(35 * var(--u))/1 var(--font); letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+/* Chấm CV: the score ring (out of 10, as the real tool scores) and three passed checks */
+.ft-panel--cv .ft-panel__demo { flex-direction: row; align-items: center; justify-content: space-between; gap: calc(12 * var(--u)); }
+.ftd-cv { position: relative; flex: none; display: block; width: calc(130 * var(--u)); aspect-ratio: 1; }
+.ftd-cv__ring { display: block; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.ftd-cv__bg { fill: none; stroke: rgba(255, 255, 255, .10); stroke-width: 7.5; }
+.ftd-cv__arc { fill: none; stroke: #3557F0; stroke-width: 7.5; stroke-linecap: round; stroke-dasharray: 100 200; stroke-dashoffset: calc(100 - 75 * var(--cp, 1)); }
+.ftd-cv__n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 600 calc(27 * var(--u))/1 var(--font); letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.page-home ul.ftd-cv__rows { flex: 1; display: grid; gap: calc(17 * var(--u)); margin: 0; padding: 0 0 0 calc(4 * var(--u)); list-style: none; }
+.ftd-cv__rows li { display: flex; align-items: center; gap: calc(10 * var(--u)); }
+.ftd-ok { flex: none; display: grid; place-items: center; width: calc(20 * var(--u)); height: calc(20 * var(--u)); border-radius: 50%; background: var(--fts-green); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); opacity: var(--ck, 1); transform: scale(calc(.6 + .4 * var(--ck, 1))); }
+.ftd-ok svg { width: 75%; height: 75%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ftd-cv__bar { display: block; height: calc(7 * var(--u)); width: calc(var(--w) * 100%); border-radius: 99px; background: rgba(255, 255, 255, .18); }
+/* Tạo invoice: three lines (they add up) and the total */
+.page-home ul.ftd-inv { margin: calc(4 * var(--u)) 0 0; padding: 0; list-style: none; }
+.ftd-inv li { display: flex; align-items: center; justify-content: space-between; gap: calc(14 * var(--u)); height: calc(38 * var(--u)); border-bottom: 1px solid rgba(255, 255, 255, .09); }
+.ftd-inv__bar { display: block; height: calc(7 * var(--u)); width: calc(var(--w) * 46%); border-radius: 99px; background: rgba(255, 255, 255, .17); }
+.ftd-inv__amt { font: 500 max(13px, calc(16.5 * var(--u)))/1 var(--font); font-variant-numeric: tabular-nums; color: #D9DCE8; opacity: var(--li, 1); transform: translateX(calc((1 - var(--li, 1)) * 8 * var(--u))); }
+.ftd-inv__total { display: flex; justify-content: space-between; align-items: baseline; gap: calc(12 * var(--u)); margin-top: calc(16 * var(--u)); font: 600 calc(25 * var(--u))/1 var(--font); letter-spacing: -0.015em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ftd-inv__total > span:first-child { font-size: .8em; font-weight: 500; color: #E6E8F0; }
+/* Kiểm tra lừa đảo: the message, its risky phrases picked out (each chip whole: non-breaking spaces), the verdict.
+   Below u .9 the bubble tightens to 9 u 10 u and line-height 1.48 (clamp(0, (u − .9 px) × 1000, extra) is 0 below
+   u .9, the extra above); its text is 15.5 u, at least 13 px, but under u .8 (the smallest pinned windows, short
+   ones) it shrinks with the card (16.25 u, 11.5 px at least), so the message always keeps to its 3 lines */
+.ftd-scam__msg {
+  --sm: clamp(0px, (var(--u) - .9px) * 1000, calc(2 * var(--u)));
+  position: relative; margin-top: calc(2 * var(--u));
+  padding: calc(9 * var(--u) + var(--sm)) calc(10 * var(--u) + var(--sm)); border-radius: calc(14 * var(--u));
+  background: rgba(255, 255, 255, .065); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 1px 0 rgba(255, 255, 255, .05);
+  font: 400 max(11.5px, calc(15.5 * var(--u)), min(13px, calc(16.25 * var(--u)))) var(--font); letter-spacing: -0.01em; color: #E3E6F0;
+  line-height: calc(1.48em + clamp(0em, (var(--u) - .9px) * 1000, .12em));
+  text-wrap: pretty;
+}
+.ftd-scam__msg::after {
+  content: ""; position: absolute; left: 50%; bottom: calc(-6 * var(--u)); width: calc(12 * var(--u)); height: calc(12 * var(--u)); margin-left: calc(-6 * var(--u));
+  background: #24262F; border-radius: 0 0 calc(3 * var(--u)) 0; rotate: 45deg; box-shadow: inset -1px -1px 0 rgba(255, 255, 255, .06);
+}
+.ftd-scam__msg mark {
+  /* the chips may break between their words (each line keeps its own rounded chip) */
+  padding: calc(1 * var(--u)) calc(4 * var(--u)); margin: 0 calc(-1 * var(--u)); border-radius: calc(5 * var(--u));
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  background: rgba(200, 48, 59, var(--mk, 1)); color: color-mix(in srgb, #fff calc(var(--mk, 1) * 100%), #E3E6F0);
+}
+.ftd-scam__res { display: flex; justify-content: center; margin-top: calc(16 * var(--u)); }
+.ftd-scam__res > span {
+  display: inline-flex; align-items: center; height: calc(36 * var(--u)); padding: 0 calc(22 * var(--u)); border-radius: 99px;
+  background: linear-gradient(180deg, #D23642, var(--fts-red)); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 calc(6 * var(--u)) calc(14 * var(--u)) rgba(200, 48, 59, .22);
+  font: 600 calc(17.5 * var(--u))/1 var(--font); letter-spacing: -0.005em; white-space: nowrap;
+  opacity: var(--rk, 1); transform: scale(calc(.82 + .18 * var(--rk, 1)));
+}
+/* the stage's counters keep their final width while they count (home.js --cw) */
+.ftd-n { display: inline-block; min-width: var(--cw, 0); text-align: right; }
+
+/* the pill, on the floor: in the cobalt pool, so it and its faint reflection sit on lit floor, not in the seam */
+.ft__foot {
+  position: absolute; left: 0; right: 0; top: calc(800 * var(--u)); z-index: 6; text-align: center;
+  opacity: var(--fts-foot, 1); translate: 0 calc((1 - var(--fts-foot, 1)) * 10 * var(--u));
+}
+/* as the concept's ~328 × 68 with a ~26 px label (matte, no arrow) */
+.fts-pill { height: calc(66 * var(--u)); min-height: 44px; padding: 0 calc(72 * var(--u)); font-size: max(15px, calc(25 * var(--u))); font-weight: 560; letter-spacing: -0.012em; }
+/* its own faint reflection on the floor: the pill cloned once by home.js, flipped about its foot */
+.fts-prefl {
+  position: absolute; left: 50%; top: 0; translate: -50% 0; display: block; pointer-events: none;
+  transform-origin: 50% calc(100% + 3 * var(--u)); transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 38%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 38%);
+  filter: blur(2.5px); opacity: .08;
+}
+.fts-prefl > .hm-pill { display: flex; transition: none; }
+
+/* the path through the stage (desktop; HOME_ROUND5_SPEC §3, the round-4 smoothness rules): across the dark band over
+   the stage from 1B's right lane (tb1, then a straight run, tb2), one quarter turn down onto the left lane, the door
+   into the pin at its top (td), down the lane 118 u clear of the h2 (ta: the straight run-out), one quarter turn
+   into the arc (tc), ONE gentle arc behind the numeral (tm: its lowest point, hidden), out on the right under the
+   numeral's middle (te), rising a little (tf: clear of the rolling price, which home.js lifts while it counts down),
+   over the outer panel's corner into the right lane (th), down it 54 u outside the panels (t8, where the plane rides
+   while the finished stage holds), one round turn left at the pin's foot (t8b, t9) and, after the pin, a level run
+   (t9b) into Chặng 02. The lanes' offsets from the centre are spread with --ux, as the panels are. */
+.fl-a--tb1 { left: 58%; top: 82px; }
+.fl-a--tb2 { left: calc(50% - 650 * var(--ux) + 150px); top: 82px; }
+.fl-a--td { left: calc(50% - 650 * var(--ux)); top: 0; }
+.fl-a--ta { left: calc(720 * var(--u) - 650 * var(--ux)); top: calc(19 * var(--u)); }
+.fl-a--tc { left: calc(720 * var(--u) - 420 * var(--ux)); top: calc(244 * var(--u)); }
+.fl-a--tm { left: 50%; top: calc(266 * var(--u)); }
+.fl-a--te { left: calc(720 * var(--u) + 290 * var(--ux)); top: calc(254 * var(--u)); }
+.fl-a--tf { left: calc(720 * var(--u) + 509 * var(--ux)); top: calc(159 * var(--u)); }
+.fl-a--tg { left: calc(720 * var(--u) + 648 * var(--ux)); top: calc(166 * var(--u)); }
+/* (th in the numeral row, as ta to tf; tg to th one round arc: its drop grows with its width, which spreads with ux on
+   short wide windows) */
+.fl-a--th { left: calc(720 * var(--u) + 714 * var(--ux)); top: calc(168 * var(--u) + 119 * var(--ux)); }
+.fl-a--t8 { left: calc(720 * var(--u) + 714 * var(--ux)); top: calc(640 * var(--u)); }
+/* the foot: one round quarter turn of 136 u (t8b, t9: the lane is at 50% + 714 ux), so the plane still rides the lane
+   while the finished stage holds; after the pin (the door t9 is keyed once the pin has let go) a level run (t9b)
+   before the turn down into Chặng 02's toggles (j2: 30 px left of the toggles' column, home.css .fj__grid), so the
+   two turns never meet in an S. The run ends where that turn is a round one (about 1.2 times as wide as it drops,
+   150 to 240 px), never past the first turn's end */
+.fl-a--t8b { left: calc(50% + 714 * var(--ux)); top: calc(100% - 136 * var(--u)); }
+.fl-a--t9 { left: calc(50% + 714 * var(--ux) - 136 * var(--u)); top: 100%; }
+.fl-a--t9b {
+  --w: min(100% - 2 * var(--gutter), var(--wrap)); --g: clamp(24px, 3vw, 48px);
+  --j2: calc((100% - var(--w)) / 2 + (var(--w) - 2 * var(--g)) * 9.1 / 12.1 + 2 * var(--g) - 30px);
+  left: min(calc(var(--j2) + clamp(150px, (50% + 714 * var(--ux) - 136 * var(--u) - var(--j2)) * .75, 240px)), calc(50% + 714 * var(--ux) - 136 * var(--u)));
+  top: 100%;
+}
+
+/* the figures that count up once (home.js): the box keeps the final number's width (--cw), so nothing moves */
+.hm-num { display: inline-block; min-width: var(--cw, 0); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- 6 Chặng 02 · Cất cánh (.fj): concept E */
+/* Black, as j-e-phone-pop.png: the copy on the left, a graphite phone (HTML/CSS) turned a little in the middle with
+   the board's real list on its screen, three real jobs popped out of it toward the viewer, the five checks as
+   toggles on the right. One cobalt pool behind the phone, a faint grain. */
+.fj {
+  --fj-pt: clamp(96px, 9vw, 140px);
+  position: relative; padding: var(--fj-pt) 0 clamp(48px, 4.6vw, 72px);
+  background:
+    radial-gradient(34% 40% at 56% 50%, rgba(44, 79, 230, .17), rgba(44, 79, 230, .05) 54%, rgba(44, 79, 230, 0) 100%),
+    #000;
+}
+.fj::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--hm-grain); -webkit-mask-image: var(--hm-grain-mask); mask-image: var(--hm-grain-mask); }
+.fj__grid {
+  position: relative; z-index: 6; display: grid; align-items: center;
+  grid-template-columns: minmax(0, 4.2fr) minmax(0, 4.9fr) minmax(0, 3fr); column-gap: clamp(24px, 3vw, 48px);
+}
+.fj__copy { grid-column: 1; grid-row: 1; }
+.fj__stage { grid-column: 2; grid-row: 1; }
+.fj__toggles { position: relative; grid-column: 3; grid-row: 1; }
+.fj__copy { position: relative; z-index: 2; }
+.fj__title { max-width: 7.2em; }
+.fj__sub { margin-top: 20px; max-width: 22em; font: 400 clamp(17px, 1.35vw, 19px)/1.5 var(--font); color: var(--hm-grey-d); text-wrap: pretty; }
+.fj__cta { margin-top: 32px; }
+/* one quiet line of real figures under the pill (counting up once, home.js) */
+.fj__facts { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 4px 0; font: 400 14.5px/1.5 var(--font); color: #9C9CA6; font-variant-numeric: tabular-nums; }
+.fj__facts > span + span::before { content: "·"; margin: 0 10px; color: #6E6E78; }
+
+/* the stage: the phone's own 3D frame (.fj__rig: 300 × 620, turned a little) with the cards in it, so a card lifted
+   toward the viewer (translateZ) grows and comes forward in the same perspective as the phone */
+.fj__stage { position: relative; height: 700px; perspective: 1700px; perspective-origin: 40% 46%; }
+.fj__rig {
+  --rig-r: rotateX(7deg) rotateY(-21deg) rotateZ(3.5deg);
+  position: absolute; right: 9%; top: 50%; width: 300px; height: 620px; margin-top: -310px;
+  transform: var(--rig-r); transform-style: preserve-3d;
+}
+.fj-phone {
+  position: absolute; inset: 0; padding: 10px; border-radius: 52px;
+  background: linear-gradient(140deg, #4A4D57 0%, #22242B 18%, #121317 52%, #0A0B0E 78%, #30333B 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1.5px 0 rgba(255, 255, 255, .22), inset 0 -2px 3px rgba(0, 0, 0, .6),
+    9px 7px 0 -1px #0B0C0F, 10px 8px 0 -1px rgba(255, 255, 255, .06),
+    0 70px 90px -40px rgba(0, 0, 0, .95), 0 30px 120px -30px rgba(44, 79, 230, .42);
+}
+/* the side buttons, on the frame's right edge */
+.fj-phone::before, .fj-phone::after { content: ""; position: absolute; right: -4px; width: 4px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2A2C33, #4A4D57); }
+.fj-phone::before { top: 148px; height: 66px; }
+.fj-phone::after { top: 228px; height: 40px; }
+.fj-phone__screen {
+  position: relative; height: 100%; overflow: hidden; border-radius: 42px; padding: 12px 16px 0;
+  background: radial-gradient(120% 60% at 20% 0%, #1A1C24 0%, #0E0F13 60%), #0E0F13;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+.fj-phone__bar { position: relative; height: 28px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+.fj-phone__island { position: absolute; left: 50%; top: 0; width: 92px; height: 27px; margin-left: -46px; border-radius: 20px; background: #000; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04); }
+.fj-phone__status { width: 46px; height: 10px; color: rgba(255, 255, 255, .8); }
+.fj-phone__h { margin-top: 18px; font: 600 26px/32px var(--font); letter-spacing: -0.02em; color: #fff; }
+.fj-phone__search {
+  margin-top: 14px; height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 12px;
+  background: #1B1C22; color: #8D8E98; font: 400 14px/1 var(--font); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+.fj-phone__search .icon { width: 17px; height: 17px; stroke-width: 2; }
+.page-home ul.fj-phone__list { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.fj-row {
+  height: 58px; display: flex; align-items: center; gap: 11px; padding: 0 10px 0 11px; border-radius: 14px;
+  background: linear-gradient(180deg, #1A1B21, #15161B); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+.fj-row--slot > * { opacity: calc(1 - 14 * var(--pop, 1)); }
+.fj-row__t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.fj-row__title { font: 500 14px/1.2 var(--font); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fj-row__co { font: 400 12px/1.2 var(--font); color: #8D8E98; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fj-row__go { width: 15px; height: 15px; flex: none; color: #5D5E68; stroke-width: 2; }
+/* the rows round the cards' own rows are skeletons, as j-e-phone-pop.png: placeholders with no text (a real row
+   would only peek out cut beside a lifted card); the cards are the subject */
+.fj-row--skel .fj-row__t { gap: 7px; }
+.fj-row--skel :is(.fj-row__title, .fj-row__co) { display: block; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .13); }
+.fj-row--skel .fj-row__title { width: 74%; }
+.fj-row--skel .fj-row__co { width: 46%; background: rgba(255, 255, 255, .08); }
+.fj-row--skel .fj-logo { background: #23252D; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
+.fj-row--slot ~ .fj-row--skel { opacity: .55; }
+/* a card's own row: once the card has lifted out, its slot is left recessed in the screen (a darker well with an
+   inner shadow, as an empty socket: never a dashed wireframe outline) */
+.fj-row--slot { position: relative; }
+.fj-row--slot::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, #08090C, #0C0D11);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .85), inset 0 0 0 1px rgba(255, 255, 255, .035), 0 1px 0 rgba(255, 255, 255, .05);
+  opacity: min(1, calc(6 * var(--pop, 1)));
+}
+/* the logo tile (a cached square mark, else the initials on a soft cobalt tile) */
+.fj-logo {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; overflow: hidden;
+  display: grid; place-items: center; background: #E9EEFF; color: var(--hm-cobalt);
+  font: 600 13px/1 var(--font); letter-spacing: -0.01em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5);
+}
+.fj-logo img { width: 100%; height: 100%; object-fit: cover; background: #fff; }
+
+/* the three cards: real jobs, white, lifted out of their rows toward the viewer at different depths (--z), turned a
+   little back toward the viewer (--ry). Each card's box is where it rests (--L, --T in the rig, 336 px wide); with
+   motion --pop scrubs it from its row (0: shrunk onto its slot, --st) to its place (1); the finished page shows 1 */
+.page-home ul.fj__cards { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; transform-style: preserve-3d; pointer-events: none; }
+.fj-card {
+  --pop: 1; --ds: .738;
+  --dx: calc(150px - var(--L) - 168px); --dy: calc(var(--st) + 29px - var(--T) - 49px);
+  position: absolute; left: var(--L); top: var(--T); width: 336px; pointer-events: auto;
+  transform-origin: 50% 50%;
+  transform: translate3d(calc(var(--dx) * (1 - var(--pop))), calc(var(--dy) * (1 - var(--pop))), calc(var(--z) * var(--pop)))
+             rotateY(calc(var(--ry) * var(--pop))) scale(calc(var(--ds) + (1 - var(--ds)) * var(--pop)));
+  opacity: clamp(0, var(--pop) * 60, 1);       /* opaque from the first frame of the lift: never its row through it */
+  scroll-margin: calc(var(--header-h) + 60px) 0 60px;
+}
+.fj-card:nth-child(1) { --L: -96px; --T: 186px; --st: 234px; --z: 90px; --ry: 9deg; }
+.fj-card:nth-child(2) { --L: -70px; --T: 316px; --st: 300px; --z: 150px; --ry: 11deg; }
+.fj-card:nth-child(3) { --L: -108px; --T: 446px; --st: 366px; --z: 110px; --ry: 8deg; }
+.fj-card__in {
+  position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 16px; border-radius: var(--hm-r);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F2F3F7 100%); color: var(--hm-text);
+  box-shadow:
+    inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0, 0, 0, .04), inset 0 -2px 0 rgba(0, 0, 0, .05),
+    0 2px 4px rgba(0, 0, 0, .18), 0 14px 26px -10px rgba(0, 0, 0, .55), 0 40px 60px -30px rgba(0, 0, 0, .8),
+    0 30px 80px -30px rgba(44, 79, 230, .4);
+  transition: box-shadow .5s var(--hm-ease), translate .5s var(--hm-ease);
+}
+/* one tile for every logo: a light tile, a hairline, the mark inset 8 px (a full-bleed red square, a borderless white
+   one and a black disc all read as one family) */
+.fj-card__logo { width: 56px; height: 56px; border-radius: 14px; font-size: 18px; background: #F2F4F8; box-shadow: inset 0 0 0 1px rgba(16, 24, 40, .1); }
+.fj-card__logo img { width: 40px; height: 40px; object-fit: contain; background: transparent; border-radius: 8px; }
+.fj-card__body { flex: 1; min-width: 0; }
+.fj-card__title { font: 500 19px/1.2 var(--font); letter-spacing: -0.012em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fj-card__title a::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: var(--hm-r); }
+.fj-card__title a:focus-visible { outline: none; }
+.fj-card:has(.fj-card__title a:focus-visible) .fj-card__in { outline: 3px solid var(--hm-cobalt-l); outline-offset: 4px; }
+.fj-card__co { margin-top: 3px; font: 400 14px/1.3 var(--font); color: #5F6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fj-card__pay { margin-top: 6px; font: 500 16px/1.25 var(--font); color: #1F1F1F; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* a gentle lift and a cobalt glow on hover and focus */
+@media (hover: hover) and (pointer: fine) {
+  .fj-card:hover .fj-card__in { translate: 0 -4px; box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0, 0, 0, .04), inset 0 -2px 0 rgba(0, 0, 0, .05), 0 2px 4px rgba(0, 0, 0, .18), 0 22px 34px -12px rgba(0, 0, 0, .6), 0 50px 70px -30px rgba(0, 0, 0, .85), 0 30px 90px -20px rgba(76, 107, 255, .6); }
+}
+.fj-card:focus-within .fj-card__in { translate: 0 -4px; }
+/* a focused card is always whole and in front, whatever the scroll has scrubbed (its pop finished, lifted over its
+   neighbours: --z 190 px, the nearest is 150), so its ring is never under another card */
+.fj-card:focus-within { --pop: 1 !important; --z: 190px !important; transition: transform .4s var(--hm-ease); }
+/* the round "Đã kiểm tra" stamp, pressed onto the card's right side */
+.fj-stamp { position: relative; z-index: 4; flex: none; width: 70px; height: 70px; transform: rotate(-8deg); filter: drop-shadow(0 6px 8px rgba(20, 30, 90, .35)); pointer-events: none; }
+.fj-stamp svg { display: block; width: 100%; height: 100%; }
+.fj-stamp__disc { fill: var(--hm-cobalt); }
+.fj-stamp__ring { fill: none; stroke: rgba(255, 255, 255, .72); stroke-width: 1.3; }
+.fj-stamp__txt { fill: #fff; font: 600 17px/1 var(--font); letter-spacing: .01em; text-anchor: middle; }
+.fj-stamp__txt--2 { font-size: 15.5px; }
+.fj-stamp__tick { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the five checks: iOS-style toggles, each a waypoint of the path (its dot on the lane left of the list); on in the
+   DOM, switched on one by one as the plane passes with motion */
+.page-home ol.fj__checks { position: relative; margin: 0; padding: 0; list-style: none; }
+.fj-check {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  min-height: 64px; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+.fj-check:first-child { border-top: 1px solid rgba(255, 255, 255, .08); }
+.fj-check__dot { left: -30px; top: 50%; }
+.fj-check__name { font: 500 clamp(16px, 1.3vw, 18.5px)/1.3 var(--font); letter-spacing: -0.01em; color: #fff; text-wrap: balance; transition: color .5s var(--hm-ease); }
+.fj-tog {
+  position: relative; flex: none; width: 52px; height: 32px; border-radius: 999px;
+  background: linear-gradient(180deg, #3A5CF2, #2343D6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .22), 0 0 22px -4px rgba(60, 92, 240, .7);
+  transition: background-color .5s var(--hm-ease), box-shadow .5s var(--hm-ease);
+}
+.fj-tog__knob {
+  position: absolute; left: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 3px 8px rgba(0, 0, 0, .35);
+  transform: translateX(20px); transition: transform .55s var(--hm-ease);
+}
+/* the path: out of 2B low on the right lane, level across the section's top (the page carries the plane up while it
+   flies left: j2a, j2b, in the grid's frame, 4 px under the section's top), down into the lane between the phone and
+   the toggles (each toggle's dot), then one easy curve right, to the right lane and down into the landing (no hook
+   under the phone: the turn there was a 20 px hairpin) */
+.fl-a--j1 { display: none; }
+.fl-a--jr { left: -30px; top: calc(100% + 40px); }    /* the straight run-out under the last toggle (about 70 px) */
+.fl-a--j2a, .fl-a--j2b { display: none; left: calc(100% - 170px); top: calc(4px - var(--fj-pt)); }   /* 900-1199 px only */
+.fl-a--j2 { left: -30px; top: -120px; }
+
+/* ---------------------------------------------------------------- 7 Thiếu mỗi bạn (.hn): dawn over the horizon */
+/* HOME_ROUND4_SPEC §2b, gen-v6/l-f-horizon.png. Close under Chặng 02 (no band of empty sky): the night deepening to
+   cobalt toward a luminous horizon, very slightly curved like the Earth's edge; the h2 and the verified line centred
+   above; an arc of round member portraits rising like the sun's rays between them and the horizon (the largest in the
+   centre; soft light rays fan up behind them); the white pill ON the horizon, the note under it. One unit, --u: 1 px
+   at 1440 × 900, less on a narrower window and on a shorter one (the whole scene, header to note, fits the window when
+   the plane docks), so the faces' places (views._dawn, px of the 1440 design) scale as one picture. */
+.hn {
+  --u: min(1px, .0694vw, (100svh - 72px) / 800);
+  --hz-k: var(--u);                 /* the horizon's own scale: its viewBox (1440 × 400, peak at 20, ends at 60) */
+  position: relative; padding: calc(64 * var(--u)) 0 calc(76 * var(--u)); background: #000; color: #fff; overflow: clip;
+}
+.hn::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: var(--hm-grain); -webkit-mask-image: var(--hm-grain-mask); mask-image: var(--hm-grain-mask); }
+.hn__inner { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hn__copy { position: relative; z-index: 6; max-width: 40em; }
+.hn__title { font: 500 max(44px, calc(88 * var(--u)))/1.06 var(--font); letter-spacing: -0.035em; text-wrap: balance; padding-block: .04em; }
+.hn__lead { margin: calc(14 * var(--u)) auto 0; max-width: 30em; font: 400 max(16px, calc(21 * var(--u)))/1.45 var(--font); color: #C3C6D4; text-wrap: balance; font-variant-numeric: tabular-nums; }
+/* the scene: its foot is the horizon's highest point (the pill's centre); everything else is placed from there */
+.hn-scene { position: relative; align-self: stretch; height: calc(300 * var(--u)); margin-top: calc(34 * var(--u)); --h: 1; --r: 1; }
+/* the sky: the night lifting to cobalt toward the horizon (brighter as dawn breaks, --h) */
+.hn-sky {
+  position: absolute; left: 50%; bottom: calc(-44 * var(--hz-k)); z-index: 1; width: 100vw; height: calc(540 * var(--u) + 44 * var(--hz-k));   /* down to the horizon's ends (under the ground) */ translate: -50% 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 80% at 50% 100%, rgba(86, 116, 255, .5), rgba(44, 79, 230, .18) 44%, rgba(44, 79, 230, 0) 76%),
+    linear-gradient(to top, rgba(30, 60, 190, .66), rgba(16, 34, 118, .3) 30%, rgba(8, 16, 60, .08) 58%, rgba(8, 16, 60, 0) 84%);
+  opacity: calc(.42 + .58 * var(--h));
+}
+/* the light rays, fanning up from the horizon's centre behind the portraits (--r: they fan up from flat) */
+.hn-rays {
+  position: absolute; left: 50%; bottom: 0; z-index: 1; width: calc(1500 * var(--u)); height: calc(560 * var(--u)); margin-left: calc(-750 * var(--u));
+  pointer-events: none; transform-origin: 50% 100%; transform: scaleY(calc(.15 + .85 * var(--r))); opacity: var(--r);
+  background: repeating-conic-gradient(from -90deg at 50% 100%, rgba(170, 186, 255, .13) 0deg 1.6deg, rgba(170, 186, 255, 0) 3.4deg 7.4deg, rgba(170, 186, 255, .13) 9deg);
+  -webkit-mask-image: radial-gradient(ellipse 50% 100% at 50% 100%, #000 8%, rgba(0, 0, 0, .55) 42%, transparent 78%);
+  mask-image: radial-gradient(ellipse 50% 100% at 50% 100%, #000 8%, rgba(0, 0, 0, .55) 42%, transparent 78%);
+}
+/* the sunrise: a warm white bloom on the horizon behind the pill */
+.hn-sun {
+  position: absolute; left: 50%; bottom: 0; z-index: 2; width: calc(560 * var(--u)); height: calc(300 * var(--u)); translate: -50% 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 238, 214, .9), rgba(255, 196, 150, .42) 22%, rgba(120, 140, 255, .2) 52%, rgba(76, 107, 255, 0));
+  opacity: var(--h); transform: scale(calc(.55 + .45 * var(--h)));
+}
+/* the portraits: round, on an arc (each centre --x from the middle, --y above the horizon, --s across), a hairline
+   and a soft lift; they rise from behind the horizon (the ground below it is opaque) */
+.hn-fan { position: absolute; inset: 0; z-index: 3; margin: 0; padding: 0; list-style: none; }
+.hn-face {
+  --fx: var(--x); --fy: var(--y); --fs: var(--s);
+  position: absolute; left: calc(50% + var(--fx) * var(--u)); bottom: calc(var(--fy) * var(--u)); width: calc(var(--fs) * var(--u));
+  aspect-ratio: 1; margin: 0 0 calc(var(--fs) * var(--u) / -2) calc(var(--fs) * var(--u) / -2); border-radius: 50%; overflow: hidden;
+  background: #16171D; box-shadow: 0 0 0 1px rgba(255, 255, 255, .14), 0 10px 26px rgba(0, 0, 18, .55), 0 0 30px rgba(76, 107, 255, .22);
+}
+.hn-face img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* the ground under the horizon: the Earth's edge (the svg cap) and the night below it, over the rising faces */
+.hn-ground { position: absolute; left: 50%; top: calc(100% - 20 * var(--hz-k)); z-index: 4; width: 100vw; height: 1200px; translate: -50% 0; pointer-events: none;
+  background: linear-gradient(#000, #000) 0 calc(400 * var(--hz-k)) / 100% 100% no-repeat; }
+.hn-hz { position: absolute; left: 50%; top: calc(100% - 20 * var(--hz-k)); z-index: 4; display: block; width: 100vw; height: calc(400 * var(--hz-k)); translate: -50% 0; overflow: visible; pointer-events: none; }
+.hn-ground .hn-hz { top: 0; }
+.hn-hz path { vector-effect: non-scaling-stroke; }
+.hn-hz--line path { fill: none; stroke-linecap: round; }
+/* the horizon line: a thin bright core in a soft glow; it draws out from the centre and brightens (--h) */
+.hn-hz--line { box-sizing: content-box; padding: 30px 0; margin-top: -30px; clip-path: inset(0 calc(50% - 50% * var(--h)) 0 calc(50% - 50% * var(--h))); opacity: calc(.25 + .75 * var(--h)); }   /* (30 px of room for the glow inside the clip) */
+.hn-hz__line { stroke-width: 2.2px; }
+.hn-hz__glow { stroke-width: 16px; opacity: .75; filter: blur(7px); }
+/* the pill ON the horizon (its centre on the line), over the path (z 5); the plane lands on its right end */
+/* The arrival pill is the page's climax (client 18/11: "nổi bật hơn khi về đích"). Its finished state (no JS, reduced
+   motion, and with motion once the plane has docked) is the larger pill (56 px, 18 px label; phones 52 / 17), lifted
+   (a deeper shadow) with a soft steady cobalt glow. With motion it waits at its usual size (scale --pre, from its
+   docking end, so the plane's mark never moves) and on docking (home.js .is-glow) it grows into it while a cobalt
+   halo pulses out once, a light sweeps across it, the glow blooms and settles, and the horizon flares behind it
+   (.hn-flare). The label stays black on white; the focus ring (below) is drawn over all of it */
+.hn__cta { position: relative; z-index: 6; margin-top: -28px; }
+.hn__pill {
+  --pre: .857;                                  /* the waiting size: 48 / 56 */
+  height: 56px; padding: 0 36px; font-size: 18px; isolation: isolate; transform-origin: 100% 50%;
+  scroll-margin: calc(var(--header-h) + 150px) 0 60px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 0 0 1px rgba(255, 255, 255, .6), 0 18px 40px -10px rgba(4, 10, 48, .75), 0 6px 34px rgba(255, 226, 190, .24);
+  transition: background-color .3s var(--hm-ease), color .3s var(--hm-ease), box-shadow .6s var(--hm-ease), translate .4s var(--hm-ease),
+              transform .4s var(--hm-ease), scale .9s var(--hm-ease);
+}
+.hn__pill::after {            /* the glow: a soft cobalt bloom from its own edge (no ring: nothing that reads as a second
+                                 outline or a focus ring); it blooms on docking and settles to this steady glow */
+  content: ""; position: absolute; inset: 0; z-index: -2; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 34px 6px rgba(76, 107, 255, .62), 0 0 90px 24px rgba(44, 79, 230, .3);
+  opacity: .72;
+}
+/* the light sweep (clipped to the pill, under the label) and the halo that pulses out once: both only animate, so
+   they exist only with motion (html.hm, below) */
+.hn__fx, .hn__halo, .hn-flare { display: none; }
+.hn__fx { position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.hn__fx::before {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: -45%; width: 40%;
+  background: linear-gradient(90deg, rgba(76, 107, 255, 0), rgba(76, 107, 255, .14) 30%, rgba(76, 107, 255, .32) 50%, rgba(76, 107, 255, .14) 70%, rgba(76, 107, 255, 0));
+  transform: skewX(-20deg);
+}
+.hn__halo { position: absolute; inset: 0; z-index: -2; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(110, 138, 255, .95), 0 0 22px 2px rgba(76, 107, 255, .55); }
+/* the horizon's flare behind the pill on docking (over the line, under the pill) */
+.hn-flare {
+  position: absolute; left: 50%; bottom: 0; z-index: 4; width: calc(1100 * var(--u)); height: calc(150 * var(--u)); translate: -50% 50%;
+  pointer-events: none; mix-blend-mode: screen;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 250, 240, .95) 50%, rgba(255, 255, 255, 0)) 50% 50% / 100% 3px no-repeat,
+    radial-gradient(closest-side, rgba(255, 246, 232, .95), rgba(255, 212, 168, .5) 20%, rgba(110, 140, 255, .3) 48%, rgba(76, 107, 255, 0));
+}
+@media (max-width: 640px) {
+  .hn__cta { margin-top: -26px; }
+  .hn .hn__pill { --pre: .846; height: 52px; padding: 0 30px; font-size: 17px; }      /* 44 / 52 (over .hm-pill's phone size) */
+}
+/* the docked plane: 42 px, its centre just outside the pill's right end (a little more than half of it out over the
+   night, its nose on the end cap with 12 px or more of air before the label), nose in; white with a cobalt shadow
+   side and a cobalt rim, one tight contact shadow. It is a child of the pill, under its focus ring (below) */
+.fl-dock { position: absolute; right: -25px; z-index: 1; top: 50%; display: block; width: 42px; height: 28px; margin-top: -15px; rotate: 178deg;
+  filter: drop-shadow(0 2px 1.5px rgba(10, 18, 70, .38)); }
+.fl-dock .pl-top { fill: #fff; stroke: #2C4FE6; stroke-width: 1.4px; stroke-linejoin: round; paint-order: stroke; }
+.fl-dock .pl-low { fill: #6F89FF; stroke: #2C4FE6; stroke-width: .8px; stroke-linejoin: round; }
+.fl-dock .pl-keel { fill: #2C4FE6; }
+/* the final pill's focus ring is drawn over the docked plane (a ring of its own, 2 px at 3 px out, as every other
+   focus ring on the home): the plane never cuts it */
+.hn__pill:focus-visible { outline: none; }
+.hn__pill:focus-visible::before { content: ""; position: absolute; inset: -5px; z-index: 2; border-radius: 999px; border: 2px solid var(--focus); pointer-events: none; }
+.hn__note { position: relative; z-index: 6; margin-top: 20px; font: 400 14px/1.4 var(--font); color: rgba(255, 255, 255, .72); }
+/* the landing (desktop): from the toggles' straight run-out one long, gentle curve into the right lane (n1: 200 u
+   over the horizon, outside the arc's last face), one wide turn onto the horizon (n2, on its curve, heading in
+   along it) and level along the horizon into the pill's right end: never across the h2, the line or a face. n0 is
+   the 900-1199 px lane's own (the toggles sit on the left there): above the h2, already in the right lane */
+.fl-a--n0 { display: none; left: calc(50% + 560 * var(--u)); top: -40px; }
+.fl-a--n1 { left: calc(50% + 590 * var(--u)); top: calc(100% - 200 * var(--u)); }
+.fl-a--n2 { left: calc(50% + 380 * var(--u)); top: calc(100% + 11 * var(--u)); }
+
+/* ---------------------------------------------------------------- 8 responsive */
+.fl-a--m, .fl-wp--m { display: none; }
+@media (min-width: 900px) and (max-width: 1199px) {
+  .fl-a--c2b { left: calc(100% - 80px); }      /* the lane runs inside the photo here: room to turn down */
+  /* 1B: the question card leads, as at 1440 (--u 1.05: the question 20 px, its labels 13 px, larger than any reply),
+     the loop drawn close round it (--rx, --ry from the card's own size); Designer and Developer over the loop's top,
+     Content and Marketing beside its lower half, Video under it: every reply 24 px or more clear of the loop and of
+     each other. The replies' answers wrap in a narrow column, their "role · city" on one line */
+  .fq__stage { --bw: 28.5%; --u: 1.05; --bh: 44px; width: calc(100% - 160px); --rx: calc(127px * var(--u) + 36px); --ry: calc(67px * var(--u) + 40px); }
+  .fq-bub { gap: 10px; padding: 12px 14px 12px 12px; transform-origin: 34px 50%; }
+  .fq-bub__av { width: 44px; height: 44px; }
+  .fq-bub__who { font-size: 14px; white-space: nowrap; }
+  .fq-bub__say { font-size: 14px; }
+  .fq-bub--content { left: max(0px, 50% - .9 * var(--rx) - 28px - var(--bw)); top: calc(47% + var(--ry) + 6px); }
+  .fq-bub--marketing { right: max(0px, 50% - .9 * var(--rx) - 28px - var(--bw)); top: calc(47% + var(--ry) + 6px); }
+  .fl-a--q10 { top: calc(47% - 10px); }
+  /* Chặng 02: the copy over the toggles on the left, the phone on the right */
+  .fj__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: auto auto; row-gap: 40px; }
+  .fj__copy { grid-column: 1; grid-row: 1; }
+  .fj__toggles { grid-column: 1; grid-row: 2; margin-left: 40px; max-width: 380px; }
+  .fj__stage { grid-column: 2; grid-row: 1 / span 2; }
+  /* the path's own route in this layout: from 2B's foot it swoops into the lane between the copy column and the
+     phone (just over the chip's row), runs down past each toggle on its right side (their waypoints) and leaves under
+     the last one into the landing: it never crosses the copy, the figures or a label */
+  .fl-a--j1 { display: block; left: calc(min(380px, (100% - 3vw) / 2.05 - 40px) + 68px); top: 24px; }
+  .fl-a--j2a, .fl-a--j2b { display: block; }
+  /* (the turn down into the lane is a round one: about 130 px across and 120 down) */
+  .fl-a--j2b { left: calc(min(380px, (100% - 3vw) / 2.05 - 40px) + 200px); }
+  .fl-a--j2a { left: calc(100% - 200px); }
+  .fj-check__dot { left: calc(100% + 28px); }
+  .fl-a--jr { left: calc(100% + 28px); top: calc(100% + 60px); }   /* a straight run-out under the last toggle */
+  .fl-a--j2 { display: none; }
+  /* the landing: room under the last toggle (the toggles sit on the left here) for its straight run-out and one wide
+     curve across into the right lane above the h2 (n0) */
+  .hn { padding-top: clamp(230px, 25vw, 290px); }
+  .fl-a--n0 { display: block; top: 60px; }   /* beside the h2's right end, in the right lane */
+}
+/* 2B below 1200 px: the stage in flow (the arc needs 1200 px for the path's lanes outside its outer panels): the h2
+   on two balanced lines, the struck price, the numeral (300 px, ~160 px on phones) with the same 3D, the light and
+   the floor scaled to the narrow stage (the floor starts at the numeral's foot), the panels FLAT, the pill. A 2 × 2
+   grid from 768 px, one column on phones. From 900 px the path keeps its desktop course round the column (the band,
+   the left lane, behind the numeral, the right lane); below 900 px it is the gutter line and the stage is indented
+   beside it (--ind), its light centred on the content. */
+@media (max-width: 1199px) {
+  .ft { --fts-h: auto; }
+  .ft > * { --u: 1px; --ux: 1px; }
+  .ft__pin { height: auto; min-height: 0; display: block; padding: 76px 16px 84px; }
+  .fts-frame { width: auto; height: auto; max-width: 720px; margin: 0 auto; }
+  .ft__head { position: relative; top: 0; }
+  .ft__title { font-size: clamp(30px, 8.2vw, 46px); max-width: 15em; margin: 0 auto; }
+  .fts-was { margin-top: 10px; font-size: clamp(26px, 7vw, 36px); }
+  .fts-num { position: relative; top: 0; margin-top: 18px; font-size: clamp(190px, 56vw, 300px); }
+  .page-home ul.ft__panels { position: relative; inset: auto; display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: -6px; perspective: none; }
+  .ft__panels > .ft-panel { position: relative; left: auto; top: auto; width: auto; height: auto; min-height: 0; padding: 18px 18px 20px; transform: translate3d(0, calc((1 - var(--r)) * 28px), 0); --lx: 0; }
+  /* the flat cards: the hairline, the top highlight and the slab as on the stage; the soft shadow on the floor under
+     each one a gradient (a large blurred box-shadow cost each card's first frame ~60 ms on a 4x slower phone) */
+  .ft__panels > .ft-panel {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .13), inset 0 -1px 0 rgba(0, 0, 0, .4),
+      0 1px 0 #2C2F3A, 0 2px 0 #282A35, 0 3px 0 #23252F, 0 4px 0 #1F2129, 0 5px 0 #1C1E26, 0 6px 0 #1A1C23, 0 7px 0 #181A21, 0 8px 0 rgba(255, 255, 255, .06);
+  }
+  .ft__panels > .ft-panel::before {
+    content: ""; position: absolute; left: 2%; right: 2%; top: calc(100% - 4px); height: 48px; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(0, 0, 0, .62), rgba(0, 0, 0, .26) 58%, rgba(0, 0, 0, 0));
+  }
+  .ft-panel .ft-panel__demo { margin-top: 16px; }
+  .ftd-rate__track { margin-top: 8px; }
+  .ftd-rate__out { margin-top: 24px; height: 60px; font-size: 30px; }
+  .ftd-cv { width: 108px; }
+  .ftd-cv__n { font-size: 24px; }
+  .ftd-inv li { height: 34px; }
+  .fts-refl, .fts-prefl { display: none; }
+  .ft__foot { position: relative; top: 0; margin-top: 36px; }
+  .fts-pill { height: 52px; padding: 0 36px; font-size: 18px; }
+  /* the stage, scaled to the narrow picture: the cone over the numeral, the floor from its foot */
+  .fts-bg__wall { top: 120px; width: 900px; height: 640px; }
+  .fts-bg__cone { width: 760px; height: 760px; }
+  .fts-bg__hot { top: -170px; width: 420px; height: 340px; }
+  .fts-bg__floor, .fts-bg__sheen { top: var(--fts-floor-y, 520px); }
+  .fts-bg__sheen { -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, .5), #000 30%, #000 70%, rgba(0, 0, 0, .5)); mask-image: linear-gradient(90deg, rgba(0, 0, 0, .5), #000 30%, #000 70%, rgba(0, 0, 0, .5)); }
+  .fts-bg__horizon { top: calc(var(--fts-floor-y, 520px) - 16px); width: 640px; }
+  /* the saturated core at the numeral's foot (the panels below stand in a grid or a column) */
+  .fts-bg__pool {
+    top: calc(var(--fts-floor-y, 520px) + 10px); width: 760px; height: 360px;
+    background:
+      radial-gradient(260px 90px at 50% 40px, rgba(var(--fts-beam), .62), rgba(var(--fts-beam), .24) 34%, rgba(var(--fts-beam), 0) 60%),
+      radial-gradient(44% 48% at 50% 40%, rgba(var(--fts-beam), .60), rgba(var(--fts-beam), .22) 55%, rgba(var(--fts-beam), 0) 100%),
+      radial-gradient(50% 30% at 50% 24%, rgba(var(--fts-spot-hi), .14), rgba(var(--fts-spot-hi), 0) 100%);
+  }
+  .fts-bg__ground { top: 0; }                       /* (its parts placed from the stage's top here: the floor's y) */
+  .fts-bg__edge { display: none; }
+  /* the box: a lighter side vignette, the same long ramp out of the black at the top, a 90 px one at the foot; the
+     vignette over the light here is the ground's (over the beam, the floor and the pool, under the sheen), as the
+     narrow stage is lit across its whole width; one grain, the ground's */
+  .fts-bg__beam::after { display: none; }
+  .fts-bg__beam::before { background: linear-gradient(180deg, #000 0, rgba(0, 0, 0, .9) 25px, rgba(0, 0, 0, .62) 55px, rgba(0, 0, 0, .3) 90px, rgba(0, 0, 0, .1) 120px, rgba(0, 0, 0, 0) 150px, rgba(0, 0, 0, 0) calc(100% - 90px), #000 100%); }
+  .fts-bg__ground::before {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(90deg, rgba(1, 2, 8, .7) 0%, rgba(1, 2, 8, 0) 24%, rgba(1, 2, 8, 0) 76%, rgba(1, 2, 8, .7) 100%);
+  }
+  .fts-bg__sheen, .fts-bg__horizon, .fts-bg__ground::after { z-index: 2; }
+  .fts-bg__ground::after { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 150px); mask-image: linear-gradient(180deg, transparent 0, #000 150px); }   /* (out of the black, as the seam) */
+  .fts-bg__pool, .fts-bg__floor { -webkit-mask-image: none; mask-image: none; }
+  .ft { --fts-floor-y: calc(76px + 1.12 * clamp(30px, 8.2vw, 46px) * 2 + 10px + 1.12 * clamp(26px, 7vw, 36px) + 18px + .82 * clamp(190px, 56vw, 300px)); }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .page-home ul.ft__panels { grid-template-columns: 1fr 1fr; }
+}
+/* 900-1199 px: the column leaves 140 px each side for the path's lanes: across the band, down the left lane, one
+   quarter turn into the arc under the rolling price, behind the numeral, one quarter turn from its right side down
+   the right lane outside the grid, and one wide turn at the foot into Chặng 02's level run (j2a, j2b) */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .ft__pin { padding: 76px 0 84px; }
+  .fts-frame { max-width: min(760px, 100% - 280px); }
+  .fl-a--tb2 { left: calc(50% - min(380px, 50% - 140px) + 80px); }
+  .fl-a--td { left: calc(50% - min(380px, 50% - 140px) - 70px); }
+  .fl-a--ta { left: -70px; top: calc(.76em - 170px); }
+  .fl-a--tc { left: calc(50% - .67em - 30px); top: .76em; }
+  .fl-a--tm { top: .8em; }
+  .fl-a--te { left: calc(50% + .69em); top: .76em; }
+  .fl-a--tf, .fl-a--tg { display: none; }
+  /* the right lane: 70 px outside the column, or further out on wide windows, so its turn into Chặng 02's run (j2a,
+     200 px in from the content's right edge) stays wide */
+  .fl-a--th, .fl-a--t8 { left: calc(100% + max(70px, (100cqw - 100%) / 2 - var(--gutter) - 30px)); }
+  .fl-a--th { top: calc(.76em + 190px); }
+  .fl-a--t8 { top: calc(100% - 110px); }
+  .fl-a--t8b, .fl-a--t9, .fl-a--t9b { display: none; }   /* (the lane turns straight into Chặng 02's level run, j2a) */
+}
+/* below 900 px: the stage indented beside the gutter line, its light centred on the content */
+@media (max-width: 899px) {
+  .ft__pin { padding: 76px var(--gutter) 84px calc(var(--gutter) + var(--ind)); }
+  /* the light full-bleed (under the gutter line too: no seam down its edge), centred on the content beside it */
+  .fts-bg__wall, .fts-bg__cone, .fts-bg__hot, .fts-bg__horizon, .fts-bg__pool { left: calc(50% + var(--ind) / 2); }
+  .fl-a--t0m { left: var(--lane); top: 0; }
+  .fl-a--t9m { left: var(--lane); top: 100%; }
+}
+/* below 900 px: the gutter path. The line runs down the left gutter (--lane); every section's content is indented
+   beside it (--ind); the waypoints are dots on the line; the desktop anchors go. */
+@media (max-width: 899px) {
+  .page-home { --lane: calc(var(--gutter) + 2px); --ind: 22px; }
+  .fl-a--d { display: none; }
+  .fl-a--m, .fl-wp--m { display: block; }
+  .fl-wp--d { display: none; }
+  .fl-wp--m { left: calc(var(--lane) - var(--gutter) - var(--ind)); top: 50%; }
+  /* the launch swoops onto the lane above the "01" (so it never crosses the numeral), then runs straight down
+     beside it to the label's waypoint */
+  .fl-a--h1m { left: var(--lane); top: 68%; }
+  .fl-a--c1m { display: none !important; }
+  .fl .wrap { width: auto; margin-inline: 0; padding-left: calc(var(--gutter) + var(--ind)); padding-right: var(--gutter); }
+  .hv .wrap { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; padding: 0; }   /* the hero keeps its own */
+
+  .fc { padding-top: 112px; }
+  .fc__grid { grid-template-columns: minmax(0, 1fr); row-gap: 40px; }
+  .fc__num { font-size: clamp(96px, 26vw, 150px); }
+  .fc__photo { aspect-ratio: 1 / 1.08; }
+  /* the card over the dark foot of the photo (the bottle and the laptop), so her face stays clear */
+  .fc__qa { --u: 1; left: 4%; top: auto; bottom: 4%; width: min(256px, 78%); }
+  .fc__photo img { top: -13%; }
+  .fc__qa::before { display: none; }
+
+  .fl-title--sm { font-size: clamp(30px, 6.4vw, 44px); }
+  /* 1B on the gutter: the heading, the question card, the five replies in a column, each springing as the plane
+     passes its waypoint on the line (the reply's middle) */
+  .fq { padding: 72px 0 80px; }
+  .fq__head { text-align: left; }
+  .fq__title { margin-top: 14px; }
+  .fq__stage { --u: 1.24; width: auto; height: auto; margin: 26px 0 0; padding: 0 var(--gutter) 0 calc(var(--gutter) + var(--ind)); }
+  .fq__q { position: relative; inset: auto; margin: 0; width: 100%; max-width: 400px; }
+  .page-home .fq__bubs { display: grid; gap: 12px; margin-top: 18px; }
+  .fq-bub {
+    position: relative; left: auto; right: auto; top: auto; translate: none; width: auto; max-width: 440px;
+    gap: 14px; padding: 12px 16px 12px 12px; transform-origin: 40px 50%;
+  }
+  .fq-bub__av { width: 52px; height: 52px; }
+  .fq-bub__who { font-size: 15.5px; }
+  .fq-bub__say { font-size: 15px; }
+  .fq-bub__wp { left: calc(var(--lane) - var(--gutter) - var(--ind)); top: 50%; }
+  .fq__foot { margin-top: 26px; text-align: left; }
+  .fq__cta { justify-content: flex-start; gap: 10px; }
+  .fl-a--q0m { left: var(--lane); top: 0; }
+  .fl-a--q9m { left: var(--lane); top: 100%; }
+
+  /* Chặng 02 on the gutter: the copy, the phone (smaller, turned less) with the three cards popping DOWN out of it in
+     a stack, then the toggles, each on the line */
+  .fj { padding: 72px 0 40px; }
+  .fj__grid { grid-template-columns: minmax(0, 1fr); row-gap: 30px; }
+  .fj__copy, .fj__stage, .fj__toggles { grid-column: 1; grid-row: auto; }
+  .fj__stage { order: 2; }
+  .fj__toggles { order: 3; }
+  .fj__title { max-width: none; }
+  .fj__stage { height: 480px; perspective: 1300px; perspective-origin: 50% 30%; }
+  .fj__rig { --rig-r: rotateX(4deg) rotateY(-12deg) rotateZ(2deg) scale(.7); right: auto; left: 50%; top: 0; margin: 0 0 0 -150px; transform-origin: 50% 0; }
+  /* the stack below the phone: one turn for all three (never two planes crossing mid-lift); each card's type is
+     counter-scaled against the rig's scale (zoom on its face, 1 / the rig's scale: real jobs at their full size) */
+  .fj-card:nth-child(1) { --L: -18px; --T: 318px; --z: 30px; --ry: 9deg; }
+  .fj-card:nth-child(2) { --L: -18px; --T: 488px; --z: 50px; --ry: 9deg; }
+  .fj-card:nth-child(3) { --L: -18px; --T: 658px; --z: 70px; --ry: 9deg; }
+  .fj-check__dot { left: calc(var(--lane) - var(--gutter) - var(--ind)); }
+  .page-home ol.fj__checks { max-width: 440px; }
+  .fl-a--j0m { left: var(--lane); top: 0; }
+  .fl-a--j3m { left: var(--lane); top: 100%; }
+
+  /* the landing on the gutter: seven faces in a tighter arc (their own places, px of the 390 design), the horizon the
+     window's width (a gentler curve: its viewBox squeezed to 140 px), the pill on it; the line comes down the gutter
+     (n1m, n4m), turns onto the horizon and runs along it into the pill's LEFT end (the plane nose right). Nothing
+     over the h2 or the line (the copy is indented off the gutter, as every section's) */
+  .hn { --u: min(1px, .2564vw); --hz-k: .35px; padding: 30px 0 64px; }
+  .fl .hn__inner { padding-right: calc(var(--gutter) + var(--ind)); }   /* centred between the indent and the edge: the horizon's middle */
+  .hn__title { font-size: clamp(40px, 11.5vw, 56px); }
+  .hn__lead { font-size: 16px; max-width: 21em; }
+  .hn-scene { height: calc(160 * var(--u)); margin-top: 26px; }
+  .hn-sky { height: calc(420px + 44 * var(--hz-k)); }
+  .hn-rays { width: 620px; height: 300px; margin-left: -310px; }
+  .hn-sun { width: 300px; height: 180px; }
+  .hn-face { --fx: var(--xm); --fy: var(--ym); --fs: var(--sm); }
+  .hn-face--d { display: none; }
+  .hn__cta { margin-top: -22px; }
+  .fl-dock { right: auto; left: -25px; rotate: -2deg; }
+  .hn__pill { transform-origin: 0 50%; }          /* the plane docks on its left end here */
+  .fl-a--n1m { left: var(--lane); top: 0; }
+  .fl-a--n4m { left: calc(var(--lane) - var(--gutter) - var(--ind)); top: calc(100% - 92px); }
+}
+/* without JS (or when it failed) the gutter line is drawn by CSS, so the phone page still reads as one path; home.js
+   replaces it with the measured SVG (.fl.is-drawn) */
+@media (max-width: 899px) {
+  html:not(.hm) .fl:not(.is-drawn) :is(.fc, .fq, .ft, .fj)::after {
+    content: ""; position: absolute; left: calc(var(--lane) - 2px); top: 0; bottom: 0; z-index: 5; width: 4px; pointer-events: none;
+    background: radial-gradient(circle, #4C6BFF 1.7px, rgba(76, 107, 255, 0) 2.2px) 0 0 / 4px 11px repeat-y;
+  }
+}
+@media (min-width: 900px) {
+  html:not(.hm) .fl:not(.is-drawn) :is(.fc__wp, .fc__pin) { display: none; }
+}
+@media (min-width: 600px) and (max-width: 899px) {
+  /* 1B on a tablet: the question as wide as the column, the replies two by two (not a phone list) */
+  .fq__q { max-width: 620px; }
+  .page-home .fq__bubs { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; }
+  .fq-bub { max-width: none; }
+  .fq-bub--developer { grid-column: 1 / -1; max-width: calc(50% - 6px); }
+  /* the right column sits lower, so its replies light after their left neighbours, never in pairs */
+  .fq-bub:nth-child(even) { margin-top: 44px; margin-bottom: -44px; }
+  .fq-bub:nth-child(even) .fq-bub__wp { left: calc(var(--lane) - var(--gutter) - var(--ind) - 100% - 12px); }
+  .fc__photo { aspect-ratio: 16 / 11; }
+  .fc__photo img { object-position: 50% 30%; }
+  /* Chặng 02 on a tablet: the phone at its full size (scale .9: the cards' faces at 1 / .9, so the company is 14 px) */
+  .fj__stage { height: 770px; }
+  .fj__rig { --rig-r: rotateX(5deg) rotateY(-16deg) rotateZ(2.5deg) scale(.9); }
+  .fj-card { width: 373px; --dx: calc(150px - var(--L) - 186.5px); --dy: calc(var(--st) + 29px - var(--T) - 54.5px); --ds: .665; }
+  .fj-card__in { zoom: 1.1112; }
+}
+
+/* Chặng 02 on phones (below 768 px): the cards' stack is flat (one plane, stacked by order: in 3D, cards at different
+   depths and turns sliced through each other while they lifted) */
+@media (max-width: 767px) {
+  .page-home ul.fj__cards { transform-style: flat; }
+  .fj-card:nth-child(2) { z-index: 1; }
+  .fj-card:nth-child(3) { z-index: 2; }
+  .fj-card:focus-within { z-index: 3; }
+}
+/* below 600 px the rig is at .7: each card spans the content column (its width in the rig's units is the column / .7)
+   and its face is zoomed 1 / .7, so a real job's title, company and pay read at 19, 14 and 16 px, as on the desktop */
+@media (max-width: 599px) {
+  .fj__stage { height: 650px; }
+  .fj-card {
+    --cw: calc((100vw - 2 * var(--gutter) - var(--ind)) / .7);
+    --L: calc(150px - var(--cw) / 2); --dx: 0px; --dy: calc(var(--st) + 29px - var(--T) - 70px); --ds: .54;
+    width: var(--cw);
+  }
+  .fj-card:nth-child(1) { --L: calc(150px - var(--cw) / 2); --T: 300px; }
+  .fj-card:nth-child(2) { --L: calc(150px - var(--cw) / 2); --T: 492px; }
+  .fj-card:nth-child(3) { --L: calc(150px - var(--cw) / 2); --T: 686px; }
+  .fj-card__in { zoom: 1.4286; }
+  /* the card's text gets the card's width: the logo tile a step smaller, the stamp pressed over the card's right
+     edge (half on the card, half on the night, as a real stamp on a corner) instead of beside the text, so a real
+     title wraps to two lines at most and the company and the pay read in full (pay never breaks) */
+  .fj-card__in { gap: 12px; padding: 15px 46px 15px 14px; }
+  .fj-card__logo { width: 46px; height: 46px; border-radius: 12px; }
+  .fj-card__logo img { width: 32px; height: 32px; }
+  .fj-card__title { font-size: 18px; line-height: 1.2; white-space: normal; text-wrap: balance; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .fj-card__co { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .fj-stamp { position: absolute; right: -12px; top: 50%; width: 56px; height: 56px; margin-top: -28px; }
+}
+/* Chặng 02 at 900-1023 px: the rig a little smaller and at the stage's right edge, the cards' lift shorter, so the
+   popped stack's left edge stays 24 px or more right of the toggles (they sit under the copy here) */
+@media (min-width: 900px) and (max-width: 1023px) {
+  .fj__rig { right: 0; --rig-r: rotateX(7deg) rotateY(-21deg) rotateZ(3.5deg) scale(.88); }
+  .fj-card:nth-child(1) { --L: -56px; }
+  .fj-card:nth-child(2) { --L: -34px; }
+  .fj-card:nth-child(3) { --L: -64px; }
+}
+
+/* phones: community first. The same orbit, stretched taller (1240 × 850 stage units: one stretch keeps the three rings
+   concentric and coplanar, one tilt, one axis ratio), as wide as the screen allows (16 px each side, the faces
+   inside it all the way round), larger faces (.165 of the width) and a larger orb; each face's cut in its ring's near
+   arc squeezed back to a disc (the rings' SVG stretches with the stage) */
+@media (max-width: 767px) {
+  .hv__sky { --sky-w: calc(100vw - 32px); --av: calc(var(--sky-w) * .165); aspect-ratio: 1240 / 850; margin: 26px auto 0; }
+  .hv-orb { width: 29%; }
+  .hv-halo { width: 74%; aspect-ratio: 1.25; }
+  .hv-burst { width: 60%; margin: -30% 0 0 -30%; }   /* scaled to the plane, not the stage: the cobalt bloom and its white core read as at 1440 */
+  .hv-rings .hm-cut { transform-box: fill-box; transform-origin: center; transform: scale(1, .5882); }
+  .hv__foot { margin-top: 26px; }
+}
+@media (max-width: 767px) and (max-height: 700px) {
+  /* small phones (375 x 667, 360 x 640): tighter gaps, so the verified member line and the board's
+     link are on the first screen (the hero no taller than the window) */
+  .hv { padding-top: calc(var(--header-h) + 10px); padding-bottom: 12px; }
+  .page-home { --hm-h1: 38px; }
+  .hv__lead { margin-top: 10px; font-size: 17px; }
+  .hv__actions { margin-top: 16px; }
+  .hv__sky { margin-top: 12px; }
+  .hv__foot { margin-top: 8px; }
+  .hv__members { font-size: 17px; }
+}
+@media (max-width: 380px) {
+  .hv__actions .hm-pill { padding: 0 18px; font-size: 15px; }
+  .fc__qa { --u: .94; bottom: 3%; }
+}
+/* short laptop windows: a smaller headline and a smaller orbit, so the member line and the link stay in the first
+   screen */
+@media (min-width: 900px) and (max-height: 820px) {
+  .page-home { --hm-h1: clamp(44px, 4.6vw, 64px); }
+  .hv__sky { --sky-h: clamp(220px, calc(100svh - 418px), 460px); margin-top: 10px; }
+  .hv__actions { margin-top: 20px; }
+}
+@media (max-width: 640px) {
+  .page-home { --hm-sec: 80px; }
+  .hm-pill { height: 44px; padding: 0 24px; }
+  .hv__actions { gap: 10px; }
+  .hv__lead { margin-top: 16px; }
+  .hv__actions { margin-top: 26px; }
+}
+@media (max-width: 767px) and (max-height: 700px) { .hv__lead { margin-top: 10px; } .hv__actions { margin-top: 16px; } }
+
+/* ---------------------------------------------------------------- 9 motion */
+/* Start states exist only under html.hm (motion allowed; set in the head, dropped if home.js never reports in).
+   The hero's intro plays on its own (CSS); everything the scroll drives is written by home.js (transform,
+   opacity, clip-path, filter, CSS variables and the mask's stroke-dashoffset). One easing family throughout
+   (--hm-ease, cubic-bezier(.2, .8, .2, 1)). */
+@keyframes hm-rise { from { opacity: 0; transform: translateY(24px); filter: blur(8px); } }
+@keyframes hm-fade { from { opacity: 0; } }
+@keyframes hm-orb { from { opacity: 0; transform: scale(.92); filter: blur(10px); } }
+/* hm-halo runs on .hv-halo::before, which has no base transform (the halo's own translate(-50%,-50%) is never
+   animated, so the glow breathes in on the orb's centre and never slides into place) */
+@keyframes hm-halo { from { opacity: 0; transform: scale(.55); } }
+@keyframes hm-pop { from { opacity: 0; transform: scale(.6); } }
+html.hm .hv__line, html.hm .hv-in { animation: hm-rise 1.1s var(--hm-ease) backwards; animation-delay: calc(140ms + var(--d, 0) * 80ms); }
+html.hm .hv-orb img { animation: hm-orb 1.6s var(--hm-ease) .38s backwards; }
+html.hm .hv-orb::before, html.hm .hv-orb::after { animation: hm-fade 1.6s var(--hm-ease) .38s backwards; }
+html.hm .hv-halo::before { animation: hm-halo 2.4s var(--hm-ease) .3s backwards; }
+/* the orb, its shading and its halo wait for the orb's render to be decoded (home.js adds .is-orb to the sky) */
+html.hm .hv__sky:not(.is-orb) .hv-orb img, html.hm .hv__sky:not(.is-orb) .hv-orb::before,
+html.hm .hv__sky:not(.is-orb) .hv-orb::after, html.hm .hv__sky:not(.is-orb) .hv-halo::before { animation-play-state: paused; }
+html.hm .hv-rings { animation: hm-fade 1.8s var(--hm-ease) .55s backwards; }
+/* a portrait pops only once its photo is decoded (home.js adds .is-ready): never an empty disc that pops, then a
+   photo that appears without motion */
+html.hm .hv-av img, html.hm .hv-av::after { animation: hm-pop 1.2s var(--hm-ease) backwards; animation-delay: calc(.75s + var(--i) * 70ms); animation-play-state: paused; }
+html.hm .hv-av.is-ready img, html.hm .hv-av.is-ready::after { animation-play-state: running; }
+/* each face's cut in its ring's near arc (home_atom_rings.html) opens WITH its face (one delay, one easing; home.js
+   marks the cut .is-ready with its face): before a face has popped its ring runs whole through its place, never a gap
+   waiting for a portrait (client 18/11: the rings looked broken on load). The cut grows from nothing to its disc
+   (phones: to its squeezed disc, the phones' rule) */
+@keyframes hm-cut { from { transform: scale(0); } }
+.hv-rings .hm-cut { transform-box: fill-box; transform-origin: center; }
+html.hm .hv-rings .hm-cut { animation: hm-cut 1.2s var(--hm-ease) backwards; animation-delay: calc(.75s + var(--i) * 70ms); animation-play-state: paused; }
+html.hm .hv-rings .hm-cut.is-ready { animation-play-state: running; }
+/* home.js never said it is running (blocked, failed): from 1.2 s (html.hm-free, the head's guard) the orb, its halo
+   and the faces play at once, short, so the stage is never left empty and then snapped in when html.hm goes at 2.5 s */
+html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb img, html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb::before,
+html.hm.hm-free .hv__sky:not(.is-orb) .hv-orb::after, html.hm.hm-free .hv__sky:not(.is-orb) .hv-halo::before { animation-play-state: running; animation-delay: 0s; animation-duration: 1s; }
+html.hm.hm-free .hv-av img, html.hm.hm-free .hv-av::after, html.hm.hm-free .hv-rings .hm-cut { animation-play-state: running; animation-delay: calc(var(--i) * 40ms); animation-duration: .9s; }
+html.hm .hv-dot::before { animation: hm-fade 1s var(--hm-ease) 1.3s backwards; }
+html.hm .hv__foot { animation-delay: 1.15s; }      /* orb, rings, faces, then the member line */
+
+/* the hero layers home.js moves every frame */
+html.hm .hv-orb, html.hm .hv-rings, html.hm .hv-halo { will-change: transform, opacity; }
+html.hm .hv-av { will-change: transform, filter, opacity; }
+
+/* T1: the hero is pinned (sticky) through an extra run of scroll; home.js scrubs the orbit to a stop, folds the
+   nine faces into the orb, folds the rings in and forms the plane (.hv-burst: the flash where the faces meet).
+   --hv-top: a hero taller than the window pins with its foot at the window's foot (home.js) */
+.hv-pin { position: relative; }
+.hv-pin__run { display: none; }
+html.hm-on .hv { position: sticky; top: var(--hv-top, 0px); }
+/* the run, and how far Chặng 01 overlaps it (--t1-pull): the hero's beats end at about 64 % of the run (home.js
+   T1K), so the pin's tail is short and Chặng 01 (the photo's top, the "01") comes up as the plane launches, while the
+   path's bend under the orb (.fl-a--h1) stays above the bend beside the "01" when the pin lets go */
+.page-home { --t1-run: 76vh; --t1-pull: .47; }
+@media (max-width: 899px) { .page-home { --t1-pull: .55; } }
+@media (max-width: 767px) { .page-home { --t1-run: 54vh; --t1-pull: .76; } }
+html.hm-on .hv-pin__run { display: block; height: var(--t1-run); }
+/* Chặng 01 rises over the pin's tail (its "01" and the photo's top come up as the plane launches): it overlaps
+   the run, on a clear background, so the hero's floor glow runs on under it */
+html.hm-on .fc { margin-top: calc(-1 * var(--t1-pull) * var(--t1-run)); padding-top: clamp(64px, 6.4vw, 96px); background: transparent; }
+/* T2 is short: the photo's card lifts off near the top of the window and 1B comes up close under the photo */
+@media (min-width: 900px) { html.hm-on .fc { padding-bottom: 32px; } }
+html.hm-on .fc::before { display: none; }        /* the hero's own floor glow shows through */
+/* a focused hero link is shown at once, whatever the pin's fade (home.js also scrolls back to the hero's start) */
+html.hm [data-t1-fade]:focus-within { opacity: 1 !important; transform: none !important; }
+.hv-burst {   /* the flash keeps its size of the earlier rounds (about 230 px at 1440): 21.5 % of the wide stage */
+  position: absolute; left: 50%; top: 50%; z-index: 30; width: 21.5%; aspect-ratio: 1; margin: -10.75% 0 0 -10.75%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .9), rgba(170, 188, 255, .5) 26%, rgba(44, 79, 230, .22) 58%, rgba(44, 79, 230, 0));   /* the white bloom of round 2 the client kept */
+  opacity: var(--burst, 0); transform: scale(var(--burst-s, .4));
+}
+html.hm [data-t1-fade] { will-change: transform, opacity; }
+
+/* the plane: shown only with motion (home.js moves it); the finished page shows it resting in the final pill */
+html.hm .fl-plane {
+  display: block; position: fixed; left: 0; top: 0; z-index: 8;    /* over the Q&A cards (z 7): never clipped by one */
+  width: 84px; height: 56px; margin: -28px 0 0 -42px;
+  opacity: 0; pointer-events: none; will-change: transform, opacity;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, .5)) drop-shadow(0 0 12px rgba(76, 107, 255, .45));
+}
+/* the docked mark crossfades in by scroll while the flying plane, at its size and angle, fades out over it (home.js --dk) */
+html.hm .fl-dock:not(.is-docked) svg { opacity: 0; }
+html.hm .fl-dock.is-docked svg { opacity: var(--dk, 1); }
+/* the arrival (home.css .hn__pill above): waiting at its usual size, the docking mark kept at its own size inside it
+   (the flying plane lands at exactly the mark's size); on docking (.is-glow) it grows, pulses, sweeps and glows */
+html.hm .hn__pill:not(.is-glow) { scale: var(--pre); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 8px 30px rgba(255, 226, 190, .22), 0 0 0 1px rgba(255, 255, 255, .5); }
+html.hm .hn__pill:not(.is-glow)::after { opacity: 0; }
+html.hm .hn__fx, html.hm .hn__halo, html.hm .hn-flare { display: block; }
+html.hm .hn__fx::before, html.hm .hn__halo, html.hm .hn-flare { opacity: 0; }
+html.hm .hn__pill .fl-dock { transition: scale .9s var(--hm-ease); }
+html.hm .hn__pill:not(.is-glow) .fl-dock { scale: calc(1 / var(--pre)); }
+@keyframes fl-glow { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: .72; } }
+@keyframes hn-halo { 0% { inset: 0; opacity: .95; } 100% { inset: -26px -30px; opacity: 0; } }
+@keyframes hn-sweep { 0% { opacity: 1; left: -45%; } 100% { opacity: 1; left: 110%; } }
+@keyframes hn-flare { 0% { opacity: 0; transform: scaleX(.35); } 28% { opacity: 1; transform: scaleX(1); } 100% { opacity: 0; transform: scaleX(1.25); } }
+html.hm .hn__pill.is-glow::after { animation: fl-glow 1.8s var(--hm-ease) both; }
+html.hm .hn__pill.is-glow .hn__halo { animation: hn-halo 1.2s var(--hm-ease) .12s both; }
+html.hm .hn__pill.is-glow .hn__fx::before { animation: hn-sweep 1.1s var(--hm-ease) .3s both; }
+html.hm .hn.is-landed .hn-flare { animation: hn-flare 1.5s var(--hm-ease) both; }
+
+/* the waypoints start unlit and light as the plane passes (home.js .is-lit) */
+html.hm .fl-wp:not(.is-lit) { background: #262A3D; box-shadow: 0 0 0 4px rgba(44, 79, 230, .16), 0 0 0 0 rgba(76, 107, 255, 0); transform: scale(.8); }
+
+/* T2: the photo's card flies into 1B's centre (home.js writes its transform and opacity) */
+html.hm .fq__q, html.hm .fc__qa { will-change: transform, opacity; }
+/* measuring the path: the springs at rest, so the replies' waypoints are read where they settle */
+.fl.is-measure .fq-bub { transform: none !important; transition: none !important; }
+/* and Chặng 02's cards at their places */
+.fl.is-measure .fj-card { --pop: 1 !important; }
+
+/* 1B, pinned (desktop): the stage stays while the plane flies the loop (--q-run of scroll); its replies spring out
+   as the plane reaches each portrait (home.js .is-lit on [data-lit]), its ring pulsing once; back on the way up */
+.page-home { --q-run: 150vh; }
+@media (min-width: 900px) {
+  html.hm-on .fq { padding: 0; }
+  html.hm-on .fq__run { height: calc(100svh + var(--q-run)); }
+  html.hm-on .fq__pin {
+    position: sticky; top: 0; z-index: 6; height: 100svh;
+    display: flex; flex-direction: column; justify-content: center; padding: calc(var(--header-h) + 14px) 0 14px;
+  }
+}
+/* short laptop windows (1366 x 657 to 1536 x 780): the pinned stage, its replies and the heading scale down, so the
+   replies never reach the card and the chip keeps its air */
+@media (min-width: 900px) and (max-height: 780px) {
+  .fq__stage { --qh: clamp(320px, calc(100svh - 318px), 420px); --u: .8; --bh: 38px; --qm: 40px; --vg: 20px; }
+  .fq__title { margin-top: 12px; font-size: clamp(28px, 2.9vw, 40px); }
+  .fq__head .fl-chip { height: 34px; font-size: 15px; }
+  .fq-bub { gap: 12px; padding: 10px 14px 10px 10px; transform-origin: 38px 50%; }
+  .fq-bub__av { width: 52px; height: 52px; }
+  .fq-bub__who { font-size: 15px; }
+  .fq-bub__say { font-size: 14px; line-height: 1.35; }
+  .fq__foot { margin-top: 16px; }
+}
+@media (min-width: 900px) and (max-height: 700px) { .fq__stage { --u: .7; } }
+/* 900-1199 px: the card keeps its lead on short windows too */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .fq__stage { --u: 1.05; }
+  .fq-bub__who { font-size: 14px; }
+  .fq-bub__say { font-size: 14px; }
+  .fq-bub { gap: 10px; }
+  .fq-bub__av { width: 44px; height: 44px; }
+}
+/* windows 781-880 px tall: the stage is at its 400 px floor, the card one step smaller */
+@media (min-width: 1200px) and (min-height: 781px) and (max-height: 880px) {
+  .fq__stage { --u: .9; --bh: 42px; }
+  .fq-bub { gap: 12px; padding: 12px 14px 12px 12px; transform-origin: 42px 50%; }
+  .fq-bub--designer, .fq-bub--content { padding: 12px 12px 12px 14px; transform-origin: calc(100% - 42px) 50%; }
+  .fq-bub__av { width: 60px; height: 60px; }
+}
+/* 1B from 1200 px, as 1b-many-answers.png: the question card is the centrepiece (about 470 px wide at 1440, its
+   question 35 px: --u 1.85, 1.55 or 1.25 by the stage's width, less on short windows), centred in the stage (--ch: its
+   half height, 64.4 px a unit of --u). The loop is one wide ellipse round it (centre 50 % 50 %; --rx: the stage's half
+   width less 190 px, --ry: the card's half height, a gap and a reply's height), and the five replies sit ON it, sized
+   to their one-line answer: Designer and Developer straddle its top arc either side of the top (90 px from the middle),
+   Content and Marketing its two ends (the end 170 px in from the reply's left, through its text), Video its foot. The
+   line runs behind each reply (the replies are opaque over it) and is seen between them, round the card with room to
+   spare; the plane fades as it slips behind a reply (home.js) and the reply springs out as it arrives. Content's right
+   edge is always 372 px into the stage (cx - rx = 190, plus its 182 px), so --u keeps the card 20 px clear of it. */
+@media (min-width: 1200px) {
+  .fq__stage {
+    --u: 1.25; --bh: 50px; --gap: 22px; --ch: calc(64.4px * var(--u));
+    --rx: calc(50% - 190px); --ry: calc(var(--ch) + var(--gap) + 2 * var(--bh) - 4px);
+    width: min(100% - 96px, 1280px);
+  }
+  .fq__q { inset: 0; }
+  .fq-bub, .fq-bub--designer, .fq-bub--content {
+    width: max-content; max-width: 440px; flex-direction: row; text-align: left;
+    padding: 14px 24px 14px 14px; transform-origin: 50px 50%;
+  }
+  .fq-bub__say { white-space: nowrap; }
+  .fq-bub--designer { left: auto; right: calc(50% + 90px); top: calc(50% - var(--ry) + var(--bh) - 4px); }
+  .fq-bub--developer { left: calc(50% + 90px); right: auto; top: calc(50% - var(--ry) + var(--bh) - 4px); }
+  .fq-bub--content { left: calc(50% - var(--rx) - 170px); right: auto; top: calc(50% + 10px); }
+  .fq-bub--marketing { left: calc(50% + var(--rx) - 170px); right: auto; top: calc(50% + 10px); }
+  .fq-bub--video { left: 50%; top: calc(50% + var(--ry) - var(--bh) + 4px); translate: -50% -50%; }
+  /* the way in: down the right lane, a quarter turn into the gap OVER Developer (26 px above its top, Developer's top
+     being 50% - ry - 4px; the heading's foot is 60 px or more above it), level along its top edge (the plane, its
+     scale .7 there, never meets its text nor the heading's) and down onto the loop's top arc past its top left corner;
+     the loop round the card; out at its right end behind Marketing and down the lane */
+  .fl-a--q0 { left: calc(100% + 32px); top: calc(50% - var(--ry) - 4px - 155px); }   /* one quarter turn of 125 px */
+  .fl-a--q1 { left: calc(100% - 93px); top: calc(50% - var(--ry) - 4px - 26px); }
+  .fl-a--q2 { left: calc(50% + 150px); top: calc(50% - var(--ry) - 4px - 24px); }
+  .fl-a--q3 { top: calc(50% - var(--ry)); }
+  .fl-a--q4 { top: calc(50% - .707 * var(--ry)); }
+  .fl-a--q5 { top: 50%; }
+  .fl-a--q6 { top: calc(50% + .707 * var(--ry)); }
+  .fl-a--q7 { top: calc(50% + var(--ry)); }
+  .fl-a--q8 { top: calc(50% + .707 * var(--ry)); }
+  .fl-a--q9 { top: 50%; }
+  .fl-a--q10 { left: calc(100% - 70px); top: calc(50% - 6px); }
+  .fl-a--q11 { left: calc(100% + 32px); top: calc(50% + 140px); }   /* the turn down the lane: wide where it shows */
+  .fl-a--q12 { left: calc(100% + 32px); top: calc(50% + var(--ry) + 20px); }
+  /* the door out of 1B: 66 to 98 px in from the right lane (q12, 32 px outside the stage, whose width stops at
+     1280 px), never further right, so the turn down-left onto the band over 2B always bends one way, wide (on wide
+     windows the pin's edge less 114 px fell right of the lane: a hook) */
+  .fl-a--qe { left: min(calc(100% - 114px), calc(50% + min(50% - 48px, 640px) - 34px)); }
+}
+@media (min-width: 1280px) { .fq__stage { --u: 1.55; } }
+@media (min-width: 1360px) { .fq__stage { --u: 1.85; } }
+@media (min-width: 1200px) and (min-height: 781px) and (max-height: 880px) {
+  .fq__stage { --bh: 42px; --gap: 18px; }
+  .fq-bub, .fq-bub--designer, .fq-bub--content { padding: 12px 20px 12px 12px; transform-origin: 42px 50%; }
+}
+@media (min-width: 1280px) and (min-height: 781px) and (max-height: 880px) { .fq__stage { --u: 1.5; } }
+@media (min-width: 1360px) and (min-height: 841px) and (max-height: 880px) { .fq__stage { --u: 1.7; } }
+@media (min-width: 1200px) and (max-height: 780px) {
+  .fq__stage { --bh: 36px; --gap: 16px; }
+  .fq-bub, .fq-bub--designer, .fq-bub--content { padding: 10px 18px 10px 10px; transform-origin: 36px 50%; }
+}
+@media (min-width: 1200px) and (max-height: 780px) { .fq__stage { --u: 1.2; } }
+/* windows too short to pin 2B: the lane's run down from the loop stops just under its turn (q11), so the turn out
+   onto the band over 2B (qe, at the pin's foot) has the height it needs to stay round */
+@media (min-width: 1200px) and (max-height: 759px) { .fl-a--q12 { top: calc(50% + 144px); } }
+@media (min-width: 1280px) and (max-height: 780px) { .fq__stage { --u: 1.5; } }
+@media (min-width: 1200px) and (max-height: 700px) { .fq__stage { --u: 1.1; } }
+@keyframes fq-ring { 0% { box-shadow: 0 0 0 0 rgba(120, 146, 255, .85); } 100% { box-shadow: 0 0 0 16px rgba(120, 146, 255, 0); } }
+/* before the plane reaches it a reply waits as someone typing: a small graphite "•••" in its portrait's slot on the
+   loop (it comes in with 1B's heading, --fqh); as the plane reaches it, it unfurls into the bubble */
+.fq-bub { transition: transform .8s var(--hm-ease); }
+.fq-bub::before, .fq-bub__t, .fq-bub__av img { transition: opacity .3s var(--hm-ease); }
+@keyframes fq-type { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+html.hm .fq-bub__dots {
+  position: absolute; left: calc(100% + 10px); top: 50%; display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px;
+  border-radius: 14px; background: linear-gradient(160deg, #2A2C35, #1C1D24); transform: translate(0, -50%) scale(1.18); transform-origin: 0 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), 0 10px 22px -10px rgba(0, 0, 0, .9);
+  opacity: calc(var(--fqh, 1) * var(--fqa, 1)); transition: opacity .25s var(--hm-ease);
+}
+html.hm .fq-bub__dots i { width: 6px; height: 6px; border-radius: 50%; background: #A9AFC4; animation: fq-type 1.2s ease-in-out 40; }
+html.hm .fq-bub__dots i:nth-child(2) { animation-delay: .16s; }
+html.hm .fq-bub__dots i:nth-child(3) { animation-delay: .32s; }
+html.hm .fq-bub.is-lit .fq-bub__dots { opacity: 0; transition-duration: .15s; }
+html.hm .fq-bub.is-lit .fq-bub__dots i { animation-play-state: paused; }
+html.hm .fq-bub:not(.is-lit) { transform: translateY(12px) scale(.85); transition-duration: .35s; }
+html.hm .fq-bub:not(.is-lit)::before, html.hm .fq-bub:not(.is-lit) .fq-bub__t { opacity: 0; transition-duration: .25s; }
+/* (--fqa: a reply whose box the T2 card still covers waits unseen until it is clear, home.js) */
+html.hm .fq-bub:not(.is-lit) .fq-bub__av img { opacity: calc(.92 * var(--fqh, 1) * var(--fqa, 1)); }
+/* the mirrored pair (900-1199 px: portrait on the right) type on the left of the portrait */
+@media (min-width: 900px) and (max-width: 1199px) {
+  html.hm :is(.fq-bub--designer, .fq-bub--content) .fq-bub__dots { left: auto; right: calc(100% + 10px); transform-origin: 100% 50%; }
+}
+html.hm .fq-bub.is-ring .fq-bub__av::after { animation: fq-ring .9s var(--hm-ease) both; }
+
+/* 1B's heading comes in once T2's flying card is below it (home.js --fqt on the pin): the card never covers it */
+html.hm .fq__head { opacity: var(--fqt, 1); transform: translate3d(0, calc((1 - var(--fqt, 1)) * 18px), 0); }
+.fl.is-measure .fq__head { transform: none !important; }
+
+/* 2B, the stage's sequence (home.js stage(), HOME_ROUND5_SPEC §2, scrubbed by scroll as §2b): it writes each beat as
+   custom properties, a pure function of the scroll (the lights, the countdown, the depth, the flare, the struck price,
+   each panel's rise and its demo). These rules hold the opening frame until home.js runs (a dark stage, the price
+   waiting) and say what moves. Without html.hm (no JS, reduced motion) none of this applies: the finished stage. */
+/* (the lights and the depth start at .01, never 0: their layers are drawn while still dark, as the stage comes up,
+   never in the frame they first show) */
+html.hm .fts-bg { --fts-cone: .01; --fts-pool: .01; }
+html.hm .fts-was { --fts-was: 0; --fts-strike: 0; }
+html.hm .ft__foot { --fts-foot: 0; }
+html.hm .fts-ex { --fts-depth: 0; --fts-ex-o: .01; }
+html.hm :is(.fts-num__contact, .fts-num__refl) { --fts-ground: 0; }
+/* with motion each digit's window holds a strip of digits (home.js), each digit with its own face: the window none */
+html.hm .ft__cell { background: none; }
+html.hm .ft__zero { opacity: 0; }
+html.hm .ft-panel { --r: 0; --o: 0; --rp: .16; --cp: .4; --rk: 0; }
+html.hm .ftd-cv__rows li { --ck: 0; }
+html.hm .ftd-inv li { --li: 0; }
+html.hm .ftd-scam__msg mark { --mk: 0; }
+/* the price's other cells show left of the last digit; every digit's window is the glyph box itself (.1 to .88 em of
+   the line: the digits fill .12 to .87 em), so a digit mid-roll never shows a stroke above the cap line or under the
+   baseline (a clip, not a mask: no extra layer per window); its strip starts .1 em above it. A leading glyph folds away
+   by fading out where it stands, then the glyphs on its left close up (home.js) */
+html.hm .ft__lead { display: inline-flex; position: absolute; right: 100%; top: 0; }
+html.hm .ft__odo .ft__cell { height: .78em; margin-top: .1em; margin-bottom: .12em; }
+html.hm .ft__odo .ft__strip { margin-top: -.1em; }
+html.hm .ft__odo.is-done .ft__lead { display: none; }
+/* a focused panel or the pill shows whole at once, its demo finished (home.js takes a pinned page to the finished
+   stage, and in flow writes the focused panel's figures) */
+html.hm .ft-panel:focus-within { --r: 1 !important; --o: 1 !important; --rp: .58 !important; --cp: 1 !important; --rk: 1 !important; }
+html.hm .ft-panel:focus-within li, html.hm .ft-panel:focus-within mark { --ck: 1 !important; --li: 1 !important; --mk: 1 !important; }
+html.hm .ft__foot:focus-within { --fts-foot: 1 !important; }
+/* what the scroll moves is a composited layer of its own, kept while the page runs (never a layer made or dropped
+   mid-scrub): the light's two groups, the extrusion's six groups, the struck price and its strike, the flare, the ground,
+   each panel, the pill; the price while it rolls (it rests crisp and unscaled once "0đ" lands). Measured on the first
+   scroll through (later ones never repaint): the light painted cost 60-110 ms frames as it came up on a 4x slower
+   phone, composited none */
+html.hm-on :is(.fts-bg__beam, .fts-bg__ground),
+html.hm-on :is(.fts-ex__g, .fts-was, .fts-was__strike, .fts-flare, .fts-num__contact, .fts-num__refl, .ft-panel, .ft__foot) { will-change: transform, opacity; }
+/* each floor reflection its own layer too: painted inside its turned card, the first frame a card showed cost a
+   ~100 ms raster (1440 × 900); on its own layer, a few ms */
+html.hm-on :is(.fts-refl, .fts-prefl) { will-change: transform; }
+html.hm .ft__odo.is-rolling { will-change: transform, opacity; }
+/* measuring the path: the panels at rest (their rise off) */
+.fl.is-measure .ft-panel { --r: 1 !important; }
+/* 2B pinned (from 1200 px, on windows tall enough): the stage holds in the window for --t-run of scroll while its
+   beats are scrubbed (home.js stage(): p = the pin's progress) and the plane flies behind the numeral */
+.page-home { --t-run: 160vh; }
+@media (min-width: 1200px) and (min-height: 760px) {
+  html.hm-on .ft__run { height: calc(var(--fts-h) + var(--t-run)); }
+  html.hm-on .ft__pin { position: sticky; top: var(--header-h); z-index: 6; }
+}
+
+/* Chặng 02: each card lifts out of its row as the section comes up (home.js scrubs --pop on the card and its row,
+   reversible); once a card is out its stamp presses on (.is-stamped: from 1.6 x, turned -20°, clear, it lands with a
+   faint ink ring, once); each toggle switches on as the plane passes its dot (.is-lit), its name brightening */
+html.hm .fj-card, html.hm .fj-row--slot { --pop: 0; }
+html.hm .fj-card { will-change: transform, opacity; }
+@keyframes fl-stamp {
+  0% { opacity: 0; transform: rotate(-20deg) scale(1.6); }
+  40% { opacity: 1; }
+  62% { transform: rotate(-6deg) scale(.93); }
+  80% { transform: rotate(-9deg) scale(1.03); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+@keyframes fl-ink { 0% { opacity: .55; transform: scale(.82); } 100% { opacity: 0; transform: scale(1.42); } }
+html.hm .fj-stamp::before { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 2px solid rgba(76, 107, 255, .8); opacity: 0; pointer-events: none; }
+html.hm .fj-card:not(.is-stamped) .fj-stamp { opacity: 0; }
+html.hm .fj-card.is-stamped .fj-stamp { animation: fl-stamp .72s var(--hm-ease) both; }
+html.hm .fj-card.is-stamped .fj-stamp::before { animation: fl-ink .7s var(--hm-ease) .42s both; }
+html.hm .fj-check:not(.is-lit) .fj-check__name { color: var(--hm-grey-d); }
+html.hm .fj-check:not(.is-lit) .fj-tog { background: #2A2B33; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 3px rgba(0, 0, 0, .6); }
+html.hm .fj-check:not(.is-lit) .fj-tog__knob { transform: none; }
+
+/* the dawn, scrubbed by scroll (home.js dawn(), reversible): the horizon draws out from the centre and brightens
+   (--h), the rays fan up (--r), each portrait rises from behind the horizon in its turn (home.js writes its
+   transform while it moves: the centre first, then outwards). Under html.hm the scene waits for it; without html.hm
+   (no JS, reduced motion) the finished scene. */
+html.hm .hn-scene { --h: 0; --r: 0; }
+html.hm .hn-face { opacity: 0; }
+
+@media (max-width: 899px) {     /* the gutter lane's plane (the lane starts at 900 px) */
+  html.hm .fl-plane { width: 50px; height: 34px; margin: -17px 0 0 -25px; }
+}
+@media (max-width: 899px) {
+  /* (the launch turns onto the gutter lane just above the "01": its turn stays 24 px or more clear of the numeral) */
+  html.hm-on .fc { padding-top: 86px; }
+}
+
+/* Chặng 01: the outlined "01" is revealed as the plane comes in from T1 (home.js --draw, 0 → 1) by one soft wipe from
+   its top right (where the plane comes from) to its bottom left: never a stroke-dash, which drew every glyph's
+   sub-paths at once and left stray ticks */
+html.hm .fc__num-svg {
+  --wipe: calc(var(--draw, 0) * 140% - 20%);
+  -webkit-mask-image: linear-gradient(200deg, #000 calc(var(--wipe) - 20%), transparent var(--wipe));
+  mask-image: linear-gradient(200deg, #000 calc(var(--wipe) - 20%), transparent var(--wipe));
+}
+
+/* reveals: blocks that hold path anchors only fade (a transform would move the anchors home.js measures) */
+html.hm [data-fade] { opacity: 0; transition: opacity 1s var(--hm-ease); }
+html.hm [data-fade].is-in { opacity: 1; }
+/* the Chặng 01 photo opens from an inset frame, settling from a slight zoom */
+html.hm .fc__photo[data-clip] { clip-path: inset(8% 6% 8% 6% round var(--hm-r)); transition: clip-path 1.3s var(--hm-ease); }
+html.hm .fc__photo[data-clip] img { transform: scale(1.14); transition: transform 1.7s var(--hm-ease); }
+html.hm .fc__photo[data-clip].is-in { clip-path: inset(0 round var(--hm-r)); }
+html.hm .fc__photo[data-clip].is-in img { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home *, .page-home *::before, .page-home *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  .hv { margin-top: 0; }
+  html.hm .page-home [data-fade], html.hm .fq-bub { opacity: 1 !important; translate: none !important; }
+  html.hm .hn-scene { --h: 1 !important; --r: 1 !important; }
+  html.hm .hn-face { transform: none !important; opacity: 1 !important; }
+  html.hm .fq-bub { transform: none !important; }
+  html.hm .fq-bub::before, html.hm .fq-bub .fq-bub__t, html.hm .fq-bub .fq-bub__av img { opacity: 1 !important; }
+  html.hm .fq-bub__dots { display: none !important; }
+  html.hm .fq__head { opacity: 1 !important; transform: none !important; }
+  html.hm .ft__lead { display: none !important; }
+  html.hm .ft__odo { transform: none !important; }
+  html.hm :is(.fts-bg, .fts-was, .ft__foot, .fts-ex, .fts-num__contact, .fts-num__refl, .ft-panel, .ft-panel li, .ft-panel mark) {
+    --fts-cone: 1 !important; --fts-pool: 1 !important; --fts-was: 1 !important;
+    --fts-strike: 1 !important; --fts-foot: 1 !important; --fts-depth: 1 !important; --fts-ex-o: 1 !important; --fts-ground: 1 !important;
+    --r: 1 !important; --o: 1 !important; --rp: .58 !important; --cp: 1 !important; --rk: 1 !important; --ck: 1 !important;
+    --li: 1 !important; --mk: 1 !important;
+  }
+  html.hm .ft__zero { opacity: 1 !important; }
+  html.hm .fc__num-svg { -webkit-mask-image: none !important; mask-image: none !important; }
+  html.hm .fq__q, html.hm .fq__head { opacity: 1 !important; }
+  html.hm .fj-card, html.hm .fj-row--slot { --pop: 1 !important; }
+  html.hm .fj-card .fj-stamp { opacity: 1 !important; animation: none !important; }
+  html.hm .fc__photo[data-clip] { clip-path: none !important; }
+  html.hm .fl-plane { display: none; }
+}

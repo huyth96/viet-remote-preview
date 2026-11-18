@@ -1,0 +1,702 @@
+/* =====================================================================
+   Việt Remote — community.css  (community & company group, Super-app language)
+   Pages: /cong-dong/ · /su-kien/ · /cau-chuyen/ (+ detail) · /dang-tin/ · /gioi-thieu/ · 404.
+   Binding: portal/DESIGN_SYSTEM_SUPERAPP.md. The shared kit (superapp.css: bands, page hero, section heads,
+   .sa-card, .sa-icard, .app, the iPhone, the CTA band) is used as-is and never restyled here; this file only
+   composes the pages (prefixes: .cg- group-shared, .cm- community, .ev- events, .st- stories, .sd- story
+   detail, .pj- post a job, .ab- about, .nf- 404; phone content: .va-<page>-…). Matte only: no gloss, no glow
+   behind text, nothing that loops.
+
+   Sections
+     0  The group's heroes and phones: one hero phone scale, the caption (one pill on desktop, the home's two-line
+        block on phones), the caption closing a navy split's copy, the phones' shared screen pieces (.va-cg-*)
+     1  Group pieces: step cards, steps with app icons, check list, FAQ, forms (kinds, fields, sent panel,
+        message template), event card + date tile, honeypot
+     2  Community: hero screen ("Hỏi đáp") + float card, the three steps, the navy answer band, the sign-up
+     3  Events: hero phone screen, topic cards, the navy band (how a session runs + how to join), recordings, the
+        speaker card
+     4  Stories: list cards, the navy share band with the composer phone; story detail
+     5  Post a job: hero phone screen + float card, form + live preview (the board's job card), the navy steps
+        band (shared with events: .cg-navy), the closing band
+     6  About: hero phone screen, mission and numbers, the four stages, the bulletin phone, principles + contact
+     7  404
+   No status chips on white (kit §6.7): an honest state ("chưa mở", "đang lên lịch") is said in the copy.
+   Breakpoints (the kit's): 1240 · 1100 · 1024 · 900 · 767 · 479 · 380.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 heroes and phones */
+/* The group's four phone heroes (.cg-hero: /cong-dong/, /su-kien/, /dang-tin/, /gioi-thieu/) use the kit's ONE
+   hero phone (superapp.css §7: --hero-k .66, 279 px wide, the whole phone with the caption under it; stacked
+   under 900 px with the kit's crop). The phone is the page's "real" object, never a thumbnail. */
+
+/* the "Giao diện minh họa" caption: on desktop ONE pill, as the home keeps it at every width; where the hero's art
+   column is 380 px (901-1240) the pill may run a few px past the column into the gap (it never wraps into a box).
+   Phones: the home's mobile caption, a two-line block with 16 px corners, the separator dot hidden so it never
+   dangles at a line end. */
+@media (min-width: 901px) {
+  .cg-hero .sa-hero__art > .sa-cap { width: max-content; max-width: none; white-space: nowrap; }
+}
+@media (min-width: 901px) and (max-width: 1240px) { .cg-hero .sa-hero__art > .sa-cap { padding-inline: 9px 12px; } }
+@media (max-width: 767px) {
+  :is(.cg-hero, .st-art, .sa-split__copy) .sa-cap:has(.sa-cap__rest) { display: grid; grid-template-columns: 1fr auto auto 1fr; gap: 2px 6px; justify-self: center; padding: 8px 18px; border-radius: 16px; font-size: 12.5px; line-height: 1.35; }
+  :is(.cg-hero, .st-art, .sa-split__copy) .sa-cap:has(.sa-cap__rest) > .icon { grid-column: 2; }
+  :is(.cg-hero, .st-art, .sa-split__copy) .sa-cap:has(.sa-cap__rest) > span:first-of-type { grid-column: 3; }
+  :is(.cg-hero, .st-art, .sa-split__copy) .sa-cap__rest { grid-column: 1 / -1; flex-basis: auto; }
+}
+
+/* a navy split whose leaning phone is illustrative (/cong-dong/, /gioi-thieu/): the phone keeps the home's lean
+   (the kit's .sa-lean, 48 px out of the band's top edge, cut by its floor), so the caption closes the copy
+   column, under its actions; stacked (< 1024 px) that puts it right above the phone */
+.sa-split__copy > .sa-cap { margin-top: 26px; }
+@media (max-width: 767px) { .sa-split__copy > .sa-cap { margin-top: 22px; } }
+
+/* the phones' shared screen pieces (canvas units, the kit's .va type scale and hairlines) */
+.va-cg-tile--sun { --c: #F3AE12; }
+.va-cg-tile--mint { --c: #12A46B; }
+.va-cg-tile--red { --c: #E8433B; }
+.va-cg-tile--green { --c: #22B35E; }
+/* a person with initials (illustrative people have no photos on these pages) */
+.va-cg-by { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.va-cg-by > span:last-child { display: grid; min-width: 0; }
+.va-cg-by b { font: 700 14.5px/18px var(--font); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.va-cg-by small { font-size: 12px; line-height: 16px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.va-cg-ini {
+  --c: #2F6BFF;
+  flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 15%, #fff); color: color-mix(in srgb, var(--c) 70%, #0B1530);
+  font: 740 12.5px/1 var(--font); letter-spacing: -0.01em;
+}
+.va-cg-ini--violet { --c: #7E5BF2; }
+.va-cg-ini--green { --c: #12A46B; }
+.va-cg-ini--orange { --c: #EC6A14; }
+.va-cg-ini--empty { background: var(--va-inset); color: #A3ABBF; }
+.va-cg-ini .glyph { width: 20px; height: 20px; }
+/* rows led by a small solid tile (the events topics, the story frame's prompts): tile · title · one grey line */
+.va-cg-rows { margin-top: 8px; padding-top: 4px; padding-bottom: 4px; list-style: none; }
+.va-cg-rows > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: center; padding: 7px 0; }
+.va-cg-rows > li + li { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-cg-rows .va-job__tile { width: 32px; height: 32px; border-radius: 9px; }
+.va-cg-rows .va-job__tile .glyph { width: 18px; height: 18px; }
+.va-cg-rows > li > span:last-child { display: grid; min-width: 0; }
+.va-cg-rows b { font: 700 14px/18px var(--font); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.va-cg-rows small { font-size: 12.5px; line-height: 16px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the screen's one action resting on its foot, above the home indicator, as an app's sticky bar */
+.va-cg-foot { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; padding: 10px 16px 26px; background: #fff; box-shadow: 0 calc(-1 * var(--hl)) 0 var(--va-line); }
+.va-cg-foot .va-btn { margin: 0; }
+
+/* ---------------------------------------------------------------- 1 group pieces */
+/* a numbered step card: the app icon, "Bước n" in the corner, a title and one line (the community's way in) */
+.cg-stepcard__n { position: absolute; top: 26px; right: 24px; font: 680 13.5px/1 var(--font); color: var(--muted); }
+.cg-stepcard .app + .cg-stepcard__n + .sa-card__title { margin-top: 18px; }
+@media (max-width: 767px) {
+  .cg-stepcard__n { position: static; margin-bottom: 4px; font-size: 12.5px; }
+  .cg-stepcard .app + .cg-stepcard__n + .sa-card__title { margin-top: 0; }
+}
+
+/* steps led by a small app icon (sign-up, how to join, review process) */
+.cg-steps { display: grid; gap: 22px; }
+.cg-steps > li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 16px; align-items: start; }
+.cg-steps__title { font: 720 17px/1.3 var(--font); letter-spacing: -0.012em; color: var(--ink); text-wrap: balance; }
+.cg-steps__text { margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--sa-desc); text-wrap: pretty; }
+
+/* a short check list on white */
+.cg-checks { display: grid; gap: 10px; }
+.cg-checks li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 15.5px; line-height: 1.45; color: var(--ink-2); }
+.cg-checks .icon { width: 20px; height: 20px; margin-top: 1px; color: var(--mint-ink); stroke-width: 2; }
+
+/* privacy line under a form intro */
+.cg-privacy { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.cg-privacy .glyph { width: 16px; height: 16px; margin-top: 2px; color: var(--ink-2); }
+
+/* a second white section's hairline, across the whole content width (the kit's .sa-head--rule only spans a
+   centred head) */
+.cg-rule { padding-top: 56px; border-top: 1px solid var(--line); }
+
+/* card grids that turn into compact rows on phones (the icon left, the text right): long stacks stay calm */
+@media (max-width: 767px) {
+  .cg-hcards > .sa-card { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: start; align-content: start; padding: 18px 16px; }
+  .cg-hcards > .sa-card > .app { --s: 44px; grid-row: 1 / span 8; }
+  .cg-hcards > .sa-card > :not(.app) { grid-column: 2; }
+  .cg-hcards > .sa-card > .app + * { margin-top: 0; }
+  .cg-hcards .sa-card__title { font-size: 17px; }
+  .cg-rule { padding-top: 44px; }
+}
+
+
+/* FAQ: a split head (title + sub left), native <details> on hairlines, a chevron that turns */
+.cg-faq { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 32px 72px; padding-top: 56px; border-top: 1px solid var(--line); }
+.cg-faq__head .sa-head__sub { font-size: 17px; text-wrap: pretty; }
+.cg-faq__head .text-link { color: var(--ultra-ink); }
+.faq { border-top: 1px solid var(--line); }
+.faq__item { border-bottom: 1px solid var(--line); }
+.faq__q {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 22px 0; cursor: pointer; list-style: none;
+  font: 700 18px/1.35 var(--font); letter-spacing: -0.014em; color: var(--ink);
+  transition: color var(--d-micro) var(--ease);
+}
+.faq__q::-webkit-details-marker { display: none; }
+.faq__q:hover { color: var(--ultra-ink); }
+.faq__q .icon { flex: none; width: 20px; height: 20px; color: var(--muted); transition: transform var(--d-ui) var(--ease); }
+.faq__item[open] .faq__q .icon { transform: rotate(180deg); }
+.faq__a { padding: 0 48px 24px 0; max-width: 64ch; font-size: 16px; line-height: 1.65; color: var(--ink-2); }
+.faq__a p + p { margin-top: 10px; }
+.faq__a a { color: var(--ultra-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+/* form card and pieces shared by both forms */
+.cg-formcard { padding: 36px; }
+.req { color: var(--coral-ink); }
+.field__label .opt { font-weight: 400; color: var(--muted); }
+.field__label .req { color: var(--coral-ink); font-weight: 600; margin-left: 2px; }
+.cg-formcard .field input[type="text"], .cg-formcard .field input[type="email"], .cg-formcard .field input[type="url"],
+.cg-formcard .field select, .cg-formcard .field textarea { border-radius: 14px; background-color: #fff; }
+.form-sec + .form-sec, .pj-inline-preview + .form-sec { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--line); }.form-sec__head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.form-sec__n {
+  width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 9px;
+  background: var(--blue-50); color: var(--blue-600); font: 740 14px/1 var(--font);
+}
+.form-sec__title { font: 720 18.5px/1.3 var(--font); letter-spacing: -0.014em; color: var(--ink); }
+.form-sec__note { margin: -8px 0 18px; font-size: 14px; color: var(--muted); }
+.form-foot { margin-top: 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+.form-foot__note { font-size: 13.5px; line-height: 1.5; color: var(--muted); max-width: 40ch; }
+.form-errors { margin-bottom: 22px; border-radius: 14px; }
+.option--check { align-items: flex-start; border-radius: 14px; }
+.option--check input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
+.option__text { display: grid; gap: 2px; font-size: 15px; color: var(--ink); }
+.option__text small { font-size: 13.5px; color: var(--muted); }
+
+/* honeypot (forms.HoneypotInput): a real text input bots fill, clipped out of view, the tab order and the a11y tree */
+.hp { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; opacity: 0; pointer-events: none; }
+
+/* "Bạn muốn…": three selectable cards (radio), each led by its app icon */
+.kinds { margin: 0 0 28px; padding: 0; border: 0; min-width: 0; }
+.kinds legend { padding: 0; margin-bottom: 12px; }
+.kinds__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.kind {
+  position: relative;
+  display: grid; gap: 4px; align-content: start;
+  padding: 16px 16px 17px; border-radius: 18px;
+  background: #fff; box-shadow: inset 0 0 0 1px var(--line-2);
+  cursor: pointer;
+  transition: box-shadow var(--d-micro) var(--ease), background-color var(--d-micro) var(--ease);
+}
+.kind:hover { box-shadow: inset 0 0 0 1px #B9C3D6; }
+.kind__input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.kind__app { --s: 40px; margin-bottom: 10px; }
+.kind__title { font: 720 16px/1.25 var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.kind__text { font-size: 13.5px; line-height: 1.45; color: var(--sa-desc); }
+.kind__tick {
+  position: absolute; top: 14px; right: 14px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1.5px var(--line-2); color: transparent;
+  transition: background-color var(--d-micro) var(--ease), box-shadow var(--d-micro) var(--ease), color var(--d-micro);
+}
+.kind__tick .icon { width: 13px; height: 13px; stroke-width: 2.8; }
+.kind:has(.kind__input:checked) { background: #F6F8FF; box-shadow: inset 0 0 0 2px var(--blue); }
+.kind:has(.kind__input:checked) .kind__tick { background: var(--blue); box-shadow: none; color: #fff; }
+.kind:has(.kind__input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 3px; }
+.kinds.is-invalid .kind { box-shadow: inset 0 0 0 1.5px var(--coral); }
+
+/* copy that changes with the chosen kind: pure CSS via :has, JS mirrors data-kind for old engines */
+.kv { display: none; }
+.cm-form:not(:has(.kind__input:checked)) .kv[data-k="peer_group"],
+.cm-form:has(.kind__input[value="peer_group"]:checked) .kv[data-k="peer_group"],
+.cm-form:has(.kind__input[value="find_mentor"]:checked) .kv[data-k="find_mentor"],
+.cm-form:has(.kind__input[value="be_mentor"]:checked) .kv[data-k="be_mentor"] { display: inline; }
+@supports not selector(:has(*)) {
+  .cm-form[data-kind="peer_group"] .kv[data-k="peer_group"],
+  .cm-form[data-kind="find_mentor"] .kv[data-k="find_mentor"],
+  .cm-form[data-kind="be_mentor"] .kv[data-k="be_mentor"] { display: inline; }
+}
+/* static export without a form endpoint: kind picker + message template */
+.kvb { display: none; }
+.cm-skool:not(:has(.kind__input:checked)) .kvb[data-k="peer_group"],
+.cm-skool:has(.kind__input[value="peer_group"]:checked) .kvb[data-k="peer_group"],
+.cm-skool:has(.kind__input[value="find_mentor"]:checked) .kvb[data-k="find_mentor"],
+.cm-skool:has(.kind__input[value="be_mentor"]:checked) .kvb[data-k="be_mentor"] { display: block; }
+@supports not selector(:has(*)) {
+  .cm-skool[data-kind="peer_group"] .kvb[data-k="peer_group"],
+  .cm-skool[data-kind="find_mentor"] .kvb[data-k="find_mentor"],
+  .cm-skool[data-kind="be_mentor"] .kvb[data-k="be_mentor"] { display: block; }
+}
+.cm-skool .form-foot { margin-top: 22px; }
+/* a message to copy: the soft grey inset, body font, keeps its line breaks */
+.msg-tpl { border-radius: 16px; background: var(--sa-tag); padding: 18px 20px 20px; }
+.msg-tpl__label { font: 650 13.5px/1.3 var(--font); color: var(--ink); }
+.msg-tpl__body {
+  margin: 10px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line-2);
+  font: 400 15px/1.75 var(--font); color: var(--ink-2);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* quick picks under the availability field (JS only) */
+.picks-row { display: none; }
+.js .picks-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.picks-row .chip { height: 34px; padding: 0 14px; font-size: 13.5px; }
+
+/* the success panel that replaces a form */
+.sent { display: grid; justify-items: start; gap: 12px; }
+.sent .app { margin-bottom: 6px; }
+.sent__check { width: 54%; height: 54%; color: #fff; stroke-width: 2.4; }
+.sent__title { font: 740 26px/1.2 var(--font-wide); font-stretch: 108%; letter-spacing: -0.022em; color: var(--ink); }
+.sent__text { font-size: 16px; line-height: 1.55; color: var(--ink-2); max-width: 46ch; }
+.sent__next { width: 100%; margin-top: 10px; border-top: 1px solid var(--line); }
+.sent__next li { border-bottom: 1px solid var(--line); }
+.sent__next a { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 0; font-size: 15px; color: var(--ink); }
+.sent__next a > .icon { width: 16px; height: 16px; color: var(--muted); transition: transform var(--d-micro) var(--ease); }
+.sent__next a:hover { color: var(--ultra-ink); }
+.sent__next a:hover > .icon { transform: translateX(3px); color: var(--ultra-ink); }
+.sent__again { margin-top: 6px; }
+.js .sent.is-new { animation: cg-in 420ms var(--ease) both; }
+@keyframes cg-in { from { opacity: 0; transform: translateY(10px); } }
+
+/* event card (community + events): an app-like date tile, the facts, two actions */
+.cg-events { display: grid; gap: 16px; }
+.cg-event { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; gap: 22px; align-items: center; padding: 22px 24px; }
+.cg-date {
+  --c: #2453E8;
+  width: 68px; height: 68px; border-radius: 18px;
+  display: grid; place-content: center; text-align: center; color: #fff;
+  background:
+    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 10px 20px -12px rgba(10, 18, 48, .42);
+}
+.cg-date--next { --c: #FFBF2E; color: var(--ink); }
+.cg-date__m { font: 650 12.5px/1 var(--font); text-transform: uppercase; letter-spacing: .04em; opacity: .9; }
+.cg-date__d { margin-top: 3px; font: 760 26px/1 var(--font-wide); font-stretch: 108%; letter-spacing: -0.02em; }
+.cg-event__meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--muted); }
+.cg-event__meta > span { display: inline-flex; align-items: center; gap: 6px; }
+.cg-event__meta .icon { width: 16px; height: 16px; }
+.cg-event__title { margin-top: 6px; font: 740 19px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
+.cg-event__text { margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--sa-desc); max-width: 62ch; }
+.cg-event__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+
+@media (max-width: 1024px) {
+  .cg-faq { grid-template-columns: minmax(0, 1fr); padding-top: 48px; }
+  .cg-event { grid-template-columns: 60px minmax(0, 1fr); }
+  .cg-event .cg-date { width: 60px; height: 60px; }
+  .cg-event__actions { grid-column: 2; justify-content: flex-start; }
+}
+@media (max-width: 767px) {
+  .cg-formcard { padding: 22px 18px; }
+  .kinds__grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .kind { grid-template-columns: 40px minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: center; padding: 14px 48px 14px 14px; }
+  .kind__app { grid-row: 1 / span 2; margin: 0; }
+  .kind__tick { top: 50%; margin-top: -11px; }
+  .form-foot .btn { width: 100%; }
+  .form-sec + .form-sec, .pj-inline-preview + .form-sec { margin-top: 26px; padding-top: 22px; }
+  .msg-tpl { padding: 16px; }
+  .msg-tpl__body { font-size: 14.5px; }
+  .faq__q { font-size: 16.5px; padding: 18px 0; }
+  .faq__a { padding-right: 0; font-size: 15.5px; }
+  .cg-faq { padding-top: 44px; gap: 20px; }
+  .cg-steps { gap: 18px; }
+  .cg-steps > li { grid-template-columns: 40px minmax(0, 1fr); gap: 14px; }
+  .cg-steps .app--sm { --s: 40px; }
+  .cg-event { grid-template-columns: 52px minmax(0, 1fr); gap: 14px 16px; padding: 18px 16px; align-items: start; }
+  .cg-event .cg-date { width: 52px; height: 52px; border-radius: 14px; }
+  .cg-date__d { font-size: 21px; }
+  .cg-event__actions { grid-column: 1 / -1; }
+  .cg-event__actions .btn { flex: 1 1 auto; }
+  .sent__title { font-size: 23px; }
+}
+
+/* ---------------------------------------------------------------- 2 community */
+/* hero: the member card on the phone's top-left frame (it overlaps only the band and the bezel, never the
+   screen); where the copy column comes too close (< 1100 px) the card steps aside, the lead says the figure */
+.cm-float { position: absolute; z-index: 2; top: 34px; right: calc(50% + 423px * var(--hero-k) / 2 - 8px); }
+@media (max-width: 1100px) { .cm-float { display: none; } }
+@media (max-width: 767px) { .cm-br { display: none; } }
+.cm-state { font-weight: 700; color: var(--ink); }
+
+/* "Vào nhóm thế nào?": three step cards stay three up down to 901 px (the kit's .sa-grid would leave "Bước 3" alone
+   on a half row at 1024-768), then become the compact rows the phone layout uses (icon left, text right) */
+@media (min-width: 901px) and (max-width: 1024px) {
+  .cm-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cm-steps > .sa-card { padding: 22px 20px; }
+  .cm-steps .cg-stepcard__n { top: 24px; right: 20px; }
+}
+@media (max-width: 900px) {
+  .cm-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 720px; margin-inline: auto; }
+  .cm-steps > .sa-card { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 16px; align-items: start; align-content: start; padding: 20px 22px; }
+  .cm-steps > .sa-card > .app { --s: 44px; grid-row: 1 / span 8; }
+  .cm-steps > .sa-card > :not(.app) { grid-column: 2; }
+  .cm-steps > .sa-card > .app + * { margin-top: 0; }
+  .cm-steps .sa-card__title { font-size: 17px; }
+  .cm-steps .cg-stepcard__n { position: static; margin-bottom: 4px; font-size: 12.5px; }
+  .cm-steps .app + .cg-stepcard__n + .sa-card__title { margin-top: 0; }
+}
+@media (max-width: 767px) { .cm-steps > .sa-card { padding: 18px 16px; column-gap: 14px; } }
+
+/* hero screen, the "Hỏi đáp" segment: question rows (tile · two-line title · category and "Có trả lời") that run
+   on under the tab bar, as a list scrolls */
+.va-cg-qs { margin: 4px 0 0; padding: 0; list-style: none; }
+.va-cg-qs > li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 16px; }
+.va-cg-qs > li + li { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-cg-qs .va-job__tile { width: 40px; height: 40px; border-radius: 11px; }
+.va-cg-q { display: grid; gap: 4px; min-width: 0; }
+.va-cg-q b { font: 700 15px/20px var(--font); letter-spacing: -0.012em; color: var(--ink); text-wrap: pretty; }
+.va-cg-q small { display: flex; align-items: center; gap: 8px; font: 600 12.5px/16px var(--font); color: var(--muted); white-space: nowrap; }
+.va-cg-q small i { display: inline-flex; align-items: center; gap: 4px; font-style: normal; color: var(--mint-ink); }
+.va-cg-q small i::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--mint); }
+
+/* the navy band's pushed screen: the question (card), "Câu trả lời", two answers, the reply bar */
+.va-cg-ask__title { margin-top: 10px; font: 720 16px/21px var(--font); letter-spacing: -0.014em; color: var(--ink); text-wrap: pretty; }
+.va-cg-ask__text { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+.va-cg-ans + .va-cg-ans { margin-top: 8px; }
+.va-cg-ans__text { margin-top: 8px; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+
+/* the sign-up: the intro on the left (sticky), the form card on the right */
+.cm-signup__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start; }
+.cm-signup__grid--rule { padding-top: 56px; border-top: 1px solid var(--line); }
+.cm-signup__intro { position: sticky; top: calc(var(--header-h) + 32px); }
+.cm-signup__intro .sa-lead { margin-top: 18px; font-size: 17.5px; }
+.cm-signup__intro .cg-steps { margin-top: 34px; }
+.cm-signup__intro .cg-privacy { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+@media (max-width: 1024px) {
+  .cm-signup__grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .cm-signup__intro { position: static; max-width: 680px; }
+}
+
+/* ---------------------------------------------------------------- 3 events */
+/* hero phone (pushed "Sự kiện" screen, canvas units): the large title under the back chevron (iOS), the status
+   card, a small label, the topics card */
+.va-ev-next__row { margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.va-ev-next .va-card__value { margin-top: 0; font-size: 19px; }
+.va-ev-next__title { display: -webkit-box; margin: 4px 0 8px; font: 740 16px/21px var(--font); letter-spacing: -0.014em; color: var(--ink); -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.va-ev-label { margin: 16px 16px 0; font: 700 13px/16px var(--font); color: var(--muted); }
+/* under the vote button: how a workshop opens (the honest state), quiet and centred like an app's footnote */
+.va-ev-note { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--muted); text-align: center; text-wrap: balance; }
+.va-ev-label + .va-card { margin-top: 8px; }
+
+/* the topic cards: three up, the "read first" line at each card's foot */
+.ev-topic { display: flex; flex-direction: column; align-items: flex-start; }
+.ev-topic .sa-card__title { margin-top: 16px; }
+.ev-topic .sa-card__text { margin-bottom: 18px; }
+.ev-topic__read {
+  margin-top: auto; padding-top: 14px; width: 100%; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 6px; font: 640 14.5px/1.2 var(--font); color: var(--ultra-ink);
+}
+.ev-topic__read .icon { width: 16px; height: 16px; stroke-width: 1.9; transition: transform var(--d-ui) var(--ease-expo); }
+@media (hover: hover) and (pointer: fine) { .ev-topic:hover .ev-topic__read .icon { transform: translateX(3px); } }
+
+/* the navy band (.cg-navy, §5): how a session runs as numbered steps in white, how to join in the white card,
+   the speaker line under its hairline */
+.ev-steps { display: grid; gap: 18px; counter-reset: none; }
+.ev-steps > li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 14px; align-items: start; }
+.ev-steps__n {
+  width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px;
+  background: var(--blue-50); color: var(--blue-600); font: 740 15px/1 var(--font);
+}
+.ev-steps__title { padding-top: 5px; font: 720 16.5px/1.3 var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.ev-steps__text { margin-top: 3px; font-size: 15px; line-height: 1.5; color: var(--sa-desc); }
+/* on navy: the numbers in a quiet glass square, sunflower figures; white titles, light text (>= 9:1) */
+.ev-steps--band { gap: 22px; }
+.ev-steps--band > li { grid-template-columns: 40px minmax(0, 1fr); gap: 16px; }
+.ev-steps--band .ev-steps__n { width: 40px; height: 40px; border-radius: 12px; background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: var(--sun); font-size: 17px; }
+.ev-steps--band .ev-steps__title { padding-top: 2px; font-size: 17px; color: #fff; }
+.ev-steps--band .ev-steps__text { color: rgba(255, 255, 255, .86); }
+.ev-join__title { margin-bottom: 24px; font: 740 21px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
+.ev-join__pitch { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 24px); }
+.ev-join__ask { font: 720 16.5px/1.3 var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.ev-join__text { margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--sa-desc); }
+.ev-join__pitch .sa-more { margin-top: 8px; padding: 4px 0; }
+/* a white card on navy: its "more" link takes the white body's ultra ink again (the band makes it white) */
+.cg-navy__card .sa-more { color: var(--ultra-ink); }
+.cg-navy__card .sa-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* recordings */
+.ev-rec__date { margin-bottom: 8px; font-size: 13.5px; color: var(--muted); }
+.ev-rec__host { margin-top: 4px; font-size: 14px; color: var(--ink-2); }
+.ev-rec__foot { margin-top: 14px; }
+
+/* the speaker card (also the story detail's closing card): app icon · copy · one button */
+.ev-pitch { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; align-items: center; }
+.ev-pitch__title { font: 740 22px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); text-wrap: balance; }
+.ev-pitch__text { margin-top: 6px; font-size: 15.5px; line-height: 1.5; color: var(--sa-desc); }
+.ev-pitch-sec .ev-pitch { margin-top: 0; }
+
+@media (max-width: 1024px) {
+  .ev-pitch { grid-template-columns: auto minmax(0, 1fr); }
+  .ev-pitch > .btn { grid-column: 1 / -1; justify-self: start; }
+}
+@media (max-width: 767px) {
+  .ev-steps--band { gap: 18px; }
+  .ev-steps--band > li { grid-template-columns: 36px minmax(0, 1fr); gap: 14px; }
+  .ev-steps--band .ev-steps__n { width: 36px; height: 36px; border-radius: 11px; font-size: 16px; }
+  .ev-join__title { margin-bottom: 20px; font-size: 19px; }
+  .ev-pitch { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ev-pitch .app--lg { --s: 56px; }
+  .ev-pitch > .btn { width: 100%; }
+  .ev-pitch__title { font-size: 20px; }
+}
+
+/* ---------------------------------------------------------------- 4 stories */
+.st-card__who { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.st-card__initial { font: 740 18px/1 var(--font); }
+.st-card__who b { display: block; font: 700 15px/1.3 var(--font); color: var(--ink); }
+.st-card__who small { display: block; font-size: 13.5px; color: var(--muted); }
+.st-facts { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.st-facts div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.st-facts dt { color: var(--muted); }
+.st-facts dd { font-weight: 650; color: var(--ink); text-align: right; }
+
+/* the share block, the page's one navy band: copy left (the honest state opens the lead), the composer phone right
+   standing whole on the colour (its frame shadow, as in the heroes), the caption right under it */
+.st-share { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 72px; align-items: center; }
+.st-share__copy .sa-lead { margin-top: 18px; }
+.st-share__copy .cg-checks { margin-top: 26px; }
+.st-share > template { display: none; }
+.st-share-sec .cg-checks li { color: rgba(255, 255, 255, .92); }
+.st-share-sec .cg-checks .icon { color: var(--sun); }
+.st-hint { margin-top: 14px; font-size: 14px; line-height: 1.5; color: rgba(255, 255, 255, .84); }
+.st-art { display: grid; justify-items: center; gap: 30px; }
+.st-art .sa-phone { --phone-k: .66; }
+/* "Sao chép khung" is the light ghost beside the one white button (the hero's firmer outline); done: a light mint
+   and a check (>= 7:1 on navy) */
+.st-copy { border-color: rgba(255, 255, 255, .72); }
+.st-copy:hover { border-color: #fff; background: rgba(255, 255, 255, .1); }
+.st-copy .st-copy__done { display: none; }
+.st-copy.is-done { color: #9BEBC8; border-color: rgba(155, 235, 200, .6); }
+.st-copy.is-done .st-copy__icon { display: none; }
+.st-copy.is-done .st-copy__done { display: block; }
+/* the composer screen (canvas units): the author card, the six prompts (.va-cg-rows, §0), the post bar */
+.va-st-title { margin-top: 12px; font: 720 16px/21px var(--font); letter-spacing: -0.014em; color: var(--ink); }
+/* the person's two choices, off until they turn them on (iOS switches) */
+.va-st-opts { padding-top: 4px; padding-bottom: 4px; }
+.va-st-opts p { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; font: 600 14px/18px var(--font); color: var(--ink); }
+.va-st-opts p + p { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-st-switch { position: relative; flex: none; width: 44px; height: 26px; border-radius: 13px; background: #E3E7EF; }
+.va-st-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(10, 18, 48, .22), 0 0 0 var(--hl) rgba(10, 18, 48, .06); }
+/* 1025-1240: even columns, so the caption under the phone keeps one line */
+@media (min-width: 1025px) and (max-width: 1240px) { .st-share { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; } }
+@media (max-width: 1024px) {
+  .st-share { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+  .st-share__copy { max-width: 680px; }
+}
+@media (max-width: 767px) { .st-art { gap: 26px; } }
+@media (max-width: 767px) {
+  .st-art .sa-phone { --phone-k: .68; }
+  .st-actions { display: grid; gap: 10px; }
+  .st-actions .btn { width: 100%; }
+}
+@media (max-width: 380px) { .st-art .sa-phone { --phone-k: .64; } }
+
+/* story detail */
+.sd-byline { margin-top: 26px; display: flex; align-items: center; gap: 14px; }
+.sd-byline__initial { font: 740 22px/1 var(--font); }
+.sd-byline b { display: block; font: 700 17px/1.3 var(--font); color: #fff; }
+.sd-byline small { display: block; margin-top: 2px; font-size: 14.5px; color: rgba(255, 255, 255, .92); }
+.sd-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 72px; align-items: start; }
+.sd-tips { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--line); }
+.sd-tips .sa-title { margin-bottom: 22px; }
+.sd-consent { margin-top: 40px; display: flex; gap: 10px; align-items: flex-start; padding: 16px 18px; border-radius: 16px; background: var(--mint-50); font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.sd-consent .icon { flex: none; width: 20px; height: 20px; color: var(--mint-ink); }
+.sd-aside { position: sticky; top: calc(var(--header-h) + 24px); display: grid; gap: 16px; }
+.sd-facts { display: grid; gap: 12px; }
+.sd-facts div { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.sd-facts div:last-child { padding-bottom: 0; border-bottom: 0; }
+.sd-facts dt { font-size: 13px; color: var(--muted); }
+.sd-facts dd { font: 720 17px/1.3 var(--font); color: var(--ink); }
+.sd-cta { display: grid; gap: 10px; justify-items: start; }
+.sd-cta__title { margin-top: 6px; font: 740 18.5px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
+.sd-cta__text { font-size: 14.5px; line-height: 1.5; color: var(--sa-desc); margin-bottom: 4px; }
+.sd-copy { justify-self: center; margin-top: 2px; }
+@media (max-width: 1024px) {
+  .sd-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .sd-aside { position: static; }
+}
+
+/* ---------------------------------------------------------------- 5 post a job */
+/* hero: the "Việc làm" tab (the example post on top of real jobs), the review card on the phone's top-left frame;
+   it steps aside where the copy column comes too close (< 1100 px) */
+.pj-float { position: absolute; z-index: 2; top: 34px; right: calc(50% + 423px * var(--hero-k) / 2 - 8px); }
+@media (max-width: 1100px) { .pj-float { display: none; } }
+/* the example row: a soft sunflower wash so it reads as "yours", the pay and the "Tin của bạn" pill on one line */
+.va-pj-mine { background: #FFFBEF; }
+.va-pj-mine__tag { height: 20px; margin-bottom: 6px; padding: 0 7px; font-size: 11.5px; border-radius: 6px; }
+
+/* form + live preview */
+.pj-form .sa-head { margin-bottom: 32px; }
+.pj-form__grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; }
+.pj-aside { position: sticky; top: calc(var(--header-h) + 24px); display: grid; gap: 14px; }
+.pj-preview__label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font: 650 13.5px/1.3 var(--font); color: var(--ink); }
+.pj-preview__label span:last-child { font-weight: 400; color: var(--muted); }
+/* the preview IS the board's job card (.njc), filled by community.js as the employer types */
+.pj-njc { pointer-events: none; }
+/* beside the form (380 px) the card takes the board card's own compact step (its <= 1100 px padding and logo), so
+   its two tags sit on one row as on the board */
+.pj-aside .pj-njc { grid-template-columns: 46px minmax(0, 1fr); gap: 14px; padding: 20px 18px 18px; }
+.pj-aside .pj-njc .njc__logo { width: 46px; height: 46px; border-radius: 13px; }
+.pj-njc .njc__title { overflow-wrap: anywhere; }
+.pj-njc ul.njc__tags { height: auto; margin-right: 0; }
+.pj-njc__vn { background: var(--mint-50) !important; color: var(--mint-ink) !important; }
+.pj-njc__vn[hidden] { display: none !important; }
+.pj-preview .is-placeholder, .pj-preview .njc__pay.is-placeholder { color: var(--muted); }
+.pj-tips { padding: 22px 22px 12px; }
+.pj-tips__title { font: 720 15.5px/1.3 var(--font); color: var(--ink); }
+.pj-tips ul { margin-top: 8px; padding: 0; list-style: none; }
+.pj-tips li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.5; color: var(--ink); font-weight: 560; transition: color var(--d-ui) var(--ease); }
+.pj-tips li:first-child { border-top: 0; }
+.pj-tips__icon { display: grid; margin-top: 1px; }
+.pj-tips__icon .icon { grid-area: 1 / 1; width: 18px; height: 18px; }
+.pj-tips .tip-on { color: var(--mint-ink); }
+.pj-tips .tip-off { display: none; color: var(--muted); }
+.pj-tips li.is-off { color: var(--muted); font-weight: 400; }
+.pj-tips li.is-off .tip-on { display: none; }
+.pj-tips li.is-off .tip-off { display: block; }
+.pj-inline-preview { display: none; }
+
+/* static export without an endpoint: the six things a post needs + the template */
+.pj-send { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: start; }
+.pj-send__title { margin-bottom: 18px; font: 720 18.5px/1.3 var(--font); color: var(--ink); }
+.pj-send__note { margin-top: 14px; }
+
+/* the group's navy steps band (/dang-tin/ .pj-rules, /su-kien/ .cg-navy): the page's one navy band, steps in white
+   on the left, a crisp white card on the right */
+.pj-rules, .cg-navy { padding-block: 88px; }
+.pj-rules__grid, .cg-navy__grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 72px; align-items: center; }
+.pj-rules__copy .cg-steps, .cg-navy__copy :is(.cg-steps, .ev-steps) { margin-top: 34px; }
+.pj-steps .cg-steps__title { color: #fff; }
+.pj-steps .cg-steps__text { color: rgba(255, 255, 255, .86); }
+/* a white card on the navy band: its links take the blue focus ring again (the band's is sunflower) */
+.pj-refuse, .cg-navy__card { --focus: var(--blue); }
+.pj-refuse__title { display: flex; align-items: center; gap: 12px; font: 740 19px/1.25 var(--font); color: var(--ink); }
+.pj-refuse__list { margin-top: 18px; display: grid; gap: 12px; }
+.pj-refuse__list li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.pj-refuse__list .icon { width: 20px; height: 20px; margin-top: 1px; color: var(--coral-ink); }
+.pj-refuse__note { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.5; color: var(--muted); }
+.pj-refuse__note .text-link { color: var(--ultra-ink); }
+/* the FAQ follows the band: no hairline on top */
+.pj-faq .cg-faq { padding-top: 0; border-top: 0; }
+/* the closing band's title is longer than "Thiếu mỗi bạn.": one step smaller on phones, so the bursts stay in view */
+@media (max-width: 767px) { .pj-cta .sa-title--cta { font-size: clamp(28px, 8.6vw, 40px); } }
+
+/* <= 1100 px: one column; the aside (preview + tips) would land under the submit button, so it is hidden and the
+   form's own grey panel shows the same preview and tips right after section 3: side by side down to 768 px (the
+   card beside the tips, no empty half), stacked on phones */
+@media (max-width: 1100px) {
+  .pj-form__grid { grid-template-columns: minmax(0, 1fr); }
+  .pj-aside { display: none; }
+  .pj-inline-preview { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: 20px 28px; align-items: start; margin-top: 32px; padding: 20px; border-radius: 18px; background: var(--sa-tag); }
+  .pj-inline-preview__card { display: grid; gap: 12px; min-width: 0; }
+  .pj-inline-preview .pj-preview__label { flex-wrap: wrap; gap: 2px 12px; }
+  .pj-inline-preview .pj-njc { box-shadow: 0 0 0 1px var(--tile-line), 0 10px 20px -16px rgba(10, 18, 48, .3); }
+  .pj-tips--inline { padding: 0; }
+  .pj-tips--inline .pj-tips__title { font-size: 13.5px; font-weight: 650; }
+  .pj-tips--inline ul { margin-top: 6px; }
+  .pj-tips--inline li { border-top-color: var(--line-2); }
+  /* the narrower in-form card: the tag row runs in under the logo (46 px + 14 px gap), so "Hợp đồng" and
+     "Tuyển ở Việt Nam" stay on one row down to 360 px instead of wrapping */
+  .pj-inline-preview .pj-njc ul.njc__tags { margin-left: -60px; gap: 6px; }
+  .pj-inline-preview .pj-njc .njc__tags li { padding: 0 11px; }
+}
+@media (max-width: 1024px) {
+  .pj-rules__grid, .cg-navy__grid, .pj-send { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .pj-rules__copy, .cg-navy__copy, .cg-navy__card { max-width: 680px; }
+}
+@media (max-width: 767px) {
+  .pj-rules, .cg-navy { padding-block: 64px; }
+  .pj-inline-preview { grid-template-columns: minmax(0, 1fr); padding: 14px; margin-top: 26px; gap: 18px; }
+  .pj-tips--inline { padding: 0 4px; }
+}
+
+/* ---------------------------------------------------------------- 6 about */
+/* hero: the h1 on two lines at every desktop width (a little under the kit's 58 px cap, no forced break) */
+@media (min-width: 768px) { .ab-hero .sa-hero__title { font-size: clamp(40px, 3.75vw, 54px); } }
+/* phones: one step smaller, so "làm remote, có nghề" holds one line and the mark ends on its own (three lines) */
+@media (max-width: 767px) { .ab-hero .sa-hero__title { font-size: clamp(31px, 8.9vw, 38px); } }
+/* hero phone: a real job's pushed screen with the five checks it passed */
+.va-ab-checks { padding-top: 12px; padding-bottom: 4px; }
+.va-ab-checks__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; }
+.va-ab-checks__head b { font: 720 15px/20px var(--font); letter-spacing: -0.01em; color: var(--ink); }
+.va-ab-checks .va-facts { margin: 0; }
+.va-ab-checks .va-facts li { padding: 8px 0; grid-template-columns: 20px minmax(0, 1fr); }
+.va .va-ab-checks .va-facts .icon { color: var(--mint); stroke-width: 2; }
+
+/* mission (a normal section head) and the live numbers */
+.ab-stat .app + .ab-stat__num { margin-top: 18px; }
+.ab-stat__num { font: 760 clamp(34px, 3vw, 44px)/1 var(--font-wide); font-stretch: 110%; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.ab-stat__label { margin-top: 8px; font-size: 15px; line-height: 1.45; color: var(--sa-desc); }
+.ab-stats__note { margin-top: 22px; text-align: center; font-size: 14px; color: var(--muted); }
+
+/* the four stages: one white card, four columns split by hairlines (uneven copy never leaves empty card feet) */
+.ab-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0; list-style: none; }
+.ab-flow__step { position: relative; padding: 28px 26px 30px; }
+.ab-flow__step + .ab-flow__step { box-shadow: inset 1px 0 0 var(--line); }
+.ab-flow__n { position: absolute; top: 32px; right: 24px; font: 680 13.5px/1 var(--font); color: var(--muted); }
+.ab-flow .app + .ab-flow__n + .sa-card__title { margin-top: 16px; }
+.ab-flow__checks { margin-top: 10px; display: grid; gap: 6px; }
+.ab-flow__checks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
+.ab-flow__checks .icon { width: 18px; height: 18px; margin-top: 1px; color: var(--mint-ink); stroke-width: 2; }
+
+/* the navy band's screen: the bulletin post (the brand as its author, REAL jobs inside, no counts or times) */
+.va-ab-bul { border-top: 0; padding-top: 8px; }
+.va-ab-bul__mark { flex: none; display: grid; }
+.va-ab-bul__mark .brand__mark { width: 34px; height: 34px; border-radius: 10px; }
+.va-ab-bul__jobs { margin-top: 10px; border-radius: 14px; background: var(--va-inset); padding: 0 12px; }
+.va-ab-bul .va-job { padding: 12px 0; }
+.va-ab-bul .va-job + .va-job { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-ab-bul .va-job__title { padding-right: 0; }
+.va-ab-bul .va-job__pay { background: #fff; }
+
+/* principles (a calm list) beside the contact card */
+.ab-end__grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 72px; align-items: start; }
+.ab-rules { margin-top: 30px; display: grid; gap: 24px; }
+.ab-rules > li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 18px; align-items: start; }
+.ab-rules__title { font: 740 18.5px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
+.ab-rules__text { margin-top: 4px; font-size: 15.5px; line-height: 1.5; color: var(--sa-desc); max-width: 52ch; }
+.ab-contact { scroll-margin-top: calc(var(--header-h) + 24px); }
+.ab-contact__sub { margin-top: 8px; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+.ab-links { margin-top: 18px; border-top: 1px solid var(--line); }
+.ab-links li { border-bottom: 1px solid var(--line); }
+.ab-links li:last-child { border-bottom: 0; }
+.ab-links a { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; color: var(--ink); }
+.ab-links b { display: block; font: 700 15.5px/1.3 var(--font); letter-spacing: -0.01em; }
+.ab-links small { display: block; margin-top: 2px; font-size: 14px; line-height: 1.4; color: var(--sa-desc); overflow-wrap: anywhere; }
+.ab-links a > .icon { width: 16px; height: 16px; color: var(--muted); transition: transform var(--d-micro) var(--ease); }
+.ab-links a:hover b { color: var(--ultra-ink); }
+.ab-links a:hover > .icon { transform: translateX(3px); color: var(--ultra-ink); }
+.ab-links a:last-child:last-child { padding-bottom: 2px; }
+
+@media (max-width: 1100px) {
+  .ab-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ab-flow__step:nth-child(3) { box-shadow: inset 0 1px 0 var(--line); }
+  .ab-flow__step:nth-child(4) { box-shadow: inset 1px 0 0 var(--line), inset 0 1px 0 var(--line); }
+}
+@media (max-width: 1024px) {
+  .ab-end__grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .ab-end__rules { max-width: 680px; }
+}
+@media (max-width: 767px) {
+  .ab-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ab-stat { padding: 16px 14px; }
+  .ab-stat .app { --s: 44px; }
+  .ab-stat .app + .ab-stat__num { margin-top: 14px; }
+  .ab-stat__num { font-size: 30px; }
+  .ab-stat__label { font-size: 13.5px; }
+  .ab-stats__note { text-align: left; }
+  .ab-flow { grid-template-columns: minmax(0, 1fr); }
+  .ab-flow__step { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: start; padding: 18px 16px; }
+  .ab-flow__step > .app { grid-row: 1 / span 4; }
+  .ab-flow__step > :not(.app) { grid-column: 2; }
+  .ab-flow__step + .ab-flow__step, .ab-flow__step:nth-child(3), .ab-flow__step:nth-child(4) { box-shadow: inset 0 1px 0 var(--line); }
+  .ab-flow__n { position: static; margin-bottom: 4px; font-size: 12.5px; }
+  .ab-flow .app + .ab-flow__n + .sa-card__title { margin-top: 0; }
+  .ab-flow .sa-card__title { font-size: 17px; }
+  .ab-rules { margin-top: 24px; gap: 20px; }
+  .ab-rules > li { grid-template-columns: 44px minmax(0, 1fr); gap: 14px; }
+  .ab-rules .app { --s: 44px; }
+  .ab-rules__title { font-size: 17px; }
+  .ab-rules__text { font-size: 15px; }
+}
+
+/* ---------------------------------------------------------------- 7 404 */
+.nf-search { max-width: 560px; margin: 30px auto 0; text-align: left; border-color: transparent; box-shadow: var(--sa-sh-float); }
+.nf-search .btn { height: 100%; }
+/* the input's intrinsic width (~20 ch) was the centred copy's min-content (auto margins size it to fit): at 360 px
+   the lead and the form ran 15 px past the viewport, cut by the band. A zero basis keeps it out; flex: 1 still fills. */
+.nf-search input { width: 0; }
+@media (max-width: 767px) { .nf-search { margin-top: 24px; } }

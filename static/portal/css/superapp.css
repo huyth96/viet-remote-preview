@@ -1,0 +1,872 @@
+/* =====================================================================
+   Việt Remote — superapp.css  (the Super-app kit: the approved HOME's visual language for every page)
+   Binding: portal/DESIGN_SYSTEM_SUPERAPP.md. Concept: static/portal/concepts/gen-v2/superapp-premium/overview.png.
+   Loaded by base.html on EVERY page: base.css → (kit_css: elevated.css, V3, inner pages only) → superapp.css →
+   page CSS. The home (home.css) is built from §0–§5 of this file and is FROZEN: never restyle a rule below to
+   change one page; extend with a page class in the page's own CSS. Matte only: no gloss, no glass, no glow
+   behind small text, no coloured shadows. One sunflower marker per page (the h1).
+   ---------------------------------------------------------------------
+   §0  Tokens            --tile-line --sh-tile(-hover) --sh-phone --green-pay; --sa-r-card --sa-sh-card(-hover)
+                         --sa-sh-float --sa-desc --sa-tag --sa-navy-foot
+   §1  Primitives        .glyph (filled, #g-*) · .btn--sun .btn--pill .btn--xl .btn__go (+ base.css .btn) ·
+                         .app.app--{blue,green,purple,orange,red,sun,mint} [--xs|--sm|--md|--lg] (app icon)
+   §2  iPhone frame      .iph > .iph__body > .iph__key + .iph__screen > .ios[--zoom|--porcelain|--white]
+                         ({% iphone %} … {% endiphone %} writes all of it: portal_tags.iphone)
+   §3  App screens       .va (the Việt Remote app): .va-top .va-tabs (chrome) · .va-nav (pushed bar) · .va-head
+                         .va-h .va-search .va-chips .va-sec .va-job .va-seg .va-compose .va-post .va-by .va-acts
+                         .va-reply .va-thread .va-ctx .va-msgs .va-msg .va-input · .va-big .va-text .va-card
+                         .va-btn .va-pill .va-facts · tool screen .sx-nav .sx-view .sx (the scam checker)
+   §4  Job card          .njc (includes/njc.html)
+   §5  Grain             the 256 px matte grain on every colour field (.sa-band--cobalt|navy|sky, .sa-grain)
+   §6  Bands             .sa-band.sa-band--{cobalt|navy|sky|paper} [--lean]   (+ data-field on the section)
+   §7  Page hero         .sa-hero.sa-band.sa-band--cobalt [--compact|--rise|--center] > .wrap.sa-hero__grid >
+                         .sa-hero__copy (.sa-chip, h1.sa-hero__title, .sa-hero__lead, .sa-hero__actions,
+                         .sa-hero__note) + .sa-hero__art (.sa-phone, .sa-float, .sa-cap)
+   §8  Sections          .sa-sec[--tight] · .sa-head[--split|--left|--rule] > .sa-title + .sa-head__sub ·
+                         .sa-title[--l|--m|--s|--band|--cta] · .sa-lead · .sa-more · .sa-grid[--2|--4|--icards|--jobs]
+   §9  Cards             .sa-card[--lg|--hover] (.sa-card__title/__text/__link) · .sa-icard (includes/icon_card.html)
+   §10 Chips             .sa-chip (on colour) · .sa-chips[--light] (feature chips) · .sa-tags / .sa-tag (on white)
+   §11 Phones on a page  .sa-phone[--lean|--lean-r|--on-light] (--phone-k) · .sa-float · .sa-cap[--light]
+   §12 Split + lean      .sa-split[--flip] > .sa-split__art (.sa-lean) + .sa-split__copy
+   §13 CTA band          .sa-cta (includes/cta_band.html) · join button: includes/join_button.html
+   §14 Page shell        body.sa-page (white body, the navy footer)
+   Breakpoints (the home's): 1240 · 1100 · 1024 · 900 · 767 · 479 · 380.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 tokens */
+/* The home's own tokens (were on .page-home), then the kit's. */
+:root {
+  --cob-glow: #4C8DFF;
+  --green-pay: #0F7A45;            /* pay figures: 5.3:1 on white */
+  --tile-line: #E7EBF3;
+  --sh-tile: 0 1px 2px rgba(10, 18, 48, .04), 0 18px 36px -22px rgba(10, 18, 48, .22);
+  --sh-tile-hover: 0 1px 2px rgba(10, 18, 48, .05), 0 26px 44px -22px rgba(10, 18, 48, .30);
+  --sh-phone: 0 60px 90px -36px rgba(4, 12, 48, .62), 0 26px 40px -24px rgba(4, 12, 48, .45);
+  --font-wideh: var(--font-wide);
+  --sa-r-card: 22px;               /* white cards and icon cards (18 px on phones) */
+  --sa-r-card-sm: 18px;
+  --sa-sh-card: 0 0 0 1px var(--tile-line), var(--sh-tile);
+  --sa-sh-card-hover: 0 0 0 1px var(--tile-line), var(--sh-tile-hover);
+  --sa-sh-float: 0 30px 50px -26px rgba(4, 12, 48, .55), 0 8px 18px -10px rgba(4, 12, 48, .25);
+  --sa-desc: #4E5875;              /* card descriptions: 7.3:1 on white */
+  --sa-tag: #F1F4F9;               /* soft tags and the light caption */
+  --sa-navy-foot: #13214F;         /* the footer under a super-app page */
+}
+
+/* ---------------------------------------------------------------- 1 primitives: glyph, buttons, app icon */
+.glyph { width: 20px; height: 20px; flex: none; fill: currentColor; stroke: none; }
+
+.btn--sun { background: var(--sun); color: var(--ink); }
+.btn--sun:hover { background: #FFD466; }
+.btn--pill { border-radius: 999px; }
+.btn--xl { --btn-h: 64px; padding: 0 30px; font-size: 18px; gap: 12px; }
+.btn--xl .glyph { width: 24px; height: 24px; }
+.btn .glyph { width: 20px; height: 20px; }
+.btn__go { transition: transform var(--d-ui) var(--ease-expo); }
+@media (hover: hover) and (pointer: fine) { .btn:hover .btn__go { transform: translateX(3px); } }
+
+/* app icon: a rounded square in one solid colour, white glyph (iOS proportions: radius 22.5 %) */
+.app {
+  --c: var(--blue); --s: 64px;
+  width: var(--s); height: var(--s); flex: none;
+  display: grid; place-items: center;
+  border-radius: calc(var(--s) * .26);
+  color: #fff;
+  /* matte, lit from the top left: a soft top light over the colour's own gradient, a darker foot, no gloss */
+  background:
+    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 10px 20px -12px rgba(10, 18, 48, .42);
+}
+.app .glyph { width: 62%; height: 62%; filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, .16)); }
+.app--blue { --c: #2F6BFF; }
+.app--green { --c: #22B35E; }
+.app--purple { --c: #7E5BF2; }
+.app--orange { --c: #FF8432; }
+.app--red { --c: #F0453D; }
+.app--sun { --c: #FFBF2E; }
+.app--mint { --c: #12A46B; }
+.app--sm { --s: 44px; }
+.app--xs { --s: 32px; }
+.app--md { --s: 56px; }
+.app--lg { --s: 68px; }
+
+/* ---------------------------------------------------------------- 2 iPhone frame */
+/* Markup: {% iphone %} … {% endiphone %} (portal_tags.iphone → includes/iphone.html); never hand-written. */
+/* Built at true size (matte graphite titanium band 6 + black bezel 9 around a 393 × 852 screen = 423 × 882) and
+   scaled by --k, so every proportion and radius is an iPhone's. The figure reserves the scaled box. The band is
+   brushed metal, lighter at the lit corners, with a hairline highlight on its outer edge: it reads as metal on
+   cobalt, never as a black outline. No gloss, no reflections on the glass. --iph-side: the band's visible side
+   thickness when a phone is turned (the hero's fanned phones). */
+.iph { --k: .7; position: relative; margin: 0; width: calc(423px * var(--k)); height: calc(882px * var(--k)); flex: none; }
+.iph__body {
+  position: absolute; left: 0; top: 0;
+  width: 423px; height: 882px; padding: 7px;
+  transform: scale(var(--k)); transform-origin: 0 0;
+  border-radius: 70px;
+  background: linear-gradient(150deg, #9095A0 0%, #565A63 20%, #3A3D44 58%, #727780 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28), inset 0 0 0 2.5px rgba(20, 22, 27, .22),
+    var(--iph-side, 0 0 transparent), var(--sh-phone);
+}
+.iph__screen {
+  position: relative; height: 100%;
+  border: 8px solid #08090B; border-radius: 63px;
+  overflow: hidden; background: #08090B;
+  box-shadow: 0 0 0 1px rgba(10, 11, 14, .6);
+  isolation: isolate;
+}
+.iph__key { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #4B4F57, #7D828B); }
+.iph__key--action { left: -3px; top: 168px; height: 32px; }
+.iph__key--up { left: -3px; top: 226px; height: 60px; }
+.iph__key--down { left: -3px; top: 300px; height: 60px; }
+.iph__key--power { right: -3px; top: 262px; height: 96px; background: linear-gradient(270deg, #4B4F57, #7D828B); }
+
+.ios {
+  position: relative; width: 393px; height: 852px; overflow: hidden;
+  border-radius: 55px;
+  font: 400 15px/1.4 var(--font); color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-align: left; letter-spacing: 0;
+}
+.ios--porcelain { background: var(--porcelain); }
+.ios--white { background: #fff; }
+.ios .icon { width: 22px; height: 22px; }
+.ios__status {
+  position: relative; z-index: 5;
+  height: 54px; display: grid; grid-template-columns: 1fr 126px 1fr; align-items: center;
+}
+.ios__time { justify-self: center; padding-left: 6px; font: 640 17px/1 var(--font); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.ios__island {
+  justify-self: center; align-self: start; margin-top: 11px;
+  width: 125px; height: 37px; border-radius: 20px;
+  background: radial-gradient(circle at 83% 50%, #151B2A 0 5px, #06080D 6px, transparent 7px), #000;
+}
+.ios__sys { justify-self: center; display: flex; align-items: center; gap: 6px; padding-right: 4px; }
+.ios__signal { width: 18px; height: 12px; }
+.ios__wifi { width: 16px; height: 12px; }
+.ios__batt { width: 27px; height: 13px; }
+.ios__home { position: absolute; z-index: 6; left: 50%; bottom: 8px; width: 139px; height: 5px; margin-left: -69.5px; border-radius: 3px; background: #0B0D12; }
+
+/* Display Zoom (Settings > Display > "Larger Text"): the hero phones render a 320 pt layout on the 393 pt screen
+   (x 1.228), as many people run their phones, so each screen shows fewer, larger items that read at a glance.
+   The status bar and the home indicator keep their hardware size (drawn at 393 pt, scaled back). */
+.ios--zoom {
+  --z: 1.228125;
+  width: 320px; height: 693.74px;
+  transform: scale(var(--z)); transform-origin: 0 0;
+  border-radius: 44.8px;
+}
+.ios--zoom .ios__status { width: 393px; transform: scale(.81425); transform-origin: 0 0; margin-bottom: -10.03px; }
+.ios--zoom .ios__home { width: 113.2px; height: 4.1px; margin-left: -56.6px; bottom: 6.5px; }
+
+/* ---------------------------------------------------------------- 3 app screens */
+/* ONE APP ACROSS THE THREE HERO PHONES (the concept's trio): the Việt Remote app, drawn in Display Zoom (a 320 pt
+   layout, .ios--zoom) so each screen shows two or three things with room around them. Every screen shares the
+   same frame, status bar, scale and colours:
+     tabs     .va-top + .va-tabs  the jobs and the feed: header (mark + name 17 · bell · the viewer's photo) and the
+                                  tab bar (Trang chủ · Việc làm · Công cụ · Cộng đồng · Cá nhân, the phone's own lit)
+     pushed   .va--push           the thread, pushed full-screen as a chat is on iOS: the person's header under the
+                                  status bar, the composer above the home indicator, no app header, no tab bar
+     content                      page title 23 · item title 15.5–16 · body 14 · meta 12.5 · chips and tabs 13
+   Spacing on a 4/8 pt grid (canvas units): 16 side insets, 12/16 between blocks, 4/8 inside them; text lines on
+   whole-pixel line heights, so a list's cut under the tab bar falls where it was planned. Hairlines are drawn at
+   --hl (1 px divided by the screen's scale), so they render one pixel wide on every phone, whatever its size.
+   One colour system: white screen, #F3F5F9 insets, brand blue for what is active, mint for pay, coral for the
+   heart. Lists run on under the opaque tab bar (as a phone scrolls), so the home indicator rests on the bar's
+   empty foot and never strikes through text. Every text colour here is >= 4.5:1 on its own fill. */
+.va {
+  --ios-bg: #fff; --va-inset: #F3F5F9; --va-line: #E4E8EF;
+  --hl: max(1px, calc(1px / (var(--k, 1) * var(--z, 1))));
+  background: #fff;
+}
+.va .icon { width: 22px; height: 22px; stroke-width: 1.7; }
+.va-ava { display: block; flex: none; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #E6E9F0; }
+
+/* the app's header: the same on both tabs (44–92) */
+.va-top { height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
+.va-top__brand { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.va-top__brand .brand__mark { width: 26px; height: 26px; }
+.va-top__brand b { font: 760 17px/1 var(--font); font-stretch: 108%; letter-spacing: -0.026em; color: var(--ink); }
+.va-top__bell { position: relative; width: 32px; height: 32px; display: grid; place-items: center; color: var(--ink); }
+.va-top__bell i { position: absolute; top: 5px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 2px #fff; }
+.va-top__me { width: 30px; height: 30px; margin-left: 4px; box-shadow: 0 0 0 2px #fff, 0 0 0 calc(2px + var(--hl)) var(--line-2); }
+
+/* the app's tab bar: the same on both tabs, the phone's own tab lit (618–694) */
+.va-tabs {
+  position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: 76px; padding: 8px 8px 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start;
+  background: #fff; box-shadow: 0 calc(-1 * var(--hl)) 0 var(--va-line);
+}
+.va-tabs span { display: grid; justify-items: center; gap: 4px; font: 600 10.5px/12px var(--font); color: var(--muted); white-space: nowrap; letter-spacing: -0.01em; }
+.va-tabs .icon { width: 24px; height: 24px; stroke-width: 1.6; }
+.va-tabs .is-on { color: var(--blue); }
+.va-tabs .is-on .icon { stroke-width: 2.1; }
+
+/* "Việc làm": page title (96–128), search (140–180), chips (192–224), "Đề xuất" (240–260), rows of 106 from 260.
+   Each row is one title line (ellipsis), so the fourth row always meets the bar the same way: its logo and title
+   in view, its meta line just under the bar's edge. */
+.va-head { margin: 4px 16px 0; height: 32px; display: flex; align-items: center; justify-content: space-between; }
+.va-h { font: 760 23px/1.1 var(--font); font-stretch: 106%; letter-spacing: -0.03em; color: var(--ink); }
+.va-head__act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; box-shadow: inset 0 0 0 var(--hl) var(--line-2); color: var(--ink-2); }
+.va-head__act .icon { width: 19px; height: 19px; }
+.va-search { margin: 12px 16px 0; height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 12px; background: var(--va-inset); font-size: 14px; color: var(--muted); white-space: nowrap; }
+.va-search .icon { width: 19px; height: 19px; color: var(--ink-2); }
+/* the chip row scrolls sideways on a phone: it fades out at the screen's edge */
+.va-chips { margin-top: 12px; padding: 0 16px; display: flex; gap: 8px; overflow: hidden; white-space: nowrap;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); }
+.va-chips span, .va-seg span { flex: none; height: 32px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; font: 620 13px/1 var(--font); color: var(--ink-2); background: var(--va-inset); }
+.va-chips .is-on, .va-seg .is-on { background: var(--blue); color: #fff; }
+.va-sec { margin: 16px 16px 0; height: 20px; display: flex; align-items: baseline; justify-content: space-between; }
+.va-sec b { font: 720 15px/20px var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.va-sec span { font: 620 13px/20px var(--font); color: var(--blue); }
+.va-job { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 16px; }
+.va-job + .va-job { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-job__logo { width: 40px; height: 40px; border-radius: 11px; font-size: 15px; }
+/* a row without a square brand icon: a coloured initials tile, matte like the page's app icons (.app) */
+.va-job__tile {
+  display: grid; place-items: center; flex: none;
+  font: 760 15px/1 var(--font); letter-spacing: -0.01em; color: #fff;
+  background:
+    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 6px 12px -8px rgba(10, 18, 48, .45);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .16);
+}
+.va-job__tile .glyph { width: 22px; height: 22px; }
+.va-job__tile--blue { --c: #2F6BFF; }
+.va-job__tile--violet { --c: #7E5BF2; }
+.va-job__tile--orange { --c: #EC6A14; }
+.va-job__main { display: grid; justify-items: start; min-width: 0; }
+.va-job__title { justify-self: stretch; padding-right: 32px; font: 700 15.5px/20px var(--font); letter-spacing: -0.014em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* employer · where: the employer gives way (ellipsis) before the place does */
+.va-job__meta { justify-self: stretch; margin-top: 4px; min-width: 0; display: flex; gap: 4px; font-size: 12.5px; line-height: 16px; color: var(--muted); white-space: nowrap; }
+.va-job__co { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.va-job__where { flex: none; }
+.va-job__where::before { content: "·"; margin-right: 4px; }
+.va-job__pay { margin-top: 8px; height: 26px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 8px; background: var(--mint-50); color: var(--mint-ink); font: 700 13.5px/1 var(--font); letter-spacing: -0.01em; white-space: nowrap; }
+.va-job__save { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--ink-2); transition: background-color .3s var(--ease), color .3s var(--ease); }
+.va-job__save .icon { width: 19px; height: 19px; transition: fill .25s var(--ease); }
+/* the finished state of its one gesture: the first row is saved (home.js plays the fill once, home.css section 8) */
+.va-job--demo .va-job__save { background: var(--blue-50); color: var(--blue); }
+.va-job--demo .va-job__save .icon { fill: currentColor; }
+
+/* "Cộng đồng": the community's own tabs (96–128), the composer (140–180), posts from 192 (illustrative); the
+   second post's actions end about 10 pt above the tab bar */
+/* the four tabs fit the row: the lit one a pill, the others plain text */
+.va-seg { margin: 4px 16px 0; display: flex; justify-content: space-between; overflow: hidden; }
+.va-seg span { padding: 0 6px; background: none; font-size: 12.5px; }
+.va-seg .is-on { padding: 0 12px; }
+.va-compose { margin: 12px 16px; height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 12px; box-shadow: inset 0 0 0 var(--hl) var(--line-2); font-size: 14px; color: var(--muted); }
+.va-compose .icon { width: 19px; height: 19px; color: var(--ink-2); }
+.va-post { padding: 12px 16px; border-top: 8px solid var(--va-inset); }
+.va-by { display: flex; align-items: center; gap: 10px; }
+.va-by__who { min-width: 0; }
+.va-by__who b { display: block; font: 680 14.5px/18px var(--font); color: var(--ink); }
+.va-by__who small { display: block; font-size: 12px; line-height: 16px; color: var(--muted); }
+.va-by__more { margin-left: auto; color: var(--ink-2); }
+.va-post__title { margin-top: 8px; font: 720 16px/21px var(--font); letter-spacing: -0.014em; color: var(--ink); text-wrap: pretty; }
+.va-post__text { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.va-acts { margin-top: 12px; height: 20px; display: flex; align-items: center; gap: 16px; font: 620 13px/1 var(--font); color: var(--ink-2); }
+.va-acts span { display: inline-flex; align-items: center; gap: 6px; }
+.va-acts .icon { width: 20px; height: 20px; }
+.va-acts__save { margin-left: auto; }
+.va-like .icon { color: var(--coral); fill: currentColor; }
+.va-like--quiet .icon { color: var(--ink-2); fill: none; }
+.va-reply { margin-top: 12px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; border-radius: 12px; background: var(--va-inset); }
+.va-reply .va-ava { width: 24px; height: 24px; margin-top: 1px; }
+.va-reply p { font-size: 13.5px; line-height: 19px; color: var(--ink-2); }
+.va-reply b { font: 680 13px/18px var(--font); color: var(--ink); }
+.va-reply small { margin-left: 6px; font-size: 11.5px; color: var(--muted); }
+.va-reply small::before { content: "·"; margin-right: 6px; }
+.va-reply p > span { display: block; }
+
+/* a question thread (illustrative), pushed full-screen: the person (44–104), why her answer is worth reading
+   (120–168), the bubbles from 188, the composer resting on the home indicator's safe area (610–694) */
+.va-thread { height: 60px; padding: 0 16px 0 8px; display: flex; align-items: center; gap: 8px; box-shadow: inset 0 calc(-1 * var(--hl)) 0 var(--va-line); }
+.va-thread .va-ava { width: 38px; height: 38px; }
+.va .va-thread__back { width: 24px; height: 24px; color: var(--blue); stroke-width: 2.1; }
+.va-thread__who { min-width: 0; margin-left: 2px; }
+.va-thread__who b { display: block; font: 700 16px/20px var(--font); letter-spacing: -0.01em; color: var(--ink); }
+.va-thread__who small { margin-top: 2px; display: flex; align-items: center; gap: 6px; font: 600 12px/16px var(--font); color: var(--mint-ink); }
+.va-thread__who small i { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); }
+.va-thread__more { margin-left: auto; color: var(--ink-2); }
+.va-ctx { margin: 16px 16px 0; padding: 8px 12px 8px 8px; display: flex; align-items: center; gap: 10px; border-radius: 14px; background: var(--va-inset); font: 560 12.5px/16px var(--font); color: var(--ink-2); white-space: nowrap; }
+.va-ctx__ic { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: var(--blue-50); color: var(--blue); }
+.va-ctx__text { display: grid; min-width: 0; }
+.va-ctx__text b { font: 700 13px/16px var(--font); letter-spacing: -0.01em; color: var(--ink); }
+.va-ctx__text span { font-size: 12px; }
+.va-ctx__ic .glyph { width: 18px; height: 18px; }
+.va-msgs { padding: 20px 16px 0; display: grid; gap: 16px; }
+/* a bubble shrinks to its longest line (width: max-content; the copy's own <br> breaks keep every line under the
+   cap, so the padding is the same on both sides), as a chat app draws it */
+.va-msg { width: max-content; max-width: 84%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 20px; color: var(--ink); }
+.va-msg--me { justify-self: end; background: #E1EAFF; border-bottom-right-radius: 6px; }
+.va-row { display: flex; align-items: flex-end; gap: 8px; }
+.va-row .va-ava { width: 24px; height: 24px; }
+.va-msg--them { max-width: calc(100% - 32px); background: var(--va-inset); border-bottom-left-radius: 6px; }
+.va-steps { margin-top: 8px; padding: 0; list-style: none; counter-reset: va-step; display: grid; gap: 4px; }
+.va-steps li { counter-increment: va-step; display: grid; grid-template-columns: 17px minmax(0, 1fr); }
+.va-steps li::before { content: counter(va-step) "."; font-weight: 720; color: var(--blue); }
+/* the read receipt under the member's last bubble, as a chat app shows it (6 pt under the bubble) */
+.va-seen { justify-self: end; margin: -10px 4px 0 0; font: 600 11px/14px var(--font); color: var(--muted); }
+.va-input { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 84px; padding: 8px 12px 28px; display: flex; align-items: center; gap: 8px; background: #fff; box-shadow: 0 calc(-1 * var(--hl)) 0 var(--va-line); }
+.va-input__plus { flex: none; width: 32px; height: 32px; display: grid; place-items: center; color: var(--ink-2); }
+.va-input__field { flex: 1; min-width: 0; height: 40px; padding: 0 16px; display: flex; align-items: center; border-radius: 20px; background: var(--va-inset); font-size: 14px; color: var(--muted); }
+.va-input__send { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--blue); color: #fff; }
+.va .va-input__send .icon { width: 19px; height: 19px; stroke-width: 1.9; margin: 1px 2px 0 0; }
+
+/* Pushed screens and building blocks for the inner pages' phones (same canvas units, colours and hairlines as
+   above). A pushed screen ({% iphone push=True %}) starts with .va-nav (includes/phone_push_nav.html): the back
+   chevron and the previous screen's name in brand blue, an optional centred title, up to two actions. Then
+   compose: .va-big (the page's title), .va-text (body), .va-card (a white card; on .va--grey screens it lifts off
+   the inset grey), .va-facts (icon · label · value rows), .va-pill (a status), .va-btn (the screen's one action). */
+.va--grey { background: var(--va-inset); }
+.va-nav { position: relative; height: 48px; padding: 0 12px 0 6px; display: flex; align-items: center; gap: 4px; background: #fff; box-shadow: inset 0 calc(-1 * var(--hl)) 0 var(--va-line); }
+.va-nav__back { display: inline-flex; align-items: center; min-width: 0; font: 600 15px/1 var(--font); color: var(--blue); white-space: nowrap; }
+.va .va-nav__back .icon { width: 24px; height: 24px; stroke-width: 2.1; }
+.va-nav__title { position: absolute; left: 50%; transform: translateX(-50%); max-width: 46%; font: 700 15.5px/20px var(--font); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.va-nav__act { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--ink-2); }
+.va .va-nav__act .icon { width: 22px; height: 22px; }
+.va-big { margin: 16px 16px 0; font: 760 21px/26px var(--font); font-stretch: 104%; letter-spacing: -0.026em; color: var(--ink); text-wrap: balance; }
+.va-text { margin: 8px 16px 0; font-size: 14px; line-height: 20px; color: var(--ink-2); }
+.va-card { margin: 12px 16px 0; padding: 14px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 var(--hl) var(--va-line), 0 10px 20px -16px rgba(10, 18, 48, .35); }
+.va-card__label { display: block; font: 600 12.5px/16px var(--font); color: var(--muted); }
+.va-card__value { display: block; margin-top: 4px; font: 760 20px/24px var(--font); letter-spacing: -0.02em; color: var(--ink); }
+.va-facts { margin: 12px 16px 0; padding: 0; list-style: none; }
+.va-facts li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0; font-size: 13.5px; line-height: 18px; color: var(--ink-2); }
+.va-facts li + li { box-shadow: inset 0 var(--hl) 0 var(--va-line); }
+.va-facts li > b { font-weight: 680; color: var(--ink); white-space: nowrap; }
+.va-card > .va-facts { margin: -10px 0; }
+.va .va-facts .icon { width: 19px; height: 19px; color: var(--muted); }
+.va-pill { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 8px; font: 700 12.5px/1 var(--font); white-space: nowrap; background: var(--mint-50); color: var(--mint-ink); }
+.va-pill--blue { background: var(--blue-50); color: var(--blue-600); }
+.va-pill--sun { background: var(--sun-50); color: var(--sun-ink); }
+.va-pill--coral { background: var(--coral-50); color: var(--coral-ink); }
+.va-btn { margin: 16px 16px 0; height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 14px; background: var(--blue); color: #fff; font: 680 15px/1 var(--font); }
+.va .va-btn .icon { width: 19px; height: 19px; stroke-width: 1.9; }
+.va-btn--quiet { background: var(--va-inset); color: var(--ink); }
+
+/* the scam checker (/cong-cu/kiem-tra-lua-dao/), in the tool's own colours (393 pt canvas, no zoom): the tool's
+   title row, the paste box, the button, the verdict. Larger type than the page (16 pt text, 30 pt verdict), as
+   the phone is seen at 70-80 % and turned a little. */
+.sx-nav {
+  position: relative; z-index: 2; height: 54px; padding: 0 18px 0 14px;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: inset 0 -1px 0 var(--line);
+  font: 760 20px/1 var(--font); font-stretch: 104%; letter-spacing: -0.024em; color: var(--ink);
+}
+.sx-nav .icon { width: 24px; height: 24px; stroke-width: 2.1; color: var(--blue); }
+/* the page scrolls under the title row behind a short fade; it rests on the paste card's top edge */
+.sx-view {
+  position: absolute; left: 0; right: 0; top: 108px; bottom: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12px); mask-image: linear-gradient(180deg, transparent 0, #000 12px);
+}
+.sx { padding: 16px 18px 0; transform: translateY(var(--sx-rest, 0px)); }
+.sx__card, .sx__result { padding: 18px; border-radius: 22px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 14px 26px -22px rgba(10, 18, 48, .4); }
+.sx__label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sx__label b { font: 680 15.5px/1.2 var(--font); }
+.sx__label span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.sx__count-0 { display: none; }
+/* one fixed box: the count swapping from "0 ký tự" to the sample's length never resizes it, so nothing on the
+   turned phone moves (CLS 0) */
+.sx__label .sx__count { min-width: 5.2em; height: 16px; line-height: 16px; text-align: right; }
+/* the box is scrolled to the middle of the pasted text, as a long paste sits: it fades out at both edges */
+.sx__text {
+  margin-top: 12px; height: 152px; overflow: hidden;
+  padding: 0 14px; border-radius: 14px; background: #F7F9FC; box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 16px; line-height: 1.55; color: var(--ink-2);
+}
+.sx__text > p:first-child { padding-top: 14px; }
+.sx__text p + p { margin-top: 10px; }
+.sx__text { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 30px), rgba(0, 0, 0, .1)); mask-image: linear-gradient(180deg, #000 calc(100% - 30px), rgba(0, 0, 0, .1)); }
+/* the marks are drawn as backgrounds (an underline, and a fill for money), so they can sweep in from the left
+   across a line break (home.js, once) */
+.sx-hl {
+  padding: 0 1px; color: var(--ink); background-color: transparent;
+  background-repeat: no-repeat; background-position: 0 100%;
+  -webkit-box-decoration-break: slice; box-decoration-break: slice;
+}
+.sx-hl--promise { background-image: linear-gradient(rgba(229, 72, 77, .66), rgba(229, 72, 77, .66)); background-size: 100% 2px; }
+.sx-hl--channel { background-image: linear-gradient(rgba(11, 21, 48, .7), rgba(11, 21, 48, .7)); background-size: 100% 2px; }
+.sx-hl--money {
+  color: var(--coral-ink); border-radius: 3px;
+  background-image: linear-gradient(rgba(229, 72, 77, .62), rgba(229, 72, 77, .62)), linear-gradient(var(--coral-50), var(--coral-50));
+  background-size: 100% 2px, 100% 100%;
+}
+.sx__run { margin-top: 14px; height: 52px; display: flex; align-items: center; justify-content: center; gap: 9px; border-radius: 15px; background: var(--blue); color: #fff; font: 680 16.5px/1 var(--font); transition: transform .12s var(--ease), background-color .2s var(--ease); }
+.sx__run .icon { width: 20px; height: 20px; stroke-width: 1.8; }
+.sx__result { margin-top: 14px; }
+.sx__risk small { display: block; font-size: 13.5px; color: var(--muted); }
+.sx__risk b { margin-top: 5px; display: flex; align-items: center; gap: 9px; font: 780 30px/1.05 var(--font); letter-spacing: -0.03em; color: var(--coral-ink); }
+.sx__risk .icon { width: 28px; height: 28px; stroke-width: 1.8; }
+.sx__meter { margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.sx__meter i { height: 9px; border-radius: 5px; background: var(--coral); }
+.sx__summary { margin-top: 14px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- 4 job card */
+/* The home's "Việc remote mới" card (markup: includes/njc.html). Real jobs only. */
+.njc {
+  position: relative;
+  display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 16px; align-items: start;
+  padding: 22px 22px 20px; border-radius: 22px;
+  background: #fff; box-shadow: 0 0 0 1px var(--tile-line), var(--sh-tile);
+  transition: box-shadow var(--d-ui) var(--ease), transform var(--d-ui) var(--ease-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .njc:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--line-2), var(--sh-tile-hover); }
+  .njc:hover .njc__title a { color: var(--ultra-ink); }
+}
+.njc__logo { width: 52px; height: 52px; border-radius: 14px; font-size: 17px; }
+.njc__body { min-width: 0; }
+.njc__title { font: 740 18.5px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
+.njc__title a { color: inherit; transition: color var(--d-micro) var(--ease); }
+.njc__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.njc__title a:focus-visible { outline: none; }
+.njc:has(.njc__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+/* one line, always: the company gives way (ellipsis) before the place does, so the three cards align */
+.njc__meta { margin-top: 8px; display: flex; align-items: center; gap: 14px; min-width: 0; white-space: nowrap; font-size: 13.5px; line-height: 1.3; color: var(--muted); }
+.njc__co, .njc__place { display: inline-flex; align-items: center; gap: 6px; }
+.njc__co { min-width: 0; }
+.njc__co > span { overflow: hidden; text-overflow: ellipsis; }
+.njc__place { flex: none; }
+.njc__meta .glyph, .njc__meta .icon { width: 16px; height: 16px; flex: none; color: #8890A6; }
+.njc__pay { margin-top: 12px; font: 740 20px/1.2 var(--font); letter-spacing: -0.02em; color: var(--green-pay); white-space: nowrap; }
+/* one row of whole chips: a chip that does not fit wraps onto a second row that is cut away, never half-shown */
+ul.njc__tags { margin-top: 14px; height: 30px; display: flex; flex-wrap: wrap; gap: 8px 8px; margin-right: 48px; overflow: hidden; }
+.njc__tags li { flex: none; height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; background: #F1F4F9; font: 500 13.5px/1 var(--font); color: var(--ink-2); }
+.njc__save { position: absolute; right: 18px; bottom: 18px; }
+@media (max-width: 1100px) {
+  .njc { grid-template-columns: 46px minmax(0, 1fr); gap: 14px; padding: 20px 18px 18px; }
+  .njc__logo { width: 46px; height: 46px; border-radius: 13px; }
+  .njc__title { font-size: 17.5px; }
+  .njc__pay { font-size: 19px; }
+  .njc__save { right: 14px; bottom: 14px; }
+}
+@media (max-width: 767px) {
+  .njc { grid-template-columns: 46px minmax(0, 1fr); gap: 14px; padding: 18px 16px 16px; border-radius: 18px; }
+  .njc__title { font-size: 17px; }
+  .njc__meta { font-size: 13px; gap: 12px; }
+  .njc__pay { font-size: 18.5px; margin-top: 10px; }
+  ul.njc__tags { margin-top: 12px; }
+  .njc__save { right: 12px; bottom: 12px; }
+}
+
+/* ---------------------------------------------------------------- 5 grain */
+/* fine matte grain on the three colour fields: a 256 px seamless tile of lightly blurred white noise
+   (img/grain-256.png, 8 grey levels), so no pattern repeats at a glance and no banding shows on the flat navy.
+   .sa-grain::before puts it on any other colour surface (the surface needs position: relative + isolation). */
+.sa-band--cobalt::before, .sa-band--navy::before, .sa-band--sky::before, .sa-grain::before,
+.hx::before, .tb::before, .jn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: url("../img/grain-256.png") 0 0 / 256px 256px; mix-blend-mode: soft-light; opacity: .2;
+}
+
+.sa-grain { position: relative; isolation: isolate; }
+
+/* ---------------------------------------------------------------- 6 bands */
+/* A band is one full-width colour field, the home's own: cobalt (the hero), navy (the tools band), sky (the
+   join band), paper (the white body). The colour bands are the header's bars underneath (base.css
+   --field-*-bar), so the sticky header laid over them always matches; one soft glow, the fine grain (§5).
+   Text on them is white; SMALL white text sits over the darker part of the field, never over the glow
+   (cobalt: the left two thirds by default; move the glow with --glow-at / --glow-size, e.g. behind a phone).
+   Each band section also carries data-field="cobalt|navy|sky|paper": the header takes that colour (common.js
+   VR.fieldHeader), and once one section on a page has it, every section should (or the header keeps the last). */
+.sa-band { position: relative; isolation: isolate; overflow: clip; }
+.sa-band--cobalt, .sa-band--navy, .sa-band--sky { color: #fff; --focus: var(--sun); }
+.sa-band--paper { background: #fff; }
+.sa-band--cobalt {
+  background:
+    radial-gradient(var(--glow-size, 40% 58%) at var(--glow-at, 72% 58%), rgba(88, 152, 255, .78) 0%, rgba(76, 141, 255, .42) 42%, rgba(76, 141, 255, 0) 76%),
+    radial-gradient(36% 44% at 0% 100%, rgba(16, 36, 160, .34) 0%, rgba(16, 36, 160, 0) 70%),
+    var(--field-cobalt-bar);
+}
+.sa-band--navy {
+  background:
+    radial-gradient(var(--glow-size, 40% 70%) at var(--glow-at, 22% 100%), rgba(66, 112, 240, .30) 0%, rgba(66, 112, 240, 0) 72%),
+    var(--field-navy-bar);
+}
+/* sky: lighter at both edges, #2A5CEC–#2C5FEF behind centred copy (white 14.5 px text >= 5.2:1) */
+.sa-band--sky {
+  background:
+    radial-gradient(46% 120% at 50% 46%, #2A5CEC 0%, rgba(42, 92, 236, .92) 50%, rgba(42, 92, 236, 0) 100%),
+    linear-gradient(90deg, #3672FB 0%, #2F66F4 26%, #2A5CEC 50%, #2652EB 74%, #2349EB 100%);
+}
+/* a band whose art leans out of its TOP edge (.sa-lean): the band clips only its floor */
+.sa-band--lean { z-index: 1; overflow: visible; overflow-x: clip; clip-path: inset(-160px 0 0 0); }
+
+/* ---------------------------------------------------------------- 7 page hero */
+/* The inner pages' hero: the home's cobalt field, compact. It starts under the sticky header (pulled up by its
+   height; the page sets {% block html_attrs %} data-field="cobalt"{% endblock %} so the header is cobalt from the
+   first paint and transparent over the hero once JS runs). Copy on the left (chip, h1 with at most one sunflower
+   .mark, lead, at most two buttons, one quiet note); art on the right: ONE phone of the app (.sa-phone), at most
+   one .sa-float card with a real fact, and the "Giao diện minh họa" caption (.sa-cap) when the screen is
+   illustrative. Variants:
+     (default)   the whole phone stands in the hero, the caption under it (~700 px tall at 1440). EVERY hero
+                 phone, tab or pushed screen, on every page: one scale (--hero-k .66, 279 px wide, the home's
+                 side phones are 268), the whole phone, the caption below it (judged 15/11: one phone idiom)
+     --rise      retired for heroes (kept for the kit page): the phone rose from the band's floor, caption above
+     --compact   less padding, a smaller h1: tool, guide, form and list pages whose content must start soon
+     --center    centred copy, no art (404, saved jobs, stories)
+   Phones (< 900 px): stacked, copy first, then the caption and the phone rising from the floor, the same crop on
+   every page (--hero-peek: 380 px of the phone show above the band's floor). */
+.sa-hero {
+  --hero-k: .66;                                /* ONE hero phone scale on every page (never set per page) */
+  --glow-at: 80% 62%; --glow-size: 34% 62%;    /* the glow sits behind the phone, clear of the copy (ends at 54 %) */
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + 56px) 0 72px;
+}
+.sa-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; align-items: center; }
+.sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); }
+.sa-hero__copy { max-width: 620px; }
+.sa-hero .breadcrumb { margin-bottom: 20px; }
+.sa-hero .breadcrumb ol { color: rgba(255, 255, 255, .88); }
+.sa-hero .breadcrumb a:hover, .sa-hero .breadcrumb [aria-current] { color: #fff; }
+.sa-hero .breadcrumb li + li::before { border-color: rgba(255, 255, 255, .6); }
+/* the wide display voice of the home's h1 (TikTok Sans at 114 % width), one step smaller */
+.sa-hero__title {
+  margin-top: 22px;
+  font: 740 clamp(40px, 4.1vw, 58px)/1.07 var(--font-wide); font-stretch: 114%; letter-spacing: -0.022em;
+  color: #fff; text-wrap: balance;
+}
+.sa-hero__copy > .sa-hero__title:first-child, .sa-hero .breadcrumb + .sa-hero__title { margin-top: 0; }
+.sa-hero__title .mark {
+  display: inline-block; line-height: 1;
+  padding: .06em .14em .1em; margin: .06em -.02em 0;
+  border-radius: .16em; background: var(--sun); color: var(--ink);
+}
+.sa-hero__lead { margin-top: 20px; max-width: 32em; font-size: 18.5px; line-height: 1.55; color: rgba(255, 255, 255, .94); text-wrap: pretty; }
+.sa-hero__actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; }
+.sa-hero__actions .btn--ghost-light { border-color: rgba(255, 255, 255, .72); }
+.sa-hero__actions .btn--ghost-light:hover { border-color: #fff; background: rgba(255, 255, 255, .1); }
+.sa-hero__note { margin-top: 20px; display: flex; align-items: center; gap: 8px; font-size: 15px; color: rgba(255, 255, 255, .92); }
+.sa-hero__note .glyph, .sa-hero__note .icon { width: 16px; height: 16px; opacity: .9; }
+.sa-hero__copy > .sa-cap { margin-top: 24px; }
+.sa-hero__art { position: relative; display: grid; justify-items: center; align-content: center; gap: 30px; }
+.sa-hero .sa-phone { --phone-k: var(--hero-k); }
+/* --rise: the art box ends on the band's floor and the phone runs on below it, cut by the band (overflow: clip) */
+.sa-hero--rise { padding-bottom: 0; }
+.sa-hero--rise .sa-hero__copy { padding-bottom: 72px; }
+.sa-hero--rise .sa-hero__art { align-self: end; align-content: start; gap: 20px; height: var(--rise-h, 430px); }
+.sa-hero--rise .sa-hero__art > .sa-cap { order: -1; }
+.sa-hero--rise .sa-phone { --phone-k: var(--hero-k); }
+.sa-hero--rise .sa-phone::after { display: none; }
+.sa-hero--compact { padding: calc(var(--header-h) + 40px) 0 52px; }
+.sa-hero--compact .sa-hero__title { margin-top: 18px; font-size: clamp(36px, 3.5vw, 50px); }
+.sa-hero--compact .sa-hero__lead { margin-top: 16px; font-size: 17.5px; }
+.sa-hero--compact .sa-hero__actions { margin-top: 24px; }
+.sa-hero--compact.sa-hero--rise { padding-bottom: 0; }
+.sa-hero--compact.sa-hero--rise .sa-hero__copy { padding-bottom: 52px; }
+.sa-hero--compact.sa-hero--rise .sa-hero__art { --rise-h: 340px; }
+.sa-hero--compact .sa-phone { --phone-k: var(--hero-k); }
+/* centred: the glow sinks below the copy, so the small white text never sits on it */
+.sa-hero--center { --glow-at: 50% 150%; --glow-size: 62% 70%; text-align: center; }
+/* centred copy reaches the brighter middle of the bar: it stays narrow (<= 74 % of 1440) and fully white (>= 4.6:1) */
+.sa-hero--center .sa-hero__copy { max-width: 720px; margin-inline: auto; }
+.sa-hero--center .sa-hero__lead { margin-inline: auto; color: #fff; }
+.sa-hero--center .breadcrumb ol, .sa-hero--center .sa-hero__note { color: #fff; }
+.sa-hero--center .sa-hero__actions, .sa-hero--center .sa-hero__note, .sa-hero--center .breadcrumb ol { justify-content: center; }
+
+/* ---------------------------------------------------------------- 8 sections */
+/* Rhythm: calm, never cramped. A white section is .sa-sec on .sa-band--paper (data-field="paper"); two white
+   sections in a row are split by a hairline on the second head (.sa-head--rule), as on the home. */
+.sa-sec { padding-block: 80px; }
+.sa-sec--tight { padding-block: 56px; }
+.sa-sec--flush { padding-top: 0; }
+/* section titles: the home's wide voice (110 % width, 740, -0.024em), stepping down from the h1:
+   --cta 60 · --band 50 · --l 44 (default) · --m 40 · --s 30 */
+.sa-title {
+  font-family: var(--font-wide); font-weight: 740; font-stretch: 110%; letter-spacing: -0.024em;
+  font-size: clamp(32px, 3.05vw, 44px); line-height: 1.1; color: var(--ink); text-wrap: balance;
+}
+.sa-title--l { font-size: clamp(32px, 3.05vw, 44px); line-height: 1.1; }
+.sa-title--m { font-size: clamp(30px, 2.8vw, 40px); line-height: 1.1; }
+.sa-title--s { font-size: clamp(24px, 2.1vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
+.sa-title--band { font-size: clamp(34px, 3.5vw, 50px); line-height: 1.08; }
+.sa-title--cta { font-size: clamp(40px, 4.2vw, 60px); line-height: 1.04; }
+:is(.sa-band--cobalt, .sa-band--navy, .sa-band--sky) .sa-title { color: #fff; }
+.sa-lead { max-width: 36em; font-size: 18.5px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.sa-band--cobalt .sa-lead { color: rgba(255, 255, 255, .94); }
+.sa-band--navy .sa-lead { color: rgba(255, 255, 255, .88); }
+.sa-band--sky .sa-lead { color: #fff; }
+/* section head: centred (the home's "Trong cộng đồng có gì?") or split (title + sub left, a "see all" link
+   right: "Việc remote mới") */
+.sa-head { max-width: 780px; margin: 0 auto 44px; text-align: center; }
+.sa-head__sub { margin-top: 14px; font-size: 18.5px; line-height: 1.55; color: var(--muted); text-wrap: balance; }
+:is(.sa-band--cobalt, .sa-band--navy, .sa-band--sky) .sa-head__sub { color: rgba(255, 255, 255, .9); }
+.sa-head--left { margin-inline: 0; text-align: left; }
+.sa-head--split { max-width: none; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px 48px; margin: 0 0 28px; text-align: left; }
+.sa-head--split .sa-head__sub { margin-top: 10px; max-width: 40em; font-size: 17px; }
+.sa-head--rule { padding-top: 48px; border-top: 1px solid var(--line); }
+/* "Xem tất cả …": a quiet arrow link (no button, no underline until hover on colour) */
+.sa-more { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; font: 640 16px/1.2 var(--font); color: var(--ultra-ink); }
+.sa-more .icon { width: 18px; height: 18px; stroke-width: 1.9; transition: transform var(--d-ui) var(--ease-expo); }
+.sa-more:hover .icon { transform: translateX(3px); }
+:is(.sa-band--cobalt, .sa-band--navy, .sa-band--sky) .sa-more { color: #fff; }
+:is(.sa-band--cobalt, .sa-band--navy, .sa-band--sky) .sa-more:hover { text-decoration: underline; text-underline-offset: 4px; }
+/* flow inside a copy block (band copy, a section intro): chip → title 20 · title → lead 18 · lead → chips 26 ·
+   → actions 30. .sa-actions: the button row (a primary button, then a quiet .sa-more link). */
+.sa-chip + .sa-title { margin-top: 20px; }
+.sa-title + .sa-lead { margin-top: 18px; }
+:is(.sa-title, .sa-lead) + .sa-chips { margin-top: 26px; }
+.sa-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; }
+* + .sa-actions { margin-top: 30px; }
+/* grids: 3 up (--2, --4) · --icards: icon cards, two up even on phones · --jobs: job cards, one column < 900 px */
+.sa-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.sa-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sa-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ---------------------------------------------------------------- 9 cards */
+/* The white card: crisp white, a hairline and one soft two-layer shadow, 22 px corners (18 on phones). Make the
+   whole card a link with .sa-card__link on its title (the focus ring goes round the card). */
+.sa-card { position: relative; padding: 22px; border-radius: var(--sa-r-card); background: #fff; color: var(--ink-2); box-shadow: var(--sa-sh-card); }
+.sa-card--lg { padding: 32px; }
+.sa-card--hover, a.sa-card, .sa-card:has(.sa-card__link) { transition: box-shadow var(--d-ui) var(--ease), transform var(--d-ui) var(--ease-expo); }
+@media (hover: hover) and (pointer: fine) {
+  .sa-card--hover:hover, a.sa-card:hover, .sa-card:has(.sa-card__link):hover { transform: translateY(-3px); box-shadow: var(--sa-sh-card-hover); }
+  .sa-card:has(.sa-card__link):hover .sa-card__link { color: var(--ultra-ink); }
+}
+.sa-card__title { font: 740 18.5px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); text-wrap: balance; }
+.sa-card__text { margin-top: 6px; font-size: 14.5px; line-height: 1.5; color: var(--sa-desc); }
+.sa-card .app + .sa-card__title { margin-top: 16px; }
+.sa-card__link { color: inherit; transition: color var(--d-micro) var(--ease); }
+.sa-card__link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.sa-card__link:focus-visible { outline: none; }
+.sa-card:has(.sa-card__link:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+/* the icon card: the home's "Trong cộng đồng có gì?" tile. An app icon, a title that is the card's one link, one
+   line of description, a small arrow (or the external mark) in the corner that moves on hover */
+.sa-icard {
+  position: relative;
+  display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 18px; align-items: center;
+  padding: 22px 40px 22px 22px; border-radius: var(--sa-r-card);
+  background: #fff; box-shadow: var(--sa-sh-card);
+  transition: box-shadow var(--d-ui) var(--ease), transform var(--d-ui) var(--ease-expo);
+}
+.sa-icard .app { --s: 68px; }
+.sa-icard__title { font: 740 19.5px/1.2 var(--font); letter-spacing: -0.015em; color: var(--ink); text-wrap: balance; }
+.sa-icard__title a { color: inherit; transition: color var(--d-micro) var(--ease); }
+.sa-icard__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.sa-icard__title a:focus-visible { outline: none; }
+.sa-icard:has(.sa-icard__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.sa-icard__desc { margin-top: 5px; font-size: 14.5px; line-height: 1.5; color: var(--sa-desc); text-wrap: balance; }
+.sa-icard__short { display: none; }
+.sa-icard__go { position: absolute; top: 18px; right: 18px; width: 18px; height: 18px; stroke-width: 2; color: #9AA3B8; transition: transform var(--d-ui) var(--ease-expo), color var(--d-ui) var(--ease), opacity var(--d-ui) var(--ease); }
+@media (hover: hover) and (pointer: fine) {
+  .sa-icard:hover { transform: translateY(-3px); box-shadow: var(--sa-sh-card-hover); }
+  .sa-icard__go { opacity: 0; }
+  .sa-icard:hover .sa-icard__go, .sa-icard:focus-within .sa-icard__go { opacity: 1; }
+  .sa-icard .app { transition: transform .5s var(--spring-pop); }
+  .sa-icard:hover .app { transform: rotate(-4deg) scale(1.04); }
+  .sa-icard:hover .sa-icard__title a, .sa-icard:hover .sa-icard__go { color: var(--ultra-ink); }
+  .sa-icard:hover .sa-icard__go { transform: translateX(3px); }
+}
+
+/* ---------------------------------------------------------------- 10 chips */
+/* .sa-chip: the label pill above a title ON A COLOUR BAND (white 10 % fill, a 30 % inner line, a glyph).
+   .sa-chips: a row of feature chips (glyph in sunflower on colour; --light: white chips on the white body).
+   .sa-tags / .sa-tag: soft grey tags on white (fields, contract type), never a coloured confetti. */
+.sa-chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 40px; padding: 0 16px 0 13px; border-radius: 999px;
+  background: rgba(255, 255, 255, .10); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .30);
+  font: 600 14.5px/1 var(--font); color: #fff; white-space: nowrap;
+}
+.sa-chip .glyph, .sa-chip .icon { width: 20px; height: 20px; }
+.sa-chips { display: flex; flex-wrap: wrap; gap: 12px; }
+.sa-chips > li {
+  height: 48px; padding: 0 20px 0 16px; display: inline-flex; align-items: center; gap: 10px;
+  border-radius: 999px; background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
+  font: 600 15.5px/1 var(--font); color: #fff;
+}
+.sa-chips .glyph { width: 20px; height: 20px; color: var(--sun); }
+.sa-chips--light > li { background: #fff; box-shadow: var(--sa-sh-card); color: var(--ink); }
+.sa-chips--light .glyph { color: var(--blue); }
+.sa-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.sa-tags > li, .sa-tag { flex: none; height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--sa-tag); font: 500 13.5px/1 var(--font); color: var(--ink-2); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- 11 phones on a page */
+/* .sa-phone wraps one {% iphone %}: scale with --phone-k (on the wrapper or any ancestor), a soft contact shadow
+   under it (the phone stands on the "table"). --lean / --lean-r turn it a little (6°, its side band showing),
+   as the home's tools band does; --on-light: a lighter shadow for a phone on the white body. */
+.sa-phone { position: relative; width: max-content; }
+.sa-phone .iph { --k: var(--phone-k, .56); }
+.sa-phone::after {
+  content: ""; position: absolute; z-index: -1; left: 10%; right: 10%; bottom: -16px; height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(6, 16, 72, .42), rgba(6, 16, 72, .16) 60%, rgba(6, 16, 72, 0));
+}
+.sa-phone--on-light { --sh-phone: 0 50px 70px -36px rgba(10, 18, 48, .36), 0 22px 34px -24px rgba(10, 18, 48, .26); }
+.sa-phone--on-light::after { background: radial-gradient(closest-side, rgba(10, 18, 48, .2), rgba(10, 18, 48, .07) 60%, rgba(10, 18, 48, 0)); }
+.sa-phone--lean { rotate: -3deg; }
+.sa-phone--lean .iph { --iph-side: -6px 0 0 -1px #6B7079, -12px 1px 0 -2px #393C43; transform: perspective(1800px) rotateY(6deg); transform-origin: 100% 50%; }
+.sa-phone--lean .iph__key:not(.iph__key--power) { left: -14px; width: 5px; }
+.sa-phone--lean .iph__key--power { display: none; }
+.sa-phone--lean-r { rotate: 3deg; }
+.sa-phone--lean-r .iph { --iph-side: 6px 0 0 -1px #6B7079, 12px 1px 0 -2px #393C43; transform: perspective(1800px) rotateY(-6deg); transform-origin: 0% 50%; }
+.sa-phone--lean-r .iph__key--power { right: -14px; width: 5px; }
+.sa-phone--lean-r .iph__key:not(.iph__key--power) { display: none; }
+/* .sa-float: a white card floating beside a phone with ONE real fact (a verified count, a check); the page
+   places it (position: absolute inside .sa-hero__art). An <a class="sa-float"> lifts on hover. */
+.sa-float {
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: 100%;
+  padding: 12px 18px 12px 12px; border-radius: 20px;
+  background: #fff; color: var(--ink); box-shadow: var(--sa-sh-float);
+}
+.sa-float .app { --s: 44px; }
+.sa-float b { display: block; font: 740 17px/1.15 var(--font); letter-spacing: -0.015em; }
+.sa-float small { display: block; margin-top: 2px; font-size: 13.5px; line-height: 1.3; color: var(--muted); }
+a.sa-float { transition: transform var(--d-ui) var(--ease-expo), box-shadow var(--d-ui) var(--ease); }
+a.sa-float:hover { transform: translateY(-2px); box-shadow: 0 34px 54px -26px rgba(4, 12, 48, .6), 0 10px 20px -10px rgba(4, 12, 48, .28); }
+/* .sa-cap: "Giao diện minh họa" — said once, quietly, right by every illustrative screen (includes/demo_cap.html).
+   A deep matte pill on colour (white 88 %, >= 5:1), --light: grey on the white body. */
+.sa-cap {
+  display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 7px;
+  min-height: 28px; padding: 5px 13px 5px 10px; border-radius: 999px;
+  background: rgba(9, 22, 92, .42); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+  font: 500 13px/1.3 var(--font); color: rgba(255, 255, 255, .88); text-align: center;
+}
+.sa-cap .icon { width: 15px; height: 15px; stroke-width: 1.8; opacity: .9; }
+.sa-cap--light { background: var(--sa-tag); box-shadow: none; color: var(--muted); }
+
+/* ---------------------------------------------------------------- 12 split + lean */
+/* .sa-split: art + copy side by side (the home's navy tools band: 5 / 7). .sa-lean: a phone leaning out of its
+   band's top edge (put .sa-band--lean on the band), turned a little, cut by the band's floor. */
+.sa-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; min-height: 480px; }
+.sa-split--flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.sa-split--flip > .sa-split__art { order: 2; }
+.sa-split__art { position: relative; align-self: stretch; }
+.sa-split__copy { padding: 64px 0; }
+.sa-lean { position: absolute; left: 50%; top: -48px; transform: translateX(-50%) rotate(-3deg); transform-origin: 50% 0; }
+.sa-lean .iph { --k: var(--phone-k, .78); --iph-side: -6px 0 0 -1px #6B7079, -12px 1px 0 -2px #393C43; transform: perspective(1800px) rotateY(6deg); transform-origin: 100% 50%; }
+.sa-lean .iph__key:not(.iph__key--power) { left: -14px; width: 5px; }
+.sa-lean .iph__key--power { display: none; }
+
+/* ---------------------------------------------------------------- 13 CTA band */
+/* The home's "Thiếu mỗi bạn." strip on the sky band: bursts round a short title, one line of lead, the
+   sunflower "Vào cộng đồng" pill, the honest note. The floor is a soft seam over the navy footer; --seams adds
+   the top seam too (for a CTA right under a navy band, as on the home). */
+.sa-cta { padding: 44px 0 46px; text-align: center; box-shadow: inset 0 -30px 36px -32px rgba(10, 22, 84, .42); }
+.sa-cta--seams { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 34px 40px -34px rgba(10, 22, 84, .55), inset 0 -30px 36px -32px rgba(10, 22, 84, .42); }
+.sa-cta__inner { display: grid; justify-items: center; }
+.sa-cta__headline { display: flex; align-items: center; justify-content: center; gap: clamp(16px, 3vw, 40px); }
+.sa-cta__burst { width: clamp(36px, 3.4vw, 50px); height: auto; flex: none; margin-top: 18px; fill: none; stroke: #fff; stroke-width: 3.4; stroke-linecap: round; opacity: .92; }
+.sa-cta__lead { margin-top: 12px; max-width: 34em; font-size: 18.5px; line-height: 1.55; color: #fff; text-wrap: balance; }
+.sa-cta .btn--xl { --btn-h: 60px; margin-top: 22px; }
+.sa-cta__note { margin-top: 12px; font-size: 14.5px; color: #fff; }
+
+/* ---------------------------------------------------------------- 14 page shell */
+/* body.sa-page ({% block body_class %}sa-page …{% endblock %}): the white body and the brand's navy footer, as on
+   the home (.page-home). */
+.sa-page { background: #fff; }
+.sa-page .site-footer { background: var(--sa-navy-foot); }
+
+/* ---------------------------------------------------------------- responsive (kit §6–§14) */
+@media (max-width: 1240px) {
+  .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; }
+}
+@media (max-width: 1100px) {
+  .sa-grid { gap: 16px; }
+  .sa-icard { grid-template-columns: 56px minmax(0, 1fr); gap: 16px; padding: 20px 36px 20px 20px; }
+  .sa-icard .app { --s: 56px; }
+  .sa-icard__title { font-size: 18.5px; }
+}
+@media (max-width: 1024px) {
+  .sa-band--sky { background: radial-gradient(70% 120% at 50% 46%, #2A5CEC 0%, rgba(42, 92, 236, .92) 60%, rgba(42, 92, 236, 0) 100%), linear-gradient(90deg, #3270F8 0%, #2A5CEC 50%, #2349EB 100%); }
+  .sa-grid, .sa-grid--4, .sa-grid--icards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sa-grid--jobs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sa-split, .sa-split--flip { grid-template-columns: minmax(0, 1fr); gap: 0; min-height: 0; }
+  .sa-split__copy { order: -1; padding: 88px 0 28px; max-width: 680px; }
+  .sa-split__art { height: 470px; order: 0; }
+  .sa-lean { top: 24px; }
+  .sa-lean .iph { --k: var(--phone-k, .74); }
+}
+/* centred or full-width copy (< 1000 px): the calmer cobalt bar, the same one home.css sets (white 16-19 px copy
+   >= 4.9:1 across the whole width); the header's bar follows, as it reads the same token */
+@media (max-width: 999px) {
+  :root { --field-cobalt-bar: linear-gradient(90deg, #1F47D6 0%, #2350E2 48%, #2A5BEA 100%); }
+}
+@media (max-width: 900px) {
+  .sa-grid--jobs { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .sa-hero:has(.sa-hero__art) { --glow-at: 50% 88%; --glow-size: 58% 30%; }
+  /* the hero stacks: copy, then the phone rising from the band's floor (any variant) */
+  .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .sa-hero:has(.sa-hero__art) { padding-bottom: 0; }
+  .sa-hero__copy, .sa-hero--rise .sa-hero__copy, .sa-hero--compact.sa-hero--rise .sa-hero__copy { padding-bottom: 0; }
+  /* the art box hugs the caption and the phone's visible part (--hero-peek); the band's floor cuts the rest, so a
+     caption that wraps to two lines never changes how much of the phone shows */
+  .sa-hero__art, .sa-hero--rise .sa-hero__art { align-self: auto; align-content: start; grid-auto-rows: max-content; gap: 20px; height: auto; }
+  .sa-hero__art > .sa-cap { order: -1; }
+  .sa-hero__art > .sa-phone { height: var(--hero-peek, 380px); }
+  .sa-hero__art .sa-phone::after, .sa-hero__art .sa-float { display: none; }
+}
+@media (max-width: 767px) {
+  .sa-sec { padding-block: 64px; }
+  .sa-sec--tight { padding-block: 44px; }
+  .sa-sec--flush { padding-top: 0; }
+  .sa-title, .sa-title--l { font-size: 31px; }
+  .sa-title--m { font-size: 29px; }
+  .sa-title--s { font-size: 23px; }
+  .sa-title--band { font-size: 34px; }
+  .sa-title--cta { font-size: clamp(34px, 9.6vw, 40px); }
+  .sa-lead { font-size: 16.5px; line-height: 1.55; }
+  .sa-head { margin-bottom: 28px; }
+  .sa-head__sub { margin-top: 10px; font-size: 16px; }
+  .sa-head--split { display: block; margin-bottom: 22px; }
+  .sa-head--split .sa-head__sub { font-size: 16px; }
+  .sa-head--split .sa-more { margin-top: 10px; }
+  .sa-head--rule { padding-top: 44px; }
+  :is(.sa-title, .sa-lead) + .sa-chips { margin-top: 24px; }
+  * + .sa-actions { margin-top: 26px; }
+  .sa-grid, .sa-grid--2, .sa-grid--4 { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  /* icon cards: two up like an app grid, the icon on top, the short line only (< 480 px) */
+  .sa-grid--icards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sa-icard { grid-template-columns: minmax(0, 1fr); align-items: start; align-content: start; gap: 12px; padding: 16px 14px 18px; border-radius: var(--sa-r-card-sm); }
+  .sa-icard .app { --s: 48px; }
+  .sa-icard__title { font-size: 16px; line-height: 1.22; padding-right: 14px; }
+  .sa-icard__desc { margin-top: 5px; font-size: 13px; line-height: 1.42; }
+  .sa-icard__go { top: 16px; right: 14px; width: 16px; height: 16px; }
+  .sa-card { padding: 18px 16px; border-radius: var(--sa-r-card-sm); }
+  .sa-card--lg { padding: 24px 20px; }
+  .sa-hero { padding-top: calc(var(--header-h) + 28px); }
+  .sa-hero--compact { padding-top: calc(var(--header-h) + 24px); }
+  .sa-hero:not(:has(.sa-hero__art)) { padding-bottom: 48px; }
+  .sa-hero__title, .sa-hero--compact .sa-hero__title { margin-top: 16px; font-size: clamp(34px, 9.4vw, 42px); letter-spacing: -0.018em; }
+  .sa-hero__lead, .sa-hero--compact .sa-hero__lead { margin-top: 14px; font-size: 16.5px; line-height: 1.5; }
+  .sa-hero__actions, .sa-hero--compact .sa-hero__actions { margin-top: 24px; display: grid; gap: 10px; }
+  .sa-hero__actions .btn { width: 100%; }
+  .sa-hero__actions .btn--lg { --btn-h: 54px; }
+  .sa-hero__note { margin-top: 16px; font-size: 14.5px; }
+  .sa-hero--center .sa-hero__copy { text-align: left; }
+  .sa-hero--center .sa-hero__note, .sa-hero--center .breadcrumb ol { justify-content: flex-start; }
+  .sa-chip { height: 36px; padding: 0 14px 0 11px; gap: 8px; font-size: 13.5px; }
+  .sa-chip .glyph, .sa-chip .icon { width: 18px; height: 18px; }
+  .sa-chips { gap: 8px; }
+  .sa-chips > li { height: 40px; padding: 0 14px 0 12px; gap: 8px; font-size: 14px; }
+  .sa-chips .glyph { width: 18px; height: 18px; }
+  .sa-cap { padding: 7px 16px; border-radius: 16px; font-size: 12.5px; line-height: 1.35; }
+  .sa-cap__sep { display: none; }
+  .sa-cap__rest { flex-basis: 100%; }
+  .sa-split__copy { padding: 80px 0 12px; }
+  .sa-split__art { height: 450px; }
+  .sa-lean { top: 22px; transform: translateX(calc(-50% - 8px)) rotate(-3deg); }
+  .sa-lean .iph { --k: var(--phone-k, .72); }
+  .sa-cta { padding: 52px 0 60px; }
+  .sa-band--sky { background: linear-gradient(90deg, #2C5FEF 0%, #2A5CEC 50%, #2652EB 100%); }
+  .sa-cta__headline { gap: 8px; }
+  .sa-cta__burst { width: 24px; margin-top: 12px; stroke-width: 4; }
+  .sa-cta .sa-title--cta { white-space: nowrap; }
+  .sa-cta__lead { font-size: 16.5px; }
+  .sa-cta .btn--xl { --btn-h: 58px; font-size: 17px; width: 100%; max-width: 360px; }
+}
+@media (max-width: 479px) {
+  .sa-icard__long { display: none; }
+  .sa-icard__short { display: inline; }
+}
+@media (max-width: 380px) {
+  .sa-hero__title, .sa-hero--compact .sa-hero__title { font-size: 33px; }
+  .sa-chip { font-size: 12px; padding: 0 11px 0 9px; gap: 6px; }
+  .sa-chip .glyph, .sa-chip .icon { width: 15px; height: 15px; }
+  .sa-icard { padding: 14px; gap: 12px; }
+  .sa-icard__title { font-size: 15.5px; }
+  .sa-chips > li { font-size: 13.5px; }
+  .sa-lean .iph { --k: var(--phone-k, .68); }
+}

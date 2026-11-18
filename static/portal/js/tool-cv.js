@@ -1,0 +1,458 @@
+/* Việt Remote — CV / Upwork profile / proposal grader (/cong-cu/cham-cv/).
+   Transparent heuristics, 100% in the browser: nothing typed here is stored or sent.
+
+   Check: { id, label, weight, test(ctx) -> {pass, detail}, fix, example?: {before, after, why} }
+   Score = passed weight / total weight × 10, rounded to 0.5.
+*/
+(function () {
+  "use strict";
+
+  /* ---------------- text helpers ---------------- */
+  const VI_CHARS = /[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/gi;
+  const count = (re, text) => (text.match(re) || []).length;
+  const fold = (s) => VR.fold(s);
+
+  const ACTION_VERBS = ["led", "managed", "built", "created", "designed", "developed", "launched", "increased", "reduced",
+    "improved", "grew", "delivered", "automated", "optimized", "optimised", "implemented", "achieved", "drove", "generated",
+    "negotiated", "trained", "mentored", "analyzed", "analysed", "produced", "edited", "wrote", "organized", "coordinated",
+    "streamlined", "scaled", "saved", "won", "established", "redesigned", "migrated", "shipped", "boosted", "cut", "doubled",
+    "tripled", "planned", "researched", "translated", "handled", "resolved", "closed", "sourced", "hired",
+    /* Vietnamese verbs keep their diacritics: folded, "dat" would also be đặt/đất, "dung" người dùng, "giam" giám đốc */
+    "xây dựng", "triển khai", "quản lý", "quản lí", "thiết kế", "dẫn dắt", "phát triển", "tối ưu", "tự động hóa", "tự động hoá",
+    "hoàn thành", "đào tạo", "sản xuất", "cải thiện", "ra mắt", "tổ chức", "điều phối", "biên tập", "tăng", "giảm", "đạt", "dựng"];
+  /* runs on the lower-cased original text, with Unicode-aware edges: JS \b treats ư, ộ, ớ… as non-word characters */
+  const VERB_RE = new RegExp("(?<![\\p{L}\\p{N}])(" + ACTION_VERBS.map((v) => v.replace(/ /g, "\\s+")).join("|") + ")(?![\\p{L}\\p{N}])(?!\\s+viên)", "giu");   // "biên tập viên" is a job title
+  /* "I, my, me" as whole words only: with a plain \b, mới, với, người, lợi and Tôi would each count as "i" */
+  const FIRST_PERSON_RE = /(?<![\p{L}\p{N}'’])(i|my|me)(?![\p{L}\p{N}])/giu;
+  const WEAK_RE = /\b(responsible for|duties (included|include)|worked on|helped with|hard[- ]?working|team player|detail[- ]oriented|fast learner|quick learner|go[- ]getter|self[- ]motivated|passionate|results[- ]driven|chiu kho|nhiet tinh|ham hoc hoi|nang dong|trung thuc|co trach nhiem|cau tien)\b/g;
+  const METRIC_RE = /(\d+(?:[.,]\d+)?\s?(%|x\b|k\b|\+)|[$€£]\s?\d[\d.,]*|\d[\d.,]*\s?(usd|vnd|đ|triệu|million|followers|users|clients|customers|leads|views|subscribers|orders|projects|videos|episodes|articles|khách|người|dự án|đơn|video|bài))/gi;
+  const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]+/;
+  const LINK_RE = /(linkedin\.com|github\.com|behance\.net|dribbble\.com|vimeo\.com|youtube\.com|notion\.site|https?:\/\/|www\.|portfolio\s*:)/i;
+  const PERSONAL_RE = /\b(date of birth|dob|birthday|ngay sinh|nam sinh|marital|hon nhan|gioi tinh|gender|religion|ton giao|chieu cao|can nang|height|weight|cmnd|cccd|que quan|nationality)\b/;
+
+  /* sign-off lines at the end ("Best,", "Thanks, An", "Kind regards" + a name line) are not the
+     closing ask: the CTA checks read the last lines before them */
+  const SIGNOFF_RE = /^(best( wishes| regards)?|kind regards|warm regards|regards|many thanks|thanks( again| so much)?|thank you( so much| again)?|cheers|sincerely|yours( sincerely| truly)?|respectfully|talk soon|all the best|trân trọng|thân ái)(?!\p{L})[\s,.!–-]*/iu;
+  /* a name is capitalised words ("An", "Nguyen Thu Linh"), so "Thanks, let me know…" stays a sentence */
+  const NAME_RE = /^\p{Lu}[\p{L}.'’-]*(\s+\p{Lu}[\p{L}.'’-]*){0,3}$/u;
+  const isName = (l) => l.length <= 40 && NAME_RE.test(l);
+  const isSignoff = (l) => { const m = SIGNOFF_RE.exec(l); if (!m) return false; const rest = l.slice(m[0].length).trim(); return !rest || isName(rest); };
+  function withoutSignoff(lines) {
+    const out = lines.slice();
+    while (out.length > 1) {
+      const last = out[out.length - 1];
+      if (isSignoff(last)) { out.pop(); continue; }
+      if (out.length > 2 && isName(last) && isSignoff(out[out.length - 2])) { out.splice(-2, 2); continue; }
+      break;
+    }
+    return out.join("\n");
+  }
+
+  /** phone-like runs with at least 9 digits (a "2021 - 2022" year range is not a phone) */
+  function phoneIn(text) {
+    const runs = text.match(/\+?\d[\d .()-]{7,}\d/g) || [];
+    return runs.find((r) => r.replace(/\D/g, "").length >= 9 && !/^\d{4}\s*[-–]\s*\d{4}$/.test(r.trim())) || "";
+  }
+
+  function typos(raw) {
+    /* emails, links and domains are not prose */
+    const text = raw.replace(/\S+@\S+|https?:\/\/\S+|www\.\S+|\b[\w-]+\.(com|net|io|vn|org|me|co|site|app|dev|ai)\b\S*/gi, "link");
+    const found = [];
+    const add = (re, label) => { const m = text.match(re); if (m) found.push(label + ": “" + m[0].trim().slice(0, 24) + "”"); };
+    add(/\S+ {2,}\S+/, "Hai dấu cách liền nhau");
+    add(/[^\s]\s+[,;!?](?!\d)/, "Dấu cách trước dấu câu");
+    add(/(?<![\p{L}\p{N}])([\p{L}\p{N}]{2,})\s+\1(?![\p{L}\p{N}])/iu, "Lặp từ");
+    add(/(^|[.!?]\s+|\s)i\s(?=[a-z])/, "Chữ “i” viết thường");
+    add(/[a-zà-ỹ]{2,}\.(?=[A-ZÀ-Ỹ][a-zà-ỹ]{2,})|[a-zà-ỹ]{2,},(?=[A-Za-zÀ-ỹ]{2,})/, "Thiếu dấu cách sau dấu câu");
+    add(/[!?]{2,}/, "Dấu chấm than/hỏi lặp");
+    return found;
+  }
+
+  /** per-character fold (no diacritics, lower-case) with an index map, so a match on folded
+      text can be shown as the user wrote it ("Ngày sinh", not "ngay sinh") */
+  function foldMap(text) {
+    let out = "";
+    const map = [];
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const f = ch === "đ" || ch === "Đ" ? "d" : /\s/.test(ch) ? " " : ch.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+      for (let k = 0; k < f.length; k++) { out += f[k]; map.push(i); }
+    }
+    return { folded: out, map };
+  }
+
+  function context(text) {
+    const words = text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w));
+    const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+    const folded = fold(text);
+    const letters = count(/\p{L}/gu, text) || 1;
+    const fm = foldMap(text);
+    const slice = (m) => text.slice(fm.map[m.index], fm.map[m.index + m[0].length - 1] + 1);
+    /** first match of a folded-text pattern, in the user's own spelling ("" if none) */
+    const find = (re) => { const m = new RegExp(re.source, re.flags.replace("g", "")).exec(fm.folded); return m ? slice(m) : ""; };
+    /** every match, user's spelling, de-duplicated */
+    const findAll = (re) => {
+      const r = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+      const seen = new Map();
+      let m;
+      while ((m = r.exec(fm.folded))) { const s = slice(m); if (!seen.has(m[0])) seen.set(m[0], s); if (!m[0]) r.lastIndex++; }
+      return { count: (fm.folded.match(r) || []).length, list: Array.from(seen.values()) };
+    };
+    return {
+      text, folded, words, lines, find, findAll,
+      wordCount: words.length,
+      first: lines[0] || "",
+      opening: fold(text.slice(0, 220)),
+      ending: fold(withoutSignoff(lines).slice(-260)),
+      metrics: count(METRIC_RE, text),
+      verbs: count(VERB_RE, text.toLowerCase()),
+      weak: findAll(WEAK_RE),
+      viRatio: count(VI_CHARS, text) / letters,
+      bullets: lines.filter((l) => /^([-•*✓✔▪►–]|\d+[.)])\s*/.test(l)).length,
+      questions: count(/\?/g, text),
+      typos: typos(text),
+    };
+  }
+
+  const plural = (n, word) => `${n} ${word}`;
+  /* far too long (more than 3× the limit, e.g. a pasted document twice over) caps the verdict in grade() */
+  const rangeCheck = (min, max, unit) => (c) => {
+    const n = c.wordCount;
+    return { pass: n >= min && n <= max, overLimit: n > max * 3, detail: n < min ? `${n} ${unit}, ngắn quá (nên ${min}–${max}).` : n > max ? `${n} ${unit}, dài quá (nên ${min}–${max}).` : `${n} ${unit}, vừa đủ.` };
+  };
+  const englishCheck = (c) => ({
+    pass: c.viRatio < 0.02,
+    detail: c.viRatio < 0.02 ? "Viết bằng tiếng Anh." : `Khoảng ${Math.round(c.viRatio * 100)}% chữ cái có dấu tiếng Việt.`,
+  });
+  const typoCheck = (c) => ({
+    pass: c.typos.length <= 1,
+    detail: !c.typos.length ? "Không thấy lỗi gõ dễ thấy." : c.typos.length === 1 ? `Chỉ một lỗi nhỏ. ${c.typos[0]}.` : c.typos.slice(0, 3).join(" · ") + ".",
+  });
+  const weakCheck = (max) => (c) => ({
+    pass: c.weak.count <= max,
+    detail: c.weak.count ? `${c.weak.count <= max ? "Chỉ có " : "Tìm thấy "}${c.weak.list.slice(0, 4).map((w) => "“" + w + "”").join(", ")}.` : "Không dùng cụm sáo rỗng.",
+  });
+  /** fail when a pattern is found; detail quotes it as written */
+  const absent = (re, bad, good) => (c) => { const m = c.find(re); return { pass: !m, detail: m ? bad(m) : good }; };
+
+  /* ---------------- checklists ---------------- */
+  const MODES = {
+    cv: {
+      label: "Điểm CV", noun: "CV", unit: "từ",
+      field: "Dán nội dung CV",
+      hint: "Dán chữ từ file CV (Ctrl + A, Ctrl + C trong Word hoặc PDF). Ứng tuyển khách quốc tế thì dùng bản tiếng Anh.",
+      placeholder: "NGUYEN VAN A · Video Editor · email · LinkedIn…",
+      checks: [
+        { id: "length", label: "Độ dài một đến hai trang", weight: 1, test: rangeCheck(200, 900, "từ"),
+          fix: "Một trang cho dưới 5 năm kinh nghiệm. Cắt mô tả công việc chung chung, giữ kết quả." },
+        { id: "metrics", label: "Có số liệu đo kết quả", weight: 2,
+          test: (c) => ({ pass: c.metrics >= 3, detail: c.metrics ? `Tìm thấy ${plural(c.metrics, "con số")}, nên có từ 3.` : "Chưa có con số nào." }),
+          fix: "Mỗi vị trí ít nhất một con số: bao nhiêu khách, tăng bao nhiêu %, tiết kiệm bao nhiêu giờ.",
+          example: { before: "Responsible for managing social media accounts.", after: "Grew Instagram from 2,000 to 18,000 followers in 6 months by posting 5 Reels a week.", why: "Một con số cụ thể nói nhiều hơn ba tính từ." } },
+        { id: "verbs", label: "Mở đầu bằng động từ hành động", weight: 2,
+          test: (c) => ({ pass: c.verbs >= 5, detail: `${plural(c.verbs, "động từ mạnh")} (led, built, increased…), nên có từ 5.` }),
+          fix: "Bắt đầu mỗi gạch đầu dòng bằng một động từ quá khứ: Built, Led, Cut, Grew, Launched.",
+          example: { before: "Worked on the company website.", after: "Rebuilt the company website in Webflow, cutting load time from 6s to 1.8s.", why: "Động từ cụ thể cho thấy bạn đã làm gì, không chỉ có mặt." } },
+        { id: "contact", label: "Có email và số điện thoại", weight: 2,
+          test: (c) => { const e = EMAIL_RE.test(c.text); const p = Boolean(phoneIn(c.text)); return { pass: e && p, detail: e && p ? "Có cả email và số điện thoại." : e ? "Có email, thiếu số điện thoại." : p ? "Có số điện thoại, thiếu email." : "Không thấy email hay số điện thoại." }; },
+          fix: "Dòng đầu CV: email chuyên nghiệp (tên của bạn), số điện thoại có mã +84, thành phố và múi giờ.",
+          example: { before: "Contact: lanxinhdep99@yahoo.com", after: "lan.nguyen@example.com · +84 00 000 0000 · Ho Chi Minh City (GMT+7)", why: "Email theo tên thật trông chuyên nghiệp hơn biệt danh." } },
+        { id: "links", label: "Có LinkedIn hoặc portfolio", weight: 1,
+          test: (c) => ({ pass: LINK_RE.test(c.text), detail: LINK_RE.test(c.text) ? "Có đường dẫn để xem thêm." : "Chưa có link LinkedIn, GitHub hay portfolio." }),
+          fix: "Thêm link LinkedIn và một portfolio (Behance, GitHub, Notion, Google Drive công khai).",
+          example: { before: "Portfolio available on request.", after: "Portfolio: behance.net/lannguyen · 12 case studies", why: "Khách quốc tế muốn xem ngay, không muốn phải xin." } },
+        { id: "sections", label: "Đủ mục Kinh nghiệm, Kỹ năng, Học vấn", weight: 1,
+          test: (c) => {
+            const has = { "Kinh nghiệm": /\b(experience|work history|employment|kinh nghiem)\b/, "Kỹ năng": /\b(skills|tools|ky nang|cong cu)\b/, "Học vấn": /\b(education|hoc van|degree|university|dai hoc|certificat)\w*/ };
+            const missing = Object.keys(has).filter((k) => !has[k].test(c.folded));
+            return { pass: !missing.length, detail: missing.length ? `Thiếu mục: ${missing.join(", ")}.` : "Có đủ ba mục chính." };
+          },
+          fix: "Đặt tiêu đề rõ: SUMMARY · EXPERIENCE · SKILLS · EDUCATION. Phần mềm ATS đọc theo các tiêu đề này." },
+        { id: "weak", label: "Không dùng cụm sáo rỗng", weight: 1, test: weakCheck(1),
+          fix: "Thay “responsible for”, “hard-working”, “chịu khó” bằng việc bạn đã làm và kết quả.",
+          example: { before: "Hard-working team player with a passion for design.", after: "Product designer, 3 years in e-commerce, 40+ launches for Shopify brands.", why: "Ai cũng tự nhận chăm chỉ; ít ai ghi được con số." } },
+        { id: "personal", label: "Không ghi thông tin cá nhân thừa", weight: 1,
+          test: absent(PERSONAL_RE, (m) => `Có “${m}”: khách quốc tế không cần, nhiều nơi còn khuyên bỏ để tránh thiên vị.`, "Không có ngày sinh, giới tính hay tình trạng hôn nhân."),
+          fix: "Bỏ ngày sinh, giới tính, tình trạng hôn nhân, số CCCD, chiều cao, cân nặng.",
+          example: { before: "Date of birth: 12/03/1999 · Marital status: Single", after: "Ho Chi Minh City, Vietnam (GMT+7) · Open to remote", why: "Múi giờ có ích cho khách hơn ngày sinh." } },
+        { id: "firstperson", label: "Không xưng “I, my” trong CV", weight: 1,
+          test: (c) => { const n = count(FIRST_PERSON_RE, c.text); return { pass: n <= 3, detail: n ? `${plural(n, "lần")} dùng I, my, me.` : "Viết theo kiểu CV, không xưng ngôi thứ nhất." }; },
+          fix: "CV bỏ chủ ngữ: “Managed a team of 5” thay cho “I managed a team of 5”.",
+          example: { before: "I managed a team of 5 editors and I trained them.", after: "Managed and trained a team of 5 editors; cut turnaround from 5 to 3 days.", why: "Ngắn hơn, đọc nhanh hơn, còn chỗ cho kết quả." } },
+        { id: "english", label: "Tiếng Anh cho khách quốc tế", weight: 1, test: englishCheck,
+          fix: "Dùng bản tiếng Anh khi ứng tuyển việc nước ngoài; bản tiếng Việt chỉ cho công ty Việt Nam." },
+        { id: "typos", label: "Không có lỗi gõ dễ thấy", weight: 1, test: typoCheck,
+          fix: "Dán vào Grammarly hoặc LanguageTool, đọc to một lượt trước khi gửi." },
+      ],
+      sample: "NGUYEN THI LAN\nVideo Editor\nEmail: lan.nguyen@example.com | Phone: +84 00 000 0000\nDate of birth: 12/03/1999\n\nSUMMARY\nHard-working and passionate video editor with 3 years of experience. I am a team player and fast learner.\n\nEXPERIENCE\nVideo Editor, Sunrise Media (2022 – now)\n- Responsible for editing videos for YouTube channels.\n- Edited 120+ long-form videos and 300 Shorts for 6 clients.\n- Increased average view duration by 35% for a cooking channel.\n- Worked on thumbnails and subtitles.\n\nFreelance Editor (2021 – 2022)\n- Responsible for editing wedding videos.\n- Managed  projects for 15 couples.\n\nSKILLS\nPremiere Pro, After Effects, DaVinci Resolve, CapCut\n\nEDUCATION\nBachelor of Multimedia, Ton Duc Thang University (2021)",
+    },
+
+    upwork: {
+      label: "Điểm Upwork profile", noun: "profile", unit: "từ",
+      field: "Dán tiêu đề và phần Overview",
+      hint: "Dòng đầu tiên là tiêu đề (Title), phần còn lại là Overview đúng như trên Upwork.",
+      placeholder: "Podcast Video Editor | YouTube & Shorts\nYour podcast deserves clips people actually finish…",
+      checks: [
+        { id: "headline", label: "Tiêu đề cụ thể, dưới 70 ký tự", weight: 2,
+          test: (c) => {
+            const t = c.first; const n = t.split(/\s+/).filter(Boolean).length;
+            const generic = /^(freelancer|virtual assistant|video editor|designer|developer|writer|translator)\.?$/i.test(t.trim());
+            const ok = t.length >= 20 && t.length <= 70 && n >= 3 && !generic && !/^(hi|hello|my name)/i.test(t);
+            return { pass: ok, detail: `Tiêu đề: “${t.slice(0, 70)}${t.length > 70 ? "…" : ""}” (${t.length} ký tự).` };
+          },
+          fix: "Công thức: Vai trò + ngách + lợi ích. Dùng dấu | để tách, giữ dưới 70 ký tự.",
+          example: { before: "Video Editor", after: "Podcast Video Editor | YouTube & Shorts | 4-day turnaround", why: "Khách tìm theo ngách; tiêu đề chung chung chìm giữa hàng nghìn người." } },
+        { id: "opening", label: "Hai dòng đầu nói về khách", weight: 2,
+          test: (c) => {
+            const self = /^(hi|hello|hey)?[\s,!.]*(my name is|i am|i'm|i have)\b/.test(fold(c.lines.slice(1).join(" ")).slice(0, 80));
+            const you = /\b(you|your)\b/.test(fold(c.lines.slice(1).join(" ")).slice(0, 220));
+            return { pass: you && !self, detail: self ? "Mở đầu bằng giới thiệu bản thân." : you ? "Mở đầu hướng tới khách." : "Hai dòng đầu chưa nhắc tới khách (you, your)." };
+          },
+          fix: "Upwork chỉ hiện khoảng 200 ký tự đầu. Nói khách nhận được gì trước, tên bạn để sau.",
+          example: { before: "Hi, my name is Lan and I am a video editor from Vietnam.", after: "Your podcast deserves clips people actually finish. I turn each episode into 8–10 Shorts a week.", why: "Khách đọc để tìm giải pháp cho họ, không phải để làm quen." } },
+        { id: "length", label: "Overview 150–450 từ", weight: 1, test: rangeCheck(150, 450, "từ"),
+          fix: "Đủ để nêu dịch vụ, bằng chứng và cách làm việc; dài hơn thì khách không đọc hết." },
+        { id: "services", label: "Liệt kê dịch vụ bằng gạch đầu dòng", weight: 1,
+          test: (c) => ({ pass: c.bullets >= 3, detail: c.bullets ? `${plural(c.bullets, "gạch đầu dòng")}, nên có từ 3.` : "Chưa có danh sách dịch vụ." }),
+          fix: "3–6 gạch đầu dòng, mỗi dòng một dịch vụ cụ thể khách có thể thuê ngay." },
+        { id: "proof", label: "Có bằng chứng: số liệu, khách cũ, portfolio", weight: 2,
+          test: (c) => {
+            const words = /\b(clients?|projects?|reviews?|5-star|five-star|top rated|rising talent|portfolio|case stud(y|ies)|years?)\b/.test(c.folded);
+            return { pass: c.metrics >= 2 && words, detail: `${plural(c.metrics, "con số")}${words ? ", có nhắc khách hoặc dự án." : ", chưa nhắc khách cũ hay dự án."}` };
+          },
+          fix: "Ghi số dự án, loại khách, kết quả tiêu biểu và trỏ tới mục Portfolio." },
+        { id: "cta", label: "Kết bằng lời mời hành động", weight: 1,
+          test: (c) => { const ok = /\b(invite|message me|send me|contact me|let'?s|let us|book|click|reach out|get in touch|hire me|drop me)\b/.test(c.ending); return { pass: ok, detail: ok ? "Có lời mời ở cuối." : "Đoạn cuối chưa mời khách làm gì tiếp." }; },
+          fix: "Câu cuối nói rõ bước tiếp theo: gửi tin nhắn, mời vào job, nhận mẫu thử.",
+          example: { before: "Thank you for reading.", after: "Click Invite to Job and send me a raw clip; I'll return a free 30-second sample.", why: "Một bước nhỏ, rõ ràng dễ được làm hơn “liên hệ khi cần”." } },
+        { id: "offplatform", label: "Không ghi liên lạc ngoài Upwork", weight: 2,
+          test: (c) => {
+            const m = (c.text.match(EMAIL_RE) || [])[0] || c.find(/\b(whatsapp|telegram|skype|zalo|viber|wechat)\b/) || phoneIn(c.text);
+            return { pass: !m, detail: m ? `Có “${m.trim()}”: Upwork cấm và có thể khóa tài khoản.` : "Không có email, số điện thoại hay app chat." };
+          },
+          fix: "Xóa email, số điện thoại, Skype, WhatsApp. Mọi trao đổi trước hợp đồng phải ở trên Upwork.",
+          example: { before: "Contact me on WhatsApp +84 00 000 0000 for fast reply!", after: "Message me here on Upwork; I reply within 12 hours (GMT+7).", why: "Giữ tài khoản an toàn mà vẫn hứa phản hồi nhanh." } },
+        { id: "cheap", label: "Không hạ giá, không hứa quá đà", weight: 1,
+          test: absent(/\b(cheap|lowest price|low price|any price|work for free|unlimited revisions|100% satisfaction|satisfaction guaranteed)\b/, (m) => `Có “${m}”.`, "Không cạnh tranh bằng giá rẻ."),
+          fix: "Cạnh tranh bằng tốc độ, chất lượng, quy trình rõ ràng; “cheap” thu hút khách khó tính nhất." },
+        { id: "weak", label: "Không dùng cụm sáo rỗng", weight: 1, test: weakCheck(1),
+          fix: "Thay “hard-working”, “passionate” bằng một kết quả cụ thể." },
+        { id: "english", label: "Viết bằng tiếng Anh", weight: 1, test: englishCheck,
+          fix: "Khách Upwork đọc tiếng Anh; viết câu ngắn, rõ, không cần từ đao to búa lớn." },
+        { id: "typos", label: "Không có lỗi gõ dễ thấy", weight: 1, test: typoCheck,
+          fix: "Kiểm tra bằng Grammarly hoặc LanguageTool trước khi lưu profile." },
+      ],
+      sample: "Video Editor\nHi, my name is Lan. I am a video editor from Vietnam with 3 years of experience. I am hard-working and I always deliver on time. My price is cheap and I offer unlimited revisions.\n\nI can edit YouTube videos, Shorts, Reels and TikTok. I use Premiere Pro and After Effects.\n\nContact me on WhatsApp +84 00 000 0000 for fast reply!!",
+    },
+
+    proposal: {
+      label: "Điểm proposal", noun: "proposal", unit: "từ",
+      field: "Dán proposal hoặc cover letter",
+      hint: "Dán đúng bản bạn định gửi, kể cả lời chào và chữ ký.",
+      placeholder: "Hi Sarah, you need 4 podcast episodes edited every week…",
+      checks: [
+        { id: "dear", label: "Không mở bằng “Dear Sir/Madam”", weight: 2,
+          test: absent(/^\s*(dear (sir\/madam|sir or madam|sir|madam|hiring manager|client)|to whom it may concern)\b/, (m) => `Mở bằng “${m.trim()}”: đọc như thư gửi hàng loạt.`, "Lời chào không rập khuôn."),
+          fix: "Gọi tên khách nếu tin có tên, không thì “Hi there,” rồi vào việc ngay.",
+          example: { before: "Dear Sir/Madam, I am very interested in your job.", after: "Hi Sarah, you need 4 podcast episodes edited every week, delivered by Friday.", why: "Câu đầu nhắc lại đúng việc của khách cho thấy bạn đã đọc tin." } },
+        { id: "tailored", label: "Câu đầu nói về việc của khách", weight: 2,
+          test: (c) => {
+            const head = c.opening.replace(/^(hi|hello|hey|dear)[^,\n]*[,\n]\s*/, "").slice(0, 170);
+            const self = /^(my name is|i am|i'm|i have \d|i have been)/.test(head);
+            const you = /\b(you|your|you'?re)\b/.test(head);
+            return { pass: you && !self, detail: self ? "Câu đầu nói về bạn." : you ? "Câu đầu hướng tới khách." : "Câu đầu chưa nhắc tới khách hay dự án." };
+          },
+          fix: "Câu đầu tóm lại vấn đề của khách bằng lời của bạn; kinh nghiệm của bạn để câu thứ hai." },
+        { id: "length", label: "Ngắn: 70–250 từ", weight: 1, test: rangeCheck(70, 250, "từ"),
+          fix: "Khách đọc trên điện thoại giữa hàng chục proposal. Ba đoạn ngắn là đủ." },
+        { id: "question", label: "Có câu hỏi cho khách", weight: 2,
+          test: (c) => ({ pass: c.questions >= 1, detail: c.questions ? `${plural(c.questions, "câu hỏi")}.` : "Chưa có câu hỏi nào." }),
+          fix: "Một câu hỏi cụ thể về dự án khiến khách trả lời, và cuộc trò chuyện bắt đầu.",
+          example: { before: "I hope to hear from you soon.", after: "Do you already have an intro template, or should I design one for the series?", why: "Câu hỏi đúng chứng minh bạn hiểu việc, hơn mọi lời hứa." } },
+        { id: "proof", label: "Có bằng chứng liên quan", weight: 1,
+          test: (c) => { const ok = LINK_RE.test(c.text) || /\b(similar|recently|last (month|week|year)|for a client|case study|portfolio|sample)\b/.test(c.folded) || c.metrics >= 1; return { pass: ok, detail: ok ? "Có link, ví dụ hoặc số liệu." : "Chưa có link, dự án tương tự hay con số." }; },
+          fix: "Một link tới việc giống nhất, kèm một câu kết quả. Đừng dán cả portfolio.",
+          example: { before: "I have a lot of experience in video editing.", after: "Here's a 60-second clip from a similar show I edited last month: [link]. Retention went up 22%.", why: "Một ví dụ đúng loại việc thuyết phục hơn “nhiều kinh nghiệm”." } },
+        { id: "rate", label: "Nêu giá hoặc thời gian rõ ràng", weight: 1,
+          test: (c) => { const ok = /(\$\s?\d|\d\s?(usd|\$)|\/\s?(hr|hour)|per hour|hourly|fixed price|budget|\d+\s?(hours?|days?|weeks?)|deadline|timeline|deliver (by|within|in)|turnaround)/.test(c.folded); return { pass: ok, detail: ok ? "Có giá hoặc mốc thời gian." : "Chưa nhắc giá, số giờ hay hạn giao." }; },
+          fix: "Ước lượng thời gian và giá cho việc đầu tiên giúp khách quyết nhanh.",
+          example: { before: "I can do this job perfectly.", after: "I can deliver the first episode in 48 hours at $25/hour, about 3 hours per episode.", why: "Con số giúp khách so sánh và quyết định." } },
+        { id: "plan", label: "Có kế hoạch hoặc các bước làm", weight: 1,
+          test: (c) => { const ok = c.bullets >= 2 || /\b(first,?|then|step|next,?|plan|approach|my process|here'?s how)\b/.test(c.folded); return { pass: ok, detail: ok ? "Có các bước làm." : "Chưa nói bạn sẽ làm thế nào." }; },
+          fix: "2–3 bước ngắn: xem gì trước, giao gì khi nào, sửa thế nào." },
+        { id: "cta", label: "Kết bằng bước tiếp theo", weight: 1,
+          test: (c) => { const ok = /\b(call|chat|available|let me know|happy to|can start|schedule|reply|send (me|over)|share|would you like|shall i|want me to|start|next step|go ahead)\b|\?/.test(c.ending); return { pass: ok, detail: ok ? "Có lời mời bước tiếp theo." : "Đoạn cuối chưa đề nghị bước tiếp theo." }; },
+          fix: "Kết bằng một đề nghị dễ đồng ý: gọi 10 phút, gửi một file mẫu, bắt đầu từ thứ Hai." },
+        { id: "beg", label: "Không xin xỏ, không tự hạ mình", weight: 1,
+          test: absent(/\b(give me (a|one) chance|i am new|i'?m new|new (to|on) upwork|no reviews yet|low (budget|price)|cheap|for free|please hire|i need this job|kindly)\b/, (m) => `Có “${m}”.`, "Giọng tự tin, ngang hàng."),
+          fix: "Không nhắc mình là người mới; thay bằng một việc tương tự bạn đã làm, kể cả dự án tự làm.",
+          example: { before: "I am new on Upwork, please give me a chance.", after: "I recently edited 24 episodes for a similar show; here's one: [link].", why: "Khách thuê người giải được việc, không thuê vì thương." } },
+        { id: "english", label: "Viết bằng tiếng Anh", weight: 1, test: englishCheck,
+          fix: "Viết câu ngắn, chủ động; đọc lại bằng LanguageTool trước khi gửi." },
+        { id: "typos", label: "Không có lỗi gõ dễ thấy", weight: 1, test: typoCheck,
+          fix: "Một lỗi chính tả trong câu đầu đủ để khách bỏ qua." },
+      ],
+      sample: "Dear Sir/Madam,\n\nI am very interested in your job. I have read your job post and I am confident I can do this job perfectly. I have 3 years experience in video editing and I am very hard working.\n\nI am new on Upwork so please give me a chance, I will work with low price.\n\nThank you,\nLan",
+    },
+  };
+
+  function grade(mode, text) {
+    const conf = MODES[mode];
+    const c = context(text);
+    const results = conf.checks.map((check) => Object.assign({ check }, check.test(c)));
+    const total = conf.checks.reduce((s, ch) => s + ch.weight, 0);
+    const got = results.reduce((s, r) => s + (r.pass ? r.check.weight : 0), 0);
+    let score = Math.round((got / total) * 20) / 2;
+    /* a text more than 3× over the length limit is never "Sẵn sàng gửi", whatever else passes */
+    if (results.some((r) => r.overLimit)) score = Math.min(score, 7.5);
+    return { score, results, ctx: c };
+  }
+
+  /* ---------------- rendering ---------------- */
+  const e = (s) => VR.escape(s);
+  const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const fmtScore = (n) => n.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
+  const C = 326.73;
+
+  function verdict(score, noun) {
+    if (score >= 8.5) return [`Sẵn sàng gửi`, `${noun[0].toUpperCase() + noun.slice(1)} đạt gần hết tiêu chí. Đọc lại một lượt với đúng vị trí bạn ứng tuyển rồi gửi.`];
+    if (score >= 7) return ["Gần xong, sửa nốt vài chỗ", "Phần lớn đã ổn. Sửa các mục bên dưới, nhất là mục có trọng số cao."];
+    if (score >= 5) return ["Cần sửa trước khi gửi", "Có nền tảng, nhưng còn những lỗi khiến người đọc lướt qua. Sửa từ trên xuống."];
+    return ["Nên viết lại phần chính", "Trượt nhiều tiêu chí quan trọng. Xem ví dụ viết lại bên dưới để có khung bắt đầu."];
+  }
+
+  function itemHtml(r) {
+    const heavy = r.check.weight > 1 ? ` <span class="badge badge--neutral">Quan trọng</span>` : "";
+    return `<li class="check-item ${r.pass ? "is-pass" : "is-fail"}">${icon(r.pass ? "check-circle" : "x-circle")}
+  <span class="check-item__title">${e(r.check.label)}${r.pass ? "" : heavy}</span>
+  <span class="check-item__detail">${e(r.detail)}</span>
+  ${r.pass ? "" : `<span class="check-item__fix"><strong>Sửa:</strong> ${e(r.check.fix)}</span>`}
+</li>`;
+  }
+
+  function render(root, mode, res) {
+    const conf = MODES[mode];
+    const out = root.querySelector("[data-result]");
+    const ring = out.querySelector("[data-ring]");
+    ring.classList.remove("is-good", "is-ok", "is-low");
+    ring.classList.add(res.score >= 8 ? "is-good" : res.score >= 5 ? "is-ok" : "is-low");
+    const arc = out.querySelector("[data-arc]");
+    const scoreEl = out.querySelector("[data-score]");
+    const prev = Number(scoreEl.dataset.count) || 0;
+    requestAnimationFrame(() => { arc.style.strokeDashoffset = String(C * (1 - res.score / 10)); });
+    VR.countTo(scoreEl, res.score, { from: prev, decimals: 1, duration: 700 });
+
+    const [title, text] = verdict(res.score, conf.noun);
+    out.querySelector("[data-mode-label]").textContent = conf.label;
+    out.querySelector("[data-verdict]").textContent = title;
+    out.querySelector("[data-summary]").textContent = text;
+    const passed = res.results.filter((r) => r.pass);
+    const failed = res.results.filter((r) => !r.pass).sort((a, b) => b.check.weight - a.check.weight);
+    out.querySelector("[data-stats]").innerHTML = `<span><b>${passed.length}/${res.results.length}</b> tiêu chí đạt</span><span><b>${VR.fmt.int(res.ctx.wordCount)}</b> từ</span><span><b>${res.ctx.metrics}</b> con số</span>`;
+
+    out.querySelector("[data-fail-count]").textContent = String(failed.length);
+    out.querySelector("[data-pass-count]").textContent = String(passed.length);
+    out.querySelector("[data-fails]").innerHTML = failed.map(itemHtml).join("");
+    out.querySelector("[data-passes]").innerHTML = passed.map(itemHtml).join("");
+    out.querySelector("[data-fail-group]").hidden = !failed.length;
+    out.querySelector("[data-pass-group]").hidden = !passed.length;
+
+    let examples = failed.filter((r) => r.check.example).slice(0, 3);
+    if (!examples.length) examples = conf.checks.filter((ch) => ch.example).slice(0, 1).map((check) => ({ check }));
+    out.querySelector("[data-rewrites]").innerHTML = examples.map((r) => `<div class="rewrite" lang="en">
+  <div class="rewrite__side rewrite__before"><span class="badge badge--risk" lang="vi">Trước</span><span>${e(r.check.example.before)}</span></div>
+  <div class="rewrite__side"><span class="badge badge--ok" lang="vi">Sau</span><span>${e(r.check.example.after)}</span></div>
+  <p class="rewrite__why" lang="vi">${e(r.check.label)}: ${e(r.check.example.why)}</p>
+</div>`).join("");
+
+    out.hidden = false;
+    root.querySelector("[data-empty]").hidden = true;
+  }
+
+  VR.onReady(() => {
+    const card = document.querySelector("[data-cv]");
+    if (!card) return;
+    const root = card.closest(".tool-main") || document;
+    const input = card.querySelector("[data-input]");
+    const counter = card.querySelector("[data-counter]");
+    const result = root.querySelector("[data-result]");
+    const tabs = Array.from(card.querySelectorAll('[role="tab"]'));
+    const panel = card.querySelector("[data-panel]");
+    const drafts = { cv: "", upwork: "", proposal: "" };   // per-mode text, memory only
+    let mode = "cv";
+    let live = false;
+    let timer;
+
+    const words = () => input.value.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+    const updateCount = () => { counter.textContent = VR.fmt.int(words()) + " từ"; };
+    const showCriteria = () => {
+      const conf = MODES[mode];
+      root.querySelector("[data-criteria-title]").textContent = `Checklist chấm ${conf.noun} · ${conf.checks.length} tiêu chí`;
+      root.querySelector("[data-criteria]").innerHTML = conf.checks.map((ch) => `<li>${e(ch.label)}</li>`).join("");
+    };
+    const reset = () => { live = false; result.hidden = true; root.querySelector("[data-empty]").hidden = false; };
+
+    const run = (scroll) => {
+      const text = input.value.normalize("NFC").replace(/\r\n?/g, "\n").trim();
+      if (text.split(/\s+/).length < 8) {
+        reset();
+        if (scroll) { VR.toast("Dán thêm nội dung, ít nhất vài câu"); input.focus(); }
+        return;
+      }
+      render(root, mode, grade(mode, text));
+      live = true;
+      if (scroll) {
+        const top = result.getBoundingClientRect().top;
+        if (top > window.innerHeight * 0.7 || top < 0) result.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+      }
+    };
+
+    const setMode = (next, focus) => {
+      if (!MODES[next]) return;
+      drafts[mode] = input.value;
+      mode = next;
+      tabs.forEach((t) => {
+        const on = t.dataset.mode === next;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        if (on) { panel.setAttribute("aria-labelledby", t.id); if (focus) t.focus(); }
+      });
+      const conf = MODES[next];
+      card.querySelector("[data-label]").textContent = conf.field;
+      card.querySelector("[data-hint]").textContent = conf.hint;
+      input.placeholder = conf.placeholder;
+      input.value = drafts[next];
+      updateCount();
+      showCriteria();
+      if (input.value.trim()) run(false); else reset();
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => setMode(tab.dataset.mode));
+      tab.addEventListener("keydown", (event) => {
+        const dir = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+        if (!dir) return;
+        event.preventDefault();
+        setMode(tabs[(i + dir + tabs.length) % tabs.length].dataset.mode, true);
+      });
+    });
+    input.addEventListener("input", () => {
+      updateCount();
+      if (!live) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => run(false), 350);
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); run(true); }
+    });
+    card.querySelector("[data-run]").addEventListener("click", () => run(true));
+    card.querySelector("[data-sample]").addEventListener("click", () => { input.value = MODES[mode].sample; updateCount(); run(true); });
+    card.querySelector("[data-clear]").addEventListener("click", () => { input.value = ""; updateCount(); reset(); input.focus(); });
+
+    const fromHash = (location.hash || "").replace("#", "");
+    if (MODES[fromHash]) setMode(fromHash); else { showCriteria(); updateCount(); }
+    window.addEventListener("hashchange", () => { const h = location.hash.replace("#", ""); if (MODES[h]) setMode(h); });
+  });
+
+  VR.gradeText = grade;   // console / test hook
+})();

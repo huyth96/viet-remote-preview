@@ -1,0 +1,1243 @@
+/* =====================================================================
+   Việt Remote — jobs.css  (jobs group: /viec-lam/, /nganh/<slug>/, job detail, /da-luu/, /luong-remote/)
+   Binding: portal/DESIGN_SYSTEM_SUPERAPP.md (the approved home's language). The shared pieces come from
+   superapp.css (bands, page hero, phones, .njc, .sa-card, .sa-chips, CTA band) and base.css (.btn, .search,
+   .tabs, .chip, .badge, .logo, .save-btn, .job-row); this file only composes the pages and restyles the board's
+   rows (job_row.html / VR.jobRow) to the home job card's recipe (.njc): crisp white, hairline + soft two-layer
+   shadow, 22 px corners, 52 px logo, 740 title, pay in green. Every other job card on these pages IS the home's
+   card (njc.html): the rail, "Việc tương tự", "Gợi ý để bắt đầu". Page prefixes: .jl- (board),
+   .fd- (field), .jd- (detail), .sv- (saved), .sl- (salary). Matte only: no gloss, glass or glow behind text.
+
+   Sections
+     0  Initials tiles       logo-less employers as the app's solid tiles (rows, cards, tracker, job page, phones)
+     1  Filter controls      fopt (checkbox row) · fswitch · fseg
+     2  Board hero           .jl-hero (compact cobalt band, search, counts, the whole app phone)
+     3  Board list           grid · filter card (sticky / bottom sheet) · rail · bar · rows · more · fab
+     4  Field page           /nganh/<slug>/ (hero note, skills row, guides)
+     5  Job detail           cobalt head · pay card (sticky) · facts · checks · description · similar · bar
+     6  Saved tracker        centred hero · app-like board (desktop) · status tabs (mobile) · empty state
+     7  Salary               cobalt hero + distribution card · median table card · skills · method · navy band
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 initials tiles */
+/* An employer without a logo that reads at this size gets the app's solid tile (superapp.css .va-job__tile: one
+   matte colour, soft top light, darker foot, white initials), never a grey monogram. The colour is fixed per
+   company: picked from the first initial (data-initials, printed by job_row.html, njc.html, VR.jobRow, saved.js, the
+   job page and the phone rows), so one employer reads the same in the hero phone, the list, the cards, the tracker
+   and its job page. Blue / violet / orange: the phone's three job colours. An anonymous Upwork client (empty
+   initials) is the blue tile with the app's white briefcase glyph. Real logos (an <img>) are left as they are. */
+:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile) {
+  --c: #2F6BFF;
+  color: #fff;
+  background:
+    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 6px 12px -8px rgba(10, 18, 48, .45);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .16);
+  font-weight: 760;
+}
+:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile):is(
+  [data-initials^="B"], [data-initials^="C"], [data-initials^="F"], [data-initials^="J"],
+  [data-initials^="O"], [data-initials^="P"], [data-initials^="Q"], [data-initials^="Z"]) { --c: #7E5BF2; }
+:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile):is(
+  [data-initials^="D"], [data-initials^="E"], [data-initials^="G"], [data-initials^="K"],
+  [data-initials^="M"], [data-initials^="T"], [data-initials^="U"], [data-initials^="X"]) { --c: #EC6A14; }
+:is(.page-jobs, .page-job, .page-saved) .logo:empty::before {
+  width: 52%; height: 52%;
+  background: #fff;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9.3 3.4h5.4c1 0 1.8.8 1.8 1.8v1.4h2.6a2.4 2.4 0 0 1 2.4 2.4v9.7a2.4 2.4 0 0 1-2.4 2.4H4.9a2.4 2.4 0 0 1-2.4-2.4V9a2.4 2.4 0 0 1 2.4-2.4h2.6V5.2c0-1 .8-1.8 1.8-1.8Zm.1 1.8v1.4h5.2V5.2ZM2.5 12.6v1.5h8.3v.4c0 .4.3.7.7.7h1c.4 0 .7-.3.7-.7v-.4h8.3v-1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9.3 3.4h5.4c1 0 1.8.8 1.8 1.8v1.4h2.6a2.4 2.4 0 0 1 2.4 2.4v9.7a2.4 2.4 0 0 1-2.4 2.4H4.9a2.4 2.4 0 0 1-2.4-2.4V9a2.4 2.4 0 0 1 2.4-2.4h2.6V5.2c0-1 .8-1.8 1.8-1.8Zm.1 1.8v1.4h5.2V5.2ZM2.5 12.6v1.5h8.3v.4c0 .4.3.7.7.7h1c.4 0 .7-.3.7-.7v-.4h8.3v-1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* ---------------------------------------------------------------- 1 filter controls */
+/* visually hidden native input; the row shows its focus ring instead */
+.fopt input, .fswitch input, .fseg__opt input {
+  position: absolute; width: 1px; height: 1px; margin: 0; padding: 0;
+  opacity: 0; pointer-events: none;
+}
+
+/* checkbox row: [box] label ........ count */
+.fopt {
+  position: relative;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  min-height: 38px; padding: 0 10px; margin: 0 -10px;
+  border-radius: 12px;
+  font: 500 14.5px/1.3 var(--font); color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--d-micro) var(--ease), opacity var(--d-micro) var(--ease);
+}
+.fopt:hover { background: var(--sa-tag); }
+.fopt:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 0; }
+.fopt__box {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 1.5px solid #C3CBDA; background: #fff;
+  transition: background-color var(--d-micro) var(--ease), border-color var(--d-micro) var(--ease);
+}
+.fopt input:checked ~ .fopt__box {
+  border-color: var(--blue);
+  background: var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 12.5 4 4 9-9'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+.fopt input:checked ~ .fopt__label { color: var(--ink); font-weight: 640; }
+.fopt__label { min-width: 0; padding-block: 8px; }
+.fopt__n { min-width: 24px; text-align: right; font: 500 13px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
+.fopt.is-zero:not(:has(input:checked)) { opacity: .45; }
+
+/* switch row: label ... count [track] */
+.fswitch {
+  position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto 38px; align-items: center; gap: 10px;
+  min-height: 44px; cursor: pointer;
+  font: 600 14.5px/1.3 var(--font); color: var(--ink);
+}
+.fswitch__n { font: 500 13px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
+.fswitch__track {
+  position: relative; width: 38px; height: 22px; border-radius: 999px;
+  background: #D3D9E4;
+  transition: background-color var(--d-micro) var(--ease);
+}
+.fswitch__track::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(11, 21, 48, .24);
+  transition: transform var(--d-ui) var(--ease-expo);
+}
+.fswitch input:checked ~ .fswitch__track { background: var(--blue); }
+.fswitch input:checked ~ .fswitch__track::after { transform: translateX(16px); }
+.fswitch:has(input:focus-visible) .fswitch__track { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* segmented radio pills: the app's chips (grey, the chosen one solid blue) */
+.fseg { display: flex; flex-wrap: wrap; gap: 6px; }
+.fseg__opt { position: relative; cursor: pointer; }
+.fseg__opt span {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 13px;
+  border-radius: 999px; background: var(--sa-tag);
+  font: 600 13.5px/1 var(--font); color: var(--ink-2);
+  transition: background-color var(--d-micro), color var(--d-micro);
+}
+.fseg__opt:hover span { background: #E7EBF3; }
+.fseg__opt input:checked + span { background: var(--blue); color: #fff; }
+.fseg__opt input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- 2 board hero */
+/* The compact cobalt hero (.sa-hero--compact, the kit's default art): copy left (crumb, h1 with one sunflower mark,
+   a one-line lead, the search pill, three real counts), the WHOLE app phone on the right on its "Việc làm" tab
+   (header, list, the 5-tab bar with "Việc làm" lit, as the home's phones), the caption under it. */
+/* The phone is the kit's one hero phone (--hero-k .66, 279 px wide at 1440), centred in a wide art column that
+   starts close to the copy; one white card with a real fact (.jl-float: every listing's 5-layer check) leans on
+   the phone's frame at its top left and bridges copy and phone, as /cong-dong/'s member card does (it covers only
+   the frame, never the screen); the glow follows the phone. */
+.jl-hero { --glow-at: 76% 60%; }
+.jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 560px); gap: 40px; }
+.jl-hero .sa-hero__art { gap: 22px; }
+.jl-float { position: absolute; z-index: 2; top: 52px; right: calc(50% + 423px * var(--hero-k) / 2 - 8px); }
+.jl-hero .sa-hero__copy { max-width: 640px; }
+.jl-hero .sa-hero__lead { max-width: 30em; }
+.jl-search {
+  margin-top: 26px; height: 62px; max-width: 600px; padding: 7px 7px 7px 22px;
+  border: 0; box-shadow: var(--sa-sh-float);
+}
+.jl-search:focus-within { border: 0; box-shadow: 0 0 0 3px var(--sun), var(--sa-sh-float); }   /* the kit's sunflower focus on colour (>= 3:1) */
+.jl-search input { font-size: 16.5px; }
+.jl-search .btn { padding: 0 24px; font-size: 15.5px; }
+.jl-search__clear { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); flex: none; }
+.jl-search__clear:hover { background: var(--sa-tag); color: var(--ink); }
+/* three real counts under the search: a figure in the wide display voice over a short label */
+.jl-stats { margin: 26px 0 0; display: flex; flex-wrap: wrap; row-gap: 12px; }
+/* column-reverse puts the figure above its label; flex-end packs to the top in a reversed column, so every figure
+   sits on one line even when a label wraps to two (phones) */
+.jl-stats > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 6px; padding-right: 28px; }
+.jl-stats > div + div { padding-left: 28px; box-shadow: inset 1px 0 0 rgba(255, 255, 255, .26); }
+.jl-stats dd { font: 740 28px/1 var(--font-wide); font-stretch: 110%; letter-spacing: -0.024em; color: #fff; }
+.jl-stats dt { font-size: 14.5px; line-height: 1.2; color: #fff; }
+.jl-hero .sa-phone .va-job__pay { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 1240px) {
+  .jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; }
+  .jl-float { display: none; }
+}
+/* tablets and phones: the phone goes (the list is the page), the hero closes under the counts */
+@media (max-width: 900px) {
+  .jl-hero, .jl-hero:has(.sa-hero__art) { --glow-at: 100% 0%; --glow-size: 52% 46%; padding-bottom: 40px; }
+  .jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr); }
+  .jl-hero .sa-hero__art { display: none; }
+  .jl-search { max-width: 640px; }
+}
+@media (max-width: 767px) {
+  .jl-hero, .jl-hero:has(.sa-hero__art) { padding-bottom: 32px; }
+  .jl-hero .sa-hero__lead { font-size: 16px; }
+  .jl-search { margin-top: 20px; height: 56px; padding: 6px 6px 6px 16px; }
+  .jl-search input { font-size: 16px; }
+  .jl-search .btn { padding: 0 16px; }
+  .jl-stats { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .jl-stats > div { padding-right: 12px; min-width: 0; }
+  .jl-stats > div + div { padding-left: 12px; }
+  .jl-stats dd { font-size: 23px; }
+  .jl-stats dt { font-size: 13px; line-height: 1.3; }
+}
+@media (max-width: 400px) {
+  .jl-search .btn { padding: 0 14px; font-size: 14.5px; }
+  .jl-stats dd { font-size: 21px; }
+  .jl-stats dt { font-size: 12.5px; }
+}
+
+/* ---------------------------------------------------------------- 3 board list */
+.jl { position: relative; padding: 48px 0 88px; background: #fff; }
+.jl__grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
+
+/* filter card — sticky white card on desktop (the kit's white card) */
+.jl-panel {
+  position: sticky; top: calc(var(--header-h) + 16px);
+  max-height: calc(100vh - var(--header-h) - 32px);
+  display: flex; flex-direction: column;
+  background: #fff;
+  border-radius: var(--sa-r-card);
+  box-shadow: var(--sa-sh-card);
+}
+.jl-panel__head { display: flex; align-items: center; gap: 12px; padding: 20px 22px 6px; }
+.jl-panel__title { flex: 1; font: 740 17px/1.3 var(--font); letter-spacing: -0.014em; color: var(--ink); }
+.jl-panel__reset { font: 640 14px/1 var(--font); color: var(--ultra-ink); padding: 6px 0; }
+.jl-panel__reset:hover { color: var(--blue-600); }
+.jl-panel__close { display: none; }
+.jl-panel__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 22px 10px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+/* scroll cue: a fade pinned to the bottom of the scrollport, shown only while groups remain below */
+.jl-panel__body::after {
+  content: ""; display: block; position: sticky; bottom: 0; z-index: 1;
+  height: 72px; margin: -72px -22px 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff 58%);
+  pointer-events: none; opacity: 0; transition: opacity var(--d-ui) var(--ease);
+}
+.jl-panel.has-more .jl-panel__body::after { opacity: 1; }
+.jl-panel__hint {
+  position: absolute; left: 50%; bottom: 12px; z-index: 2; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 11px 6px 13px;
+  border-radius: 999px; background: #fff; box-shadow: var(--sa-sh-card);
+  font: 600 12.5px/1 var(--font); color: var(--ink-2); white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--d-ui) var(--ease);
+}
+.jl-panel__hint .icon { width: 14px; height: 14px; }
+.jl-panel.has-more .jl-panel__hint { opacity: 1; pointer-events: auto; }
+.jl-panel__hint:hover { color: var(--ink); }
+.jl-panel__foot { display: none; }
+.jl-switches { padding: 4px 0 12px; }
+.fgroup { margin: 0; padding: 16px 0 14px; border: 0; border-top: 1px solid var(--line); min-width: 0; }
+.fgroup__title { float: left; width: 100%; padding: 0; margin-bottom: 8px; font: 700 14px/1.3 var(--font); letter-spacing: -0.006em; color: var(--ink); }
+.fgroup__list { clear: both; display: grid; }
+.fgroup .fseg { clear: both; padding-top: 2px; }
+.fgroup__more {
+  margin-top: 6px; display: inline-flex; align-items: center; gap: 4px;
+  font: 640 14px/1 var(--font); color: var(--ultra-ink); padding: 6px 0;
+}
+.fgroup__more .icon { transition: transform var(--d-ui) var(--ease); }
+.fgroup.is-open .fgroup__more .icon { transform: rotate(180deg); }
+.js .fgroup:not(.is-open) .fopt--more:not(:has(input:checked)) { display: none; }
+html:not(.js) .fgroup__more { display: none; }
+
+/* results column */
+.jl-results { min-width: 0; }
+.jl-quick { display: none; }
+.jl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 16px; min-height: 46px; }
+.jl-count { font-size: 15.5px; color: var(--ink-2); }
+.jl-count strong { font: 740 21px/1 var(--font-wide); font-stretch: 108%; letter-spacing: -0.02em; color: var(--ink); margin-right: 3px; }
+.jl-count .jl-count__q { color: var(--ink); font-weight: 600; }
+/* sort: the app's segmented control (grey track, the chosen one a white pill) */
+.jl-sort { padding: 4px; border: 0; background: var(--sa-tag); }
+.jl-sort .tab { height: 36px; padding: 0 15px; font: 600 14px/1 var(--font); color: var(--ink-2); }
+.jl-sort .tab[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(10, 18, 48, .08), 0 0 0 1px var(--tile-line); }
+
+.jl-active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+.jl-active[hidden] { display: none; }
+.jl-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 10px 0 14px;
+  border-radius: 999px;
+  background: var(--blue-50); color: var(--blue-600); box-shadow: inset 0 0 0 1px #C9D7FF;
+  font: 600 13.5px/1 var(--font);
+  max-width: 100%;
+  transition: box-shadow var(--d-micro) var(--ease), background-color var(--d-micro);
+}
+.jl-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jl-pill .icon { width: 14px; height: 14px; stroke-width: 2.2; opacity: .85; }
+.jl-pill:hover { box-shadow: inset 0 0 0 1.5px var(--blue); }
+.jl-clear-all { font: 640 13.5px/1 var(--font); color: var(--ink-2); padding: 8px 6px; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+.jl-clear-all:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+/* rows: the home job card's recipe in a dense list (VR.jobRow / job_row.html) */
+.jl-rows { gap: 12px; transition: opacity var(--d-ui) var(--ease); }
+.jl-rows .job-row {
+  grid-template-columns: 52px minmax(0, 1fr) auto auto; gap: 18px;
+  padding: 20px 20px 20px 22px;
+  border: 0; border-radius: var(--sa-r-card);
+  background: #fff; box-shadow: var(--sa-sh-card);
+  transition: box-shadow var(--d-ui) var(--ease), transform var(--d-ui) var(--ease-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .jl-rows .job-row:hover { transform: translateY(-2px); box-shadow: var(--sa-sh-card-hover); }
+  .jl-rows .job-row:hover .job-row__title a { color: var(--ultra-ink); }
+}
+.jl-rows .job-row:has(.job-row__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.jl-rows .job-row__title a:focus-visible { outline: none; }
+.jl-rows .job-row > .logo { width: 52px; height: 52px; border-radius: 14px; font-size: 16.5px; align-self: start; }
+.jl-rows .job-row__main { gap: 6px; grid-template-columns: minmax(0, 1fr); }   /* the one-line tablet meta ellipsises inside its column, never under the pay */
+.jl-rows .job-row__title { font: 740 18px/1.3 var(--font); letter-spacing: -0.016em; }
+.jl-rows .job-row__title a { transition: color var(--d-micro) var(--ease); }
+.jl-rows .job-row__meta { font-size: 13.5px; }
+.jl-rows .job-row__badges { margin-top: 4px; gap: 6px; }
+.jl-rows .job-row .badge { height: 28px; padding: 0 11px; font: 500 13px/1 var(--font); }
+.jl-rows .job-row__side { gap: 6px; }
+.jl-rows .job-row__pay { font: 740 18.5px/1.2 var(--font); letter-spacing: -0.02em; color: var(--green-pay); }
+.jl-rows .job-row__pay small { margin-top: 2px; font-weight: 500; letter-spacing: 0; }
+.jl-rows .job-row__pay .muted { font: 600 15px/1.2 var(--font); letter-spacing: -0.01em; color: var(--muted); }
+.jl-rows .job-row__age { font-size: 13px; }
+.jl-rows .job-row__source { font: 500 13px/1 var(--font); }
+/* calm rows, toward the home job card: company · field · level at most (the employment type and the rest live on
+   the job page); on a field page every row would repeat the field, so it goes and the employment type takes its
+   place. The pay leads with the listing's own figure; another currency adds one quiet ≈ USD line. */
+.jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
+.jl.is-preset .jl-rows .job-row__meta span:nth-child(2) { display: none; }
+
+.jl-rows.is-loading { opacity: .5; pointer-events: none; transition: opacity .2s; }
+.jl-loading { color: var(--muted); }
+.jl-loading::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px;
+  border: 1.5px solid var(--line-2, #CBD2E0); border-top-color: var(--blue); border-radius: 50%; animation: jl-spin .8s linear infinite; }
+@keyframes jl-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .jl-loading::before { animation: none; } }
+@keyframes jl-in { from { opacity: 0; transform: translateY(6px); } }
+.jl-rows.is-fresh > * { animation: jl-in 300ms var(--ease) both; }
+.jl-rows.is-fresh > :nth-child(2) { animation-delay: 25ms; }
+.jl-rows.is-fresh > :nth-child(3) { animation-delay: 50ms; }
+.jl-rows.is-fresh > :nth-child(4) { animation-delay: 75ms; }
+.jl-rows.is-fresh > :nth-child(5) { animation-delay: 100ms; }
+.jl-rows.is-fresh > :nth-child(n+6) { animation-delay: 125ms; }
+/* empty state: a white card, a blue app icon */
+.jl-rows .empty { padding: 52px 24px 48px; border: 0; border-radius: var(--sa-r-card); box-shadow: var(--sa-sh-card); }
+.jl-rows .empty__icon { width: 56px; height: 56px; border-radius: 15px; color: #fff;
+  background: radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #4C82FF 0%, #2F6BFF 58%, #2A60E6 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 10px 20px -12px rgba(10, 18, 48, .42); }
+.jl-rows .empty__icon .icon { width: 26px; height: 26px; stroke-width: 2; }
+.jl-rows .empty__title { font: 740 20px/1.3 var(--font); letter-spacing: -0.016em; }
+.jl-rows .empty .btn { border-radius: 999px; }
+.jl-suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; max-width: 560px; }
+.jl-suggest__label { width: 100%; font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+
+.jl-more { margin-top: 32px; display: grid; justify-items: center; gap: 16px; }
+.jl-more[hidden] { display: none; }
+.jl-more__progress { display: grid; justify-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+.jl-more__progress strong { font-weight: 640; color: var(--ink-2); }
+.jl-more__bar { width: 200px; height: 4px; border-radius: 2px; background: var(--sa-tag); overflow: hidden; }
+.jl-more__bar i { display: block; height: 100%; background: var(--blue); border-radius: inherit; transition: width var(--d-base) var(--ease); }
+.jl-more__btn { min-width: 250px; border: 0; box-shadow: var(--sa-sh-card); }
+.jl-more__btn:hover { box-shadow: var(--sa-sh-card-hover); }
+html:not(.js) .jl-more__btn { display: none; }
+.jl-more__noscript { max-width: 60ch; text-align: center; font-size: 14px; color: var(--ink-2); }
+
+.jl-trust {
+  margin-top: 40px; padding: 16px 20px 16px 16px; border-radius: 18px; background: var(--sa-tag);
+  display: flex; align-items: flex-start; gap: 14px; font-size: 14px; line-height: 1.55; color: var(--ink-2);
+}
+.jl-trust .app { margin-top: 1px; }
+/* a block with the arrow inline (as .jd-ask): when a 360 px phone wraps the line, the arrow follows the last word
+   instead of standing apart at the far right */
+.jl-ask { display: block; width: fit-content; max-width: 100%; margin-top: 14px; font-size: 15px; }
+.jl-ask .icon { display: inline-block; margin-left: 8px; vertical-align: -3px; }
+
+.jl-fab, .jl-scrim { display: none; }
+
+/* "Tuyển ở Việt Nam" rail: three employers hiring in Vietnam above the untouched first page, as the home's
+   job cards (.njc), a little more compact in the narrower results column */
+.jl-rail { margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
+.jl-rail[hidden] { display: none; }
+.jl-rail__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 16px; }
+.jl-rail__title { font: 740 19px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
+.jl-rail__text { flex: 1; min-width: 0; font-size: 14.5px; color: var(--muted); }
+.jl-rail__all { padding: 6px 0; font-size: 15px; white-space: nowrap; }
+.jl-rail__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.jl-rail .njc { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 18px 16px 16px; }
+.jl-rail .njc__logo { width: 44px; height: 44px; border-radius: 12px; font-size: 15px; }
+.jl-rail .njc__title { font-size: 16.5px; }
+.jl-rail .njc__meta { gap: 10px; font-size: 13px; }
+/* every card in "Tuyển ở Việt Nam" would say "Việt Nam": the place goes, the employer reads in full */
+.jl-rail .njc__place { display: none; }
+.jl-rail .njc__pay { margin-top: 10px; font-size: 17px; }
+.jl-rail ul.njc__tags { margin-top: 12px; margin-right: 44px; }
+.jl-rail .njc__save { right: 12px; bottom: 12px; }
+/* the job cards on these pages (rail, "Việc tương tự", "Gợi ý để bắt đầu") never cut an employer's name: the meta
+   line wraps, the name takes up to two lines, the place follows it */
+:is(.page-jobs, .page-job, .page-saved) .njc__meta { flex-wrap: wrap; row-gap: 4px; white-space: normal; }
+:is(.page-jobs, .page-job, .page-saved) .njc__co > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+:is(.page-jobs, .page-job, .page-saved) .njc__co .glyph { align-self: flex-start; margin-top: 1px; }
+/* njc.html prints the pay as the listing states it; a listing without one says so (the board's own words) */
+:is(.page-jobs, .page-job) .njc__pay:empty::before { content: "Lương thỏa thuận"; font-size: .84em; font-weight: 640; letter-spacing: -0.01em; color: var(--muted); }
+
+@media (min-width: 641px) and (max-width: 1180px) {
+  /* tablet and small-laptop rows: one meta line (company · field · level), never a lone
+     "Bán thời gian" wrapped onto its own line; the level ellipsises before the row grows */
+  .jl-rows .job-row__meta { flex-wrap: nowrap; }
+  .jl-rows .job-row__meta span { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jl-rows .job-row__meta span:first-child { flex-shrink: 0; max-width: 46%; }
+  .jl.is-preset .jl-rows .job-row__meta span:first-child { max-width: 72%; }
+  .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
+  .jl.is-preset .jl-rows .job-row__meta span:nth-child(2) { display: none; }
+  /* the board (not a field page): company · field only, as on phones. With the level too, the 1024/768 rows
+     cut two or three items in a row ("Dữ liệu & … · Senior / Ch… ", "Ju…"); the level lives on the job page */
+  .jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(3) { display: none; }
+  .jl:not(.is-preset) .jl-rows .job-row__meta span:first-child { max-width: 60%; }
+}
+@media (max-width: 1100px) {
+  .jl__grid { grid-template-columns: 252px minmax(0, 1fr); gap: 24px; }
+  .jl-rows .job-row { grid-template-columns: 46px minmax(0, 1fr) auto auto; gap: 16px; padding: 18px 18px 18px 20px; }
+  .jl-rows .job-row > .logo { width: 46px; height: 46px; border-radius: 13px; }
+  .jl-rows .job-row__title { font-size: 17px; }
+  .jl-rows .job-row__pay { font-size: 17.5px; }
+  .jl-rail__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .jl-rail__cards > :nth-child(3) { display: none; }
+}
+
+/* ---- tablet & phone: the filter card becomes a bottom sheet (only with JS; without it, it stays inline) */
+@media (max-width: 960px) {
+  .jl { padding-top: 32px; }
+  .jl__grid { grid-template-columns: minmax(0, 1fr); }
+  html:not(.js) .jl-panel { position: static; max-height: none; }
+  .js .jl-panel {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 70;
+    max-height: min(88vh, 780px);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -16px 48px -16px rgba(11, 21, 48, .3);
+    transform: translateY(104%); visibility: hidden;
+    transition: transform 360ms var(--ease), visibility 0s linear 360ms;
+  }
+  .js .jl-panel.is-open { transform: none; visibility: visible; transition-delay: 0s; }
+  /* the head is the drag handle (jobs.js: drag down past 80px to close) */
+  .js .jl-panel__head { position: relative; padding: 24px 16px 12px 20px; border-bottom: 1px solid var(--line); touch-action: none; cursor: grab; }
+  .js .jl-panel__head button { cursor: pointer; }
+  .js .jl-panel__head::before { content: ""; position: absolute; top: 8px; left: 50%; width: 38px; height: 5px; margin-left: -19px; border-radius: 3px; background: var(--line-2); }
+  .js .jl-panel__title { font-size: 19px; }
+  .js .jl-panel__close { display: inline-grid; }
+  .js .jl-panel__reset { display: none; }
+  .js .jl-panel__body { padding: 0 20px 12px; }
+  .js .jl-panel__foot {
+    display: flex; gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line); background: #fff;
+  }
+  .js .jl-panel__foot .btn { border-radius: 999px; }
+  .js .jl-panel__foot .btn--primary { flex: 1; min-width: 0; }
+  .js .jl-switches { padding-top: 8px; }
+  /* touch-size option rows in the sheet */
+  .js .fopt { min-height: 42px; }
+  .js .jl-panel__hint { display: none; }
+
+  .js .jl-scrim {
+    display: block; position: fixed; inset: 0; z-index: 69;
+    background: rgba(11, 21, 48, .44);
+    opacity: 0; transition: opacity var(--d-ui) var(--ease);
+  }
+  .js .jl-scrim.is-on { opacity: 1; }
+  .js .jl-scrim[hidden] { display: none; }
+
+  .js .jl-fab {
+    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 45;
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 52px; padding: 0 22px 0 19px;
+    border-radius: 999px;
+    background: var(--ink); color: #fff;
+    font: 640 15.5px/1 var(--font);
+    box-shadow: 0 18px 36px -16px rgba(4, 12, 48, .55), 0 4px 10px -4px rgba(4, 12, 48, .3);
+    transform: translate(-50%, 0);
+    transition: transform var(--d-ui) var(--ease), opacity var(--d-ui) var(--ease);
+  }
+  .js .jl-fab.is-hidden { transform: translate(-50%, 160%); opacity: 0; pointer-events: none; }
+  .jl-fab__n {
+    min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+    display: inline-grid; place-items: center;
+    background: var(--sun); color: var(--ink); font: 700 12.5px/1 var(--font);
+  }
+  .jl-fab__n[hidden] { display: none; }
+  .page-jobs .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  /* quick filters: the app's chips (grey, a pressed one solid blue), one row that scrolls sideways */
+  .js .jl-quick {
+    display: flex; gap: 8px; margin: 0 calc(-1 * var(--gutter)) 16px; padding: 0 var(--gutter) 2px;
+    overflow-x: auto; scrollbar-width: none; scroll-padding-inline: var(--gutter);
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+  }
+  .jl-quick::-webkit-scrollbar { display: none; }
+  .jl-quick .chip { flex: none; border: 0; background: var(--sa-tag); font-weight: 600; color: var(--ink-2); }
+  .jl-quick .chip[aria-pressed="true"] { background: var(--blue); color: #fff; }
+}
+html.jl-lock { overflow: hidden; }
+
+@media (max-width: 767px) {
+  .jl { padding: 24px 0 72px; }
+}
+@media (max-width: 640px) {
+  .jl-bar { margin-bottom: 12px; }
+  .jl-count { font-size: 14.5px; }
+  .jl-count strong { font-size: 19px; }
+  .jl-sort .tab { padding: 0 12px; font-size: 13.5px; }
+  .jl-rows { gap: 10px; }
+  .jl-more__btn { width: 100%; }
+  /* compact rows: company · field (level/employment left to the detail page). Each item stays
+     whole: the field wraps to its own line rather than being cut mid-word ("Marketing & G…").
+     An item is only ellipsised when it alone is wider than the row. */
+  .jl-rows .job-row { grid-template-columns: 44px minmax(0, 1fr) auto; row-gap: 8px; column-gap: 12px; padding: 16px 14px 16px 16px; border-radius: var(--sa-r-card-sm); }
+  .jl-rows .job-row > .logo { width: 44px; height: 44px; border-radius: 12px; font-size: 15px; }
+  .jl-rows .job-row__main { grid-column: 2 / 4; grid-row: 1; gap: 4px; }
+  .jl-rows .job-row__title { font-size: 16.5px; line-height: 1.3; padding-right: 44px; }
+  .jl-rows .job-row .save-btn { align-self: start; grid-column: 3; grid-row: 1; }
+  .jl-rows .job-row__side { grid-column: 2 / 4; }
+  .jl-rows .job-row__meta { flex-wrap: wrap; min-width: 0; font-size: 13px; }
+  .jl-rows .job-row__meta span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(n+3), .jl.is-preset .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
+  /* the meta line keeps clear of the round save button, as the title does */
+  .jl-rows .job-row__meta { padding-right: 44px; }
+  .jl-rows .job-row__badges { margin-top: 4px; }
+  .jl-rows .job-row .badge { height: 26px; padding: 0 10px; font-size: 12.5px; }
+  .jl-rows .job-row__side { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 2px 10px; text-align: left; }
+  .jl-rows .job-row__pay { font-size: 16.5px; }
+  .jl-rows .job-row__pay small { max-width: none; }
+  .jl-rail { margin-bottom: 24px; padding-bottom: 24px; }
+  .jl-rail__head { margin-bottom: 12px; }
+  .jl-rail__text { order: 3; flex-basis: 100%; font-size: 14px; }
+  .jl-rail__all { margin-left: auto; }
+  /* phones: the three cards scroll sideways (a stack would push the list a screen down) */
+  .jl-rail__cards {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 86%; gap: 10px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 14px; scroll-padding-inline: var(--gutter);
+  }
+  .jl-rail__cards > :nth-child(3) { display: grid; }
+  .jl-rail__cards::-webkit-scrollbar { display: none; }
+  .jl-rail__cards > * { scroll-snap-align: start; }
+  .jl-trust { margin-top: 32px; font-size: 13.5px; }
+}
+/* small phones: one rhythm for every row — the pay (and its ≈ USD line), then age · source on their own line */
+@media (max-width: 479px) {
+  .jl-rows .job-row__side { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+
+/* ---------------------------------------------------------------- 4 field page */
+/* the field's hourly pay in one quiet line above the list (out of the hero, which stays title · lead · search · counts) */
+.fd-pay {
+  margin-bottom: 20px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+  font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
+}
+.fd-pay strong { color: var(--ink); font-weight: 680; }
+.fd-pay__link { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; font-weight: 640; color: var(--ultra-ink); white-space: nowrap; vertical-align: bottom; }
+.fd-pay__link .icon { width: 16px; height: 16px; stroke-width: 1.9; transition: transform var(--d-ui) var(--ease-expo); }
+.fd-pay__link:hover .icon { transform: translateX(3px); }
+/* "Kỹ năng hay gặp": the field's frequent tags, exact-tag filters (jobs.js), the app's grey chips */
+.fd-skills { margin-bottom: 28px; display: grid; gap: 12px; }
+.fd-skills__label { font: 700 14px/1.3 var(--font); color: var(--ink); }
+.fd-skills__list { display: flex; flex-wrap: wrap; gap: 8px; }
+.fd-skills__list .chip { border: 0; background: var(--sa-tag); font-weight: 600; color: var(--ink-2); }
+.fd-skills__list .chip:hover { background: #E7EBF3; }
+.fd-skills__list .chip__count { background: #fff; }
+.fd-skills__list .chip[aria-pressed="true"] { background: var(--blue); color: #fff; }
+.fd-skills__list .chip[aria-pressed="true"] .chip__count { background: rgba(11, 21, 48, .2); color: #fff; }
+/* the field page's list hands over to the guides section (its own hairline head) */
+.page-field .jl { padding-bottom: 72px; }
+.fd-after { padding-bottom: 88px; }
+
+@media (max-width: 960px) {
+  .fd-skills { margin-bottom: 20px; }
+  .fd-skills__list {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 2px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+  }
+  .fd-skills__list::-webkit-scrollbar { display: none; }
+  .fd-skills__list .chip { flex: none; }
+  /* one chip row above the list on phones and tablets: the field's skills (the quick filters are in the sheet) */
+  .js .page-field .jl-results:has(.fd-skills) .jl-quick { display: none; }
+}
+@media (max-width: 767px) {
+  .fd-pay { font-size: 14px; margin-bottom: 16px; }
+  .page-field .jl { padding-bottom: 56px; }
+  .fd-after { padding-bottom: 64px; }
+}
+
+/* ---------------------------------------------------------------- 5 job detail */
+/* A compact cobalt head (employer, title, chips, age · source) clear of the right column; the white pay card sits
+   in that column, rises --jd-pull into the band from the white body and stays in view (sticky) as the page scrolls. */
+.page-job { --jd-aside: 384px; --jd-gap: 64px; --jd-pull: 300px; }
+.jd-hero { --glow-at: 90% 78%; --glow-size: 30% 60%; padding-bottom: 64px; }
+.jd-hero__inner { padding-right: calc(var(--jd-aside) + var(--jd-gap)); }
+.jd-head { min-width: 0; max-width: 760px; }
+.jd-crumb li[aria-current] { min-width: 0; }
+.jd-crumb__cur { display: block; max-width: 36ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jd-org { display: flex; align-items: center; gap: 14px; }
+.jd-org .logo--lg { box-shadow: 0 10px 22px -14px rgba(4, 12, 48, .6); }
+/* the initials tile on cobalt: the home's app-icon recipe, shadow only (no outline ring); a deeper soft drop
+   shadow sets a blue tile apart from the band */
+.page-job .jd-org .logo--lg:not(:has(img)) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 14px 26px -12px rgba(4, 12, 48, .62), 0 3px 8px -3px rgba(4, 12, 48, .3); }
+.jd-org__text { min-width: 0; display: grid; gap: 3px; }
+.jd-org__name { font: 680 17px/1.3 var(--font); letter-spacing: -0.012em; color: #fff; }
+.jd-org__meta { font-size: 14.5px; color: #fff; }
+.jd-org__meta a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .45); text-underline-offset: 3px; }
+.jd-org__meta a:hover { text-decoration-color: #fff; }
+.jd-title {
+  margin-top: 22px;
+  font: 740 clamp(32px, 3.2vw, 46px)/1.1 var(--font-wide); font-stretch: 110%; letter-spacing: -0.022em;
+  color: #fff; text-wrap: balance; overflow-wrap: anywhere;
+}
+/* a headline that stays over 60 characters (no separator to split at: jobs_tags.title_parts) steps down a size,
+   one more past 80, so it keeps to about two lines */
+.jd-title--long { font-size: clamp(28px, 2.5vw, 36px); line-height: 1.14; }
+.jd-title--xlong { font-size: clamp(26px, 2.15vw, 31px); }
+/* the rest of a long scraped title: a quieter line under the headline, so the role keeps its scale */
+.jd-title__rest {
+  display: block; margin-top: 12px;
+  font: 500 max(17px, .42em)/1.45 var(--font); font-stretch: 100%; letter-spacing: -0.006em;
+  color: #fff; text-wrap: pretty;
+}
+.jd-badges { margin-top: 24px; gap: 10px; }
+.jd-badges > li { height: 40px; padding: 0 16px 0 13px; font-size: 14.5px; background: rgba(9, 22, 92, .16); }   /* a touch deeper than the kit's chip: small white text stays >= 4.5:1 on the bright right of the band */
+.jd-badges .icon { width: 20px; height: 20px; stroke-width: 2; color: var(--sun); }
+.jd-posted { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0; font-size: 14.5px; color: #fff; }
+.jd-posted > span + span::before { content: "·"; margin: 0 9px; color: rgba(255, 255, 255, .6); }
+.jd-hero .job-age.is-new { color: #fff; font-weight: 640; }
+
+.jd { position: relative; z-index: 1; padding: 0 0 72px; background: #fff; }
+.jd-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--jd-aside);
+  grid-template-areas: "main aside";
+  column-gap: var(--jd-gap);
+  align-items: start;
+}
+.jd-main { grid-area: main; min-width: 0; padding-top: 48px; }
+.jd-aside { grid-area: aside; position: sticky; top: calc(var(--header-h) + 20px); margin-top: calc(-1 * var(--jd-pull)); }
+
+/* the pay card: the kit's white card, floating (it rises from the cobalt band) */
+.jd-apply {
+  padding: 26px 26px 22px;
+  border-radius: var(--sa-r-card);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--tile-line), 0 34px 60px -30px rgba(4, 12, 48, .42), 0 10px 22px -12px rgba(4, 12, 48, .18);
+}
+.jd-apply__label { display: flex; align-items: center; gap: 10px; font: 640 14.5px/1.2 var(--font); color: var(--ink-2); }
+.jd-apply__pay { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.jd-apply__amount { font: 740 40px/1.05 var(--font-wide); font-stretch: 106%; letter-spacing: -0.03em; color: var(--green-pay); }
+.jd-apply__amount--muted { font-size: 32px; color: var(--ink-2); }
+.jd-apply__unit { font: 640 16px/1.2 var(--font); letter-spacing: -0.01em; color: var(--ink-2); }
+.jd-apply__sub { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+.jd-apply__cta { margin-top: 22px; }
+.jd-apply__row { margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.jd-apply__btn { width: 100%; height: 44px; justify-content: center; border-color: var(--tile-line); }
+.jd-apply__note { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.jd-apply__note strong { color: var(--ink-2); font-weight: 640; }
+.jd-apply__scam {
+  margin-top: 14px; display: flex; gap: 12px; align-items: center;
+  padding: 12px 14px 12px 12px; border-radius: 16px;
+  background: var(--coral-50);
+  font-size: 13.5px; line-height: 1.45; color: var(--ink-2);
+  transition: background-color var(--d-micro) var(--ease);
+}
+.jd-apply__scam strong { color: var(--coral-ink); font-weight: 640; }
+.jd-apply__scam:hover { background: #FBE2E2; }
+.jd-apply__scam:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+/* the arrow follows the words: inline text with an inline arrow, so a wrapped line never strands it at the far right */
+.jd-ask { display: block; width: fit-content; max-width: 100%; margin: 14px 0 0 6px; font-size: 15px; }
+.jd-ask .icon { display: inline-block; margin-left: 8px; vertical-align: -3px; }
+
+/* white cards in the main column */
+.jd-card { padding: 28px 30px 30px; }
+.jd-card + .jd-card { margin-top: 20px; }
+.jd-h2 { font: 740 21px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
+.jd-facts {
+  margin: 22px 0 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 24px;
+}
+.jd-fact { min-width: 0; }
+.jd-fact dt { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.jd-fact__ic { flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-50); color: var(--blue); }
+.jd-fact__ic .icon { width: 17px; height: 17px; stroke-width: 1.9; }
+.jd-fact dd { margin: 6px 0 0 42px; display: grid; gap: 3px; }
+.jd-fact__v { font: 680 16px/1.35 var(--font); letter-spacing: -0.008em; color: var(--ink); overflow-wrap: anywhere; }
+.jd-fact__v.is-none { font-weight: 500; color: var(--muted); }
+.jd-fact__s { font-size: 13px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
+.jd-fact__link { display: inline-flex; align-items: center; gap: 5px; justify-self: start; }
+.jd-fact__link:hover { color: var(--ultra-ink); }
+.jd-fact--pay .jd-fact__ic { background: var(--mint-50); color: var(--mint-ink); }
+.jd-fact--pay .jd-fact__v { font-weight: 740; color: var(--green-pay); }
+.jd-fact--pay .jd-fact__v.is-none { font-weight: 500; color: var(--muted); }
+
+.jd-checks__head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding-bottom: 14px; }
+.jd-checks__titles { flex: 1; min-width: 0; }
+.jd-checks__title { font: 740 19px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
+.jd-checks__sub { margin-top: 2px; font-size: 13.5px; color: var(--muted); }
+.jd-checks__more { padding: 6px 0; font-size: 15px; }
+.app.jd-app--grey { --c: #7C86A0; }
+.jd-checks__list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  padding: 13px 0; border-top: 1px solid var(--line);
+  font-size: 15px; color: var(--ink);
+}
+.jd-checks__list li:last-child { padding-bottom: 0; }
+.jd-checks__name { font-weight: 600; }
+.jd-tick { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--mint-50); color: var(--mint-ink); }
+.jd-tick .icon { width: 15px; height: 15px; stroke-width: 2.4; }
+.jd-checks__val { font-size: 13.5px; color: var(--muted); text-align: right; max-width: 330px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* a check the listing gives no evidence for: neutral dash, never a tick (facts.vietnam_access) */
+.jd-tick--open { background: var(--sa-tag); box-shadow: inset 0 0 0 1px var(--line-2); }
+.jd-tick--open::before { content: ""; width: 9px; height: 1.5px; border-radius: 1px; background: var(--muted); }
+.jd-checks__open { margin-left: 6px; font: 500 12.5px/1 var(--font); color: var(--muted); }
+
+.jd-section { margin-top: 52px; }
+.jd-section > .jd-h2 { margin-bottom: 16px; }
+.jd-desc__lang { margin: -8px 0 18px; font-size: 13.5px; color: var(--muted); }
+.jd-body { max-width: 72ch; font-size: 16.5px; line-height: 1.75; color: var(--ink-2); overflow-wrap: anywhere; }
+.jd-body > * + * { margin-top: 1em; }
+.jd-body p.jd-h, .jd-body h3 { margin-top: 1.7em; font: 700 17.5px/1.35 var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.jd-body p.jd-h + *, .jd-body h3 + * { margin-top: .55em; }
+.jd-body > :first-child, .jd-body > p.jd-h:first-child { margin-top: 0; }
+.jd-body ul { padding-left: 1.25em; }
+.jd-body li + li { margin-top: .4em; }
+.jd-body li::marker { color: var(--muted); }
+.jd-body.is-clamped {
+  max-height: 620px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 70%, transparent);
+  mask-image: linear-gradient(#000 70%, transparent);
+}
+.jd-desc__more { margin-top: 16px; border: 0; box-shadow: var(--sa-sh-card); }
+.jd-desc__more:hover { box-shadow: var(--sa-sh-card-hover); }
+.jd-desc__more .icon { transition: transform var(--d-ui) var(--ease); }
+.jd-desc__more[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.jd-skills { gap: 8px; }
+.jd-skills > li { padding: 0; height: 34px; transition: background-color var(--d-micro) var(--ease); }
+.jd-skills > li:hover { background: #E7EBF3; }
+.jd-skills a { display: inline-flex; align-items: center; height: 100%; padding: 0 14px; border-radius: inherit; color: var(--ink-2); font-weight: 560; }
+.jd-skills a:hover { color: var(--ink); }
+.jd-owner {
+  margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; gap: 10px; max-width: 80ch;
+  font-size: 13.5px; line-height: 1.6; color: var(--muted);
+}
+.jd-owner .icon { margin-top: 3px; flex: none; }
+.jd-owner strong { color: var(--ink-2); font-weight: 640; }
+
+/* "Việc tương tự": the home's job cards (njc.html) */
+.jd-similar { padding-bottom: 88px; }
+
+.jd-bar { display: none; }
+
+@media (max-width: 1180px) {
+  .page-job { --jd-aside: 344px; --jd-gap: 40px; }
+  .jd-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 960px) {
+  .jd-hero { --glow-at: 100% 100%; --glow-size: 56% 34%; padding-bottom: 76px; }
+  .jd-hero__inner { padding-right: 0; }
+  .jd-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "aside" "main"; }
+  /* the pay card follows the head, rising a little into the band */
+  .jd-aside { position: static; margin-top: -44px; }
+  .jd-main { padding-top: 36px; }
+  .jd-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .jd-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+    background: #fff; box-shadow: 0 -1px 0 var(--line), 0 -10px 28px -16px rgba(11, 21, 48, .24);
+    transition: transform var(--d-ui) var(--ease);
+  }
+  .jd-bar.is-hidden { transform: translateY(110%); }
+  .jd-bar__pay { min-width: 0; display: grid; gap: 1px; }
+  .jd-bar__pay strong { font: 740 18px/1.15 var(--font); letter-spacing: -0.02em; color: var(--green-pay); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jd-bar__pay strong:not(.num) { color: var(--ink); }
+  .jd-bar__pay span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jd-bar .save-btn { width: 44px; height: 44px; }
+  .jd-bar__cta { padding: 0 20px; }
+  .page-job .site-footer { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .page-job .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+/* tablets: the full-width pay card reads as a scaled-up phone, so pay sits left and the
+   actions right (auto-width "Ứng tuyển", save and copy as icon buttons); notes stay below */
+@media (min-width: 641px) and (max-width: 960px) {
+  .jd-apply { padding: 24px 26px 22px; }
+  .jd-apply__top { display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; }
+  .jd-apply__info { min-width: 0; }
+  .jd-apply__actions { flex: none; display: flex; align-items: center; gap: 8px; }
+  .jd-apply__cta { margin-top: 0; width: auto; min-width: 220px; }
+  .jd-apply__row { margin-top: 0; display: flex; gap: 8px; }
+  .jd-apply__btn { width: 54px; height: 54px; padding: 0; border-radius: 50%; }
+  .jd-apply__btn > span { display: none; }
+  .jd-apply__btn .icon { width: 20px; height: 20px; }
+  .jd-apply__note { margin-top: 20px; }
+  .jd-apply__scam { margin-top: 12px; }
+}
+@media (max-width: 767px) {
+  .jd-hero { padding-bottom: 68px; }
+  .jd-title { margin-top: 18px; font-size: clamp(28px, 7.6vw, 34px); letter-spacing: -0.018em; line-height: 1.14; }
+  .jd-title--long { font-size: clamp(24px, 6.6vw, 28px); }
+  .jd-title--xlong { font-size: clamp(22px, 6vw, 25px); }
+  .jd-title__rest { margin-top: 8px; font-size: 15.5px; }
+  .jd-badges { margin-top: 18px; gap: 6px; }
+  .jd-badges > li { height: 34px; padding: 0 12px 0 10px; gap: 7px; font-size: 13px; }
+  .jd-badges .glyph { width: 16px; height: 16px; }
+  .jd-posted { margin-top: 14px; font-size: 13.5px; }
+  .jd-card { padding: 22px 18px 24px; border-radius: var(--sa-r-card-sm); }
+  .jd-section { margin-top: 44px; }
+  .jd-h2 { font-size: 19px; }
+  .jd-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; }
+  .jd-fact--pay { grid-column: 1 / -1; }
+  .jd-fact dd { margin-left: 0; margin-top: 8px; }
+  .jd-fact__v { font-size: 15px; }
+}
+@media (max-width: 640px) {
+  .jd { padding-bottom: 56px; }
+  /* the h1 right below names the job: on phones the trail stops at the field so it stays one line */
+  .jd-crumb li[aria-current] { display: none; }
+  .jd-org .logo--lg { width: 48px; height: 48px; border-radius: 13px; }
+  .jd-org__name { font-size: 16px; }
+  .jd-org__meta { font-size: 13.5px; }
+  .jd-aside { margin-top: -40px; }
+  .jd-apply { padding: 22px 18px 18px; border-radius: var(--sa-r-card-sm); }
+  .jd-apply__amount { font-size: 34px; }
+  .jd-checks__head { align-items: flex-start; }
+  .jd-checks__more { flex-basis: 100%; padding: 0 0 4px 58px; }
+  .jd-checks__list li { grid-template-columns: 26px minmax(0, 1fr); row-gap: 2px; align-items: start; }
+  .jd-tick { grid-row: 1 / span 2; margin-top: 1px; }
+  .jd-checks__val { grid-column: 2; text-align: left; max-width: none; white-space: normal; }
+  .jd-body { font-size: 16px; line-height: 1.72; }
+  .jd-body.is-clamped { max-height: 520px; }
+  .jd-bar__cta { padding: 0 16px; }
+}
+
+/* ---------------------------------------------------------------- 6 saved tracker */
+/* A centred compact cobalt hero (no art), then the board on white, drawn like an app: soft grey columns, each
+   headed by its status tile (.sv-tile, the kit's app-icon recipe at 28 px), crisp white cards. */
+.sv-hero .sa-hero__copy { max-width: 760px; }
+.sv-sub strong { color: #fff; font-weight: 740; }
+.sv-head__actions[hidden] { display: none; }
+.sv { padding: 56px 0 88px; background: #fff; }
+.sv .notice { margin-bottom: 24px; }
+
+/* the status tile: a solid colour, white glyph, matte (superapp.css .app recipe, small) */
+.sv-tile {
+  --c: #2F6BFF;
+  flex: none; width: 28px; height: 28px; border-radius: 8px;
+  display: inline-grid; place-items: center; color: #fff;
+  background:
+    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .12), 0 6px 12px -8px rgba(10, 18, 48, .45);
+}
+.sv-tile .glyph { width: 17px; height: 17px; }
+.sv-tile .icon { width: 16px; height: 16px; stroke-width: 2.4; }
+.sv-tile--applied { --c: #7E5BF2; }
+.sv-tile--interview { --c: #22B35E; }
+.sv-tile--offer { --c: #FFBF2E; }
+.sv-tile--rejected { --c: #8A93A8; }
+
+.sv-tabs { display: none; }
+.sv-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.sv-board[hidden] { display: none; }
+.sv-col {
+  min-width: 0; min-height: 360px;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px;
+  border-radius: var(--sa-r-card);
+  background: #F3F5F9;
+  transition: background-color var(--d-micro) var(--ease), box-shadow var(--d-micro) var(--ease);
+}
+.sv-col.is-over { background: var(--blue-50); box-shadow: inset 0 0 0 2px #C9D7FF; }
+.sv-col__head { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 4px; }
+.sv-col__title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font: 700 15px/1.3 var(--font); letter-spacing: -0.01em; color: var(--ink); }
+.sv-col__n { min-width: 28px; height: 24px; padding: 0 8px; display: grid; place-items: center; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--tile-line); font: 640 12.5px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.sv-col__list { display: grid; gap: 10px; }
+.sv-col__empty {
+  display: grid; place-items: center; text-align: center;
+  min-height: 96px; padding: 16px;
+  border: 1.5px dashed #CFD6E3; border-radius: 16px;
+  font-size: 13px; line-height: 1.45; color: var(--muted);
+}
+
+.sv-card {
+  position: relative;
+  display: grid; gap: 10px;
+  padding: 14px 14px 12px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--tile-line), 0 1px 2px rgba(10, 18, 48, .04), 0 12px 22px -18px rgba(10, 18, 48, .28);
+  transition: box-shadow var(--d-ui) var(--ease), opacity var(--d-micro), transform var(--d-ui) var(--ease-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sv-card:hover { box-shadow: 0 0 0 1px var(--line-2), 0 1px 2px rgba(10, 18, 48, .05), 0 18px 30px -18px rgba(10, 18, 48, .34); }
+}
+.sv-card[draggable="true"] { cursor: grab; }
+.sv-card.is-dragging { opacity: .45; }
+.sv-card.is-flash { animation: sv-flash 900ms var(--ease); }
+@keyframes sv-flash { 0% { box-shadow: 0 0 0 3px var(--blue-100); } 100% { box-shadow: 0 0 0 1px var(--tile-line), 0 12px 22px -18px rgba(10, 18, 48, .28); } }
+.sv-card__top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.sv-card .logo--sm { width: 34px; height: 34px; border-radius: 10px; }
+.sv-card__remove { width: 28px; height: 28px; margin: -4px -6px -4px 0; }
+.sv-card__company { font: 500 13px/1.35 var(--font); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-card__title { font: 700 15.5px/1.32 var(--font); letter-spacing: -0.012em; color: var(--ink); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.sv-card__title a:hover { color: var(--ultra-ink); }
+.sv-card__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted); }
+.sv-card__pay { font: 740 14.5px/1.3 var(--font); letter-spacing: -0.01em; color: var(--green-pay); }
+.sv-card__pay.is-none { font-weight: 560; color: var(--muted); }
+.sv-card .badge { height: 22px; font-size: 11.5px; padding: 0 8px; }
+/* a long note shows four lines; clicking it opens the full text in the editor */
+.sv-note {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+  width: 100%; text-align: left;
+  /* vertical space as transparent borders, not padding: overflow clips at the padding box,
+     so a fifth line cannot peek into the bottom padding (the background still paints under them) */
+  padding: 0 10px; border-block: 8px solid transparent; border-radius: 10px;
+  background: var(--sa-tag);
+  font-size: 13px; line-height: 1.45; color: var(--ink-2);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.sv-note:hover { background: #E7EBF3; }
+.sv-note__edit {
+  width: 100%; min-height: 76px; max-height: 320px; field-sizing: content; resize: vertical;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--blue); box-shadow: 0 0 0 3px var(--blue-50);
+  background: #fff; color: var(--ink);
+  font-size: 13.5px; line-height: 1.45;
+}
+.sv-note__edit:focus { outline: none; }
+.sv-card__foot { display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sv-select {
+  flex: 1; min-width: 0; height: 34px; min-height: 0;
+  padding: 0 26px 0 10px;
+  border-radius: 10px; border: 1px solid var(--line-2);
+  font: 600 13px/1 var(--font); color: var(--ink);
+  background-position: right 7px center; background-size: 15px;
+}
+.sv-icon { width: 34px; height: 34px; flex: none; display: inline-grid; place-items: center; border-radius: 10px; color: var(--muted); transition: background-color var(--d-micro), color var(--d-micro); }
+.sv-icon .icon { width: 17px; height: 17px; }
+.sv-icon:hover { background: var(--sa-tag); color: var(--ink); }
+.sv-icon--risk:hover { background: var(--coral-50); color: var(--coral-ink); }
+
+/* undo bar after removing a card (toast twin with one action) */
+.sv-undo {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 81;
+  display: flex; align-items: center; gap: 14px;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: var(--ink); color: #fff;
+  font: 500 14.5px/1.35 var(--font);
+  box-shadow: 0 18px 36px -16px rgba(4, 12, 48, .55);
+  opacity: 0; transform: translate(-50%, 8px);
+  transition: opacity var(--d-ui) var(--ease), transform var(--d-ui) var(--ease);
+}
+.sv-undo.is-on { opacity: 1; transform: translate(-50%, 0); }
+.sv-undo span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-undo button { flex: none; height: 34px; padding: 0 16px; border-radius: 999px; background: var(--sun); color: var(--ink); font: 680 14px/1 var(--font); }
+.sv-undo button:hover { background: #FFD466; }
+
+.sv-local { margin-top: 28px; padding: 14px 18px 14px 14px; border-radius: 18px; background: var(--sa-tag); display: flex; align-items: center; gap: 12px; max-width: 880px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.sv-local[hidden] { display: none; }
+
+/* the app itself, the whole phone standing on the white body (.sa-phone--on-light, the home's side-phone size),
+   the caption under it; beside it the white card with the message, three steps and the way to the board. The list
+   shows three real jobs; the statuses are illustrative (the caption says so). */
+.sv-empty {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 64px; align-items: center;
+  max-width: 1080px; margin-inline: auto;
+}
+.sv-empty[hidden] { display: none; }
+.sv-empty--solo { grid-template-columns: minmax(0, 1fr); max-width: 760px; }   /* an empty catalog: the message alone */
+.sv-art { display: grid; justify-items: center; align-content: center; gap: 22px; padding: 4px 0 8px; }
+.sv-art .sa-phone { --phone-k: .635; }
+/* the honesty caption with a one-line short form on phones (saved.html, salary.html: demo_cap.html's markup) */
+.jl-cap__short { display: none; }
+/* the phone's status line: the pay chip, then the status as a quiet grey pill with the board's colour dot */
+.va-sv { justify-self: stretch; margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.va-sv .va-job__pay { margin-top: 0; }
+.va-sv__st {
+  height: 26px; padding: 0 9px 0 8px; display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 8px; background: var(--va-inset); font: 650 12.5px/1 var(--font); color: var(--ink-2); white-space: nowrap;
+}
+.va-sv__st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--st, #2F6BFF); }
+.va-sv__st--applied { --st: #7E5BF2; }
+.va-sv__st--interview { --st: #22B35E; }
+.sv-empty__body {
+  padding: 52px 52px 48px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  border-radius: 28px; background: #fff; box-shadow: var(--sa-sh-card);
+}
+.sv-empty__text { margin-top: 14px; font-size: 17px; line-height: 1.6; color: var(--ink-2); max-width: 44ch; }
+.sv-empty__icon { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; vertical-align: -6px; background: var(--blue-50); color: var(--blue); }
+.sv-steps { margin-top: 26px; width: 100%; display: grid; border-top: 1px solid var(--line); }
+.sv-steps li { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
+.sv-steps strong { display: block; font: 700 16px/1.35 var(--font); letter-spacing: -0.01em; color: var(--ink); }
+.sv-empty__actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+.sv-suggest { margin-top: 64px; }
+.sv-suggest[hidden] { display: none; }
+.sv-suggest__head { margin-bottom: 24px; }
+/* "Gợi ý để bắt đầu": the home's job cards (njc.html, server-rendered), as the rail and "Việc tương tự" */
+/* touch: status menu and icon buttons at finger size; 16px text so iOS does not zoom on the select */
+@media (max-width: 1100px), (pointer: coarse) {
+  .sv-select { height: 40px; font-size: 16px; border-radius: 12px; padding-left: 12px; }
+  .sv-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .sv-card__remove { width: 40px; height: 40px; margin: -10px -10px -10px 0; }
+}
+/* small laptops and iPad landscape: the same five-column board, scrolling sideways */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .sv-board {
+    grid-template-columns: repeat(5, minmax(256px, 1fr));
+    overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+    margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter) 14px; scroll-padding-inline: var(--gutter);
+  }
+  .sv-col { scroll-snap-align: start; }
+}
+/* tablet portrait and phones: one status at a time behind the app's chips */
+@media (max-width: 900px) {
+  .sv { padding-top: 32px; }
+  .sv-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; overflow: visible; background: none; border: 0; border-radius: 0; }
+  .sv-tabs[hidden] { display: none; }
+  .sv-tabs .tab { height: 40px; padding: 0 15px; gap: 8px; border-radius: 999px; background: var(--sa-tag); font: 600 14px/1 var(--font); color: var(--ink-2); }
+  .sv-tabs .tab .tab__count { color: var(--muted); }
+  .sv-tabs .tab[aria-pressed="true"] { background: var(--blue); color: #fff; box-shadow: none; }
+  .sv-tabs .tab[aria-pressed="true"] .tab__count { color: rgba(255, 255, 255, .86); }
+  .sv-board { grid-template-columns: minmax(0, 1fr); margin-top: 18px; }
+  .sv-col { display: none; min-height: 0; padding: 0; background: none; }
+  .sv-col.is-active { display: flex; }
+  .sv-col__head { display: none; }
+  .sv-col__list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .sv-col.is-over { background: none; box-shadow: none; }
+}
+@media (max-width: 1100px) {
+  .sv-empty { gap: 44px; }
+  .sv-empty__body { padding: 44px 40px 40px; }
+}
+@media (max-width: 880px) {
+  .sv-empty { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  /* the message first, the app under it */
+  .sv-art { order: 2; padding: 0; }
+  .sv-art .sa-phone { --phone-k: .6; }
+  .sv-empty__body { padding: 32px 28px 32px; }
+}
+@media (max-width: 767px) {
+  .sv-hero .sa-hero__actions { display: flex; flex-wrap: wrap; }
+  .sv-hero .sa-hero__actions[hidden] { display: none; }
+  .sv-hero .sa-hero__actions .btn { flex: 1 1 0; width: auto; padding: 0 16px; }
+  /* phones: the caption stays one pill on one line, in its short form (superapp.css wraps the long one) */
+  .sa-cap.jl-cap { flex-wrap: nowrap; white-space: nowrap; border-radius: 999px; padding: 5px 14px 5px 10px; }
+  .jl-cap .sa-cap__sep { display: inline; }
+  .jl-cap .sa-cap__rest { flex-basis: auto; }
+  .jl-cap .jl-cap__long { display: none; }
+  .jl-cap .jl-cap__short { display: inline; }
+}
+@media (max-width: 640px) {
+  .sv { padding: 24px 0 72px; }
+  .sv-tabs .tab { height: 38px; padding: 0 13px; font-size: 13.5px; }
+  .sv-col__list { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sv-empty { gap: 32px; }
+  .sv-empty__body { padding: 24px 20px 26px; border-radius: var(--sa-r-card); }
+  .sv-empty__text { font-size: 15.5px; }
+  .sv-empty__actions { width: 100%; }
+  .sv-empty__actions .btn { flex: 1 1 100%; }
+  .sv-local { font-size: 13.5px; align-items: flex-start; }
+  .sv-suggest { margin-top: 44px; }
+  /* phones: the three cards scroll sideways, as the board's rail */
+  .sv-suggest .sa-grid--jobs {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 86%; gap: 10px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 14px; scroll-padding-inline: var(--gutter);
+  }
+  .sv-suggest .sa-grid--jobs::-webkit-scrollbar { display: none; }
+  .sv-suggest .sa-grid--jobs > * { scroll-snap-align: start; }
+}
+
+/* ---------------------------------------------------------------- 7 salary */
+/* The compact cobalt hero: the board-wide hourly median as the h1, and every hourly rate as a white chart card
+   floating on the band (right, over the glow, which never sits behind text). */
+.sl-hero { --glow-at: 82% 56%; --glow-size: 36% 64%; }
+.sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 500px); }
+.sl-hero .sa-hero__copy { max-width: 640px; }
+.sl-title { text-wrap: wrap; }
+.sl-title .mark { white-space: nowrap; }
+.sl-lead strong { color: #fff; font-weight: 700; }
+.sl-hero__art { align-content: center; }
+
+.sl-dist {
+  width: 100%; padding: 24px 26px 20px; border-radius: var(--sa-r-card);
+  background: #fff; color: var(--ink-2); box-shadow: var(--sa-sh-float);
+}
+.sl-dist__head { display: flex; align-items: center; gap: 14px; }
+.sl-dist__titles { display: grid; gap: 3px; min-width: 0; }
+.sl-dist__title { font: 740 16.5px/1.3 var(--font); letter-spacing: -0.012em; color: var(--ink); }
+.sl-dist__n { font-size: 13.5px; color: var(--muted); }
+.sl-dist__bars { margin-top: 24px; display: flex; align-items: flex-end; gap: 4px; height: 176px; border-bottom: 1px solid var(--line-2); }
+.sl-dist__bars i { flex: 1; height: calc(var(--h) * 1%); border-radius: 4px 4px 0 0; background: #D9E2F4; transform-origin: 50% 100%; transition: background-color var(--d-micro) var(--ease); }
+.sl-dist__bars i:hover { background: #C3D1EE; }
+.sl-dist__bars i.is-median { background: var(--blue); }
+.sl-dist.is-armed .sl-dist__bars i { transform: scaleY(0); }
+.sl-dist.is-armed.is-in .sl-dist__bars i { transform: none; transition: transform 700ms var(--ease), background-color var(--d-micro) var(--ease); }
+.sl-dist__axis { position: relative; height: 14px; margin-top: 8px; font: 500 12px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
+.sl-dist__axis span { position: absolute; top: 0; left: calc(var(--x) * 1%); white-space: nowrap; }
+.sl-dist__axis span:last-child { left: auto; right: 0; }
+.sl-dist__note { margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.sl-key { display: inline-block; flex: none; }
+.sl-key--range { width: 20px; height: 8px; border-radius: 4px; background: #C9D7FF; }
+.sl-key--median { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+
+.sl-main { padding-bottom: 88px; }
+.sl-card { --c-label: 260px; --c-val: 104px; --c-n: 72px; --c-fixed: 136px; --c-gap: 24px; padding: 32px 34px 26px; }
+.sl-card__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; }
+.sl-card__sub { margin-top: 6px; font-size: 15px; color: var(--muted); }
+.sl-toggle { padding: 4px; border: 0; background: var(--sa-tag); }
+.sl-toggle .tab { height: 38px; padding: 0 17px; font: 600 14.5px/1 var(--font); color: var(--ink-2); }
+.sl-toggle .tab[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(10, 18, 48, .08), 0 0 0 1px var(--tile-line); }
+.sl-table { margin-top: 22px; }
+.sl-row {
+  display: grid;
+  grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n) var(--c-fixed);
+  gap: var(--c-gap); align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.sl-row--head { padding: 0 0 10px; border-top: 0; font: 600 13px/1.3 var(--font); color: var(--muted); }
+.sl-col-num { text-align: right; }
+.sl-rows { position: relative; }
+.sl-rows::before {
+  content: ""; position: absolute; top: 0; bottom: 0; pointer-events: none;
+  left: calc(var(--c-label) + var(--c-gap));
+  right: calc(var(--c-val) + var(--c-n) + var(--c-fixed) + 3 * var(--c-gap));
+  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+  background-size: calc(100% / var(--steps, 6)) 100%;
+  border-right: 1px solid var(--line);
+}
+.sl-label { display: grid; gap: 2px; min-width: 0; }
+.sl-label a { font: 680 15.5px/1.3 var(--font); letter-spacing: -0.01em; color: var(--ink); transition: color var(--d-micro); }
+.sl-label a:hover { color: var(--ultra-ink); }
+.sl-label__meta { font-size: 13px; color: var(--muted); }
+.sl-label__n { display: none; }
+.sl-track { position: relative; height: 28px; }
+.sl-range {
+  position: absolute; top: 50%; height: 10px; margin-top: -5px;
+  left: calc(var(--a) * 1%); width: max(calc((var(--b) - var(--a)) * 1%), 0px);
+  border-radius: 5px; background: #C9D7FF;
+  transform-origin: calc((var(--m) - var(--a)) / max(var(--b) - var(--a), .01) * 100%) 50%;
+}
+.sl-dot {
+  position: absolute; top: 50%; left: calc(var(--m) * 1%);
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 2.5px #fff, 0 2px 6px rgba(36, 83, 232, .3);
+}
+.sl-card.is-armed .sl-range { transform: scaleX(0); }
+.sl-card.is-armed .sl-dot { transform: scale(0); }
+.sl-card.is-armed.is-in .sl-range { transform: none; transition: transform 800ms var(--ease) calc(var(--d, 0) * 45ms); }
+.sl-card.is-armed.is-in .sl-dot { transform: none; transition: transform var(--d-base) var(--ease) calc(300ms + var(--d, 0) * 45ms); }
+.sl-value { display: grid; justify-items: end; gap: 1px; }
+.sl-value strong { font: 740 19px/1.15 var(--font); letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
+.sl-value small { font: 500 12.5px/1.35 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.sl-n, .sl-fixed { font-size: 14px; color: var(--ink-2); white-space: nowrap; }
+.sl-n__unit { font-size: 12.5px; color: var(--muted); }
+.sl-axis { display: grid; grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n) var(--c-fixed); gap: var(--c-gap); margin-top: 8px; }
+.sl-ticks { position: relative; height: 14px; font: 500 12px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
+.sl-ticks span { position: absolute; top: 0; left: calc(var(--x) * 1%); transform: translateX(-50%); white-space: nowrap; }
+.sl-ticks span:first-child { transform: none; }
+.sl-ticks span:last-child { transform: translateX(-100%); }
+.sl-axis__unit { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sl-card__foot { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.sl-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; font-size: 13px; color: var(--muted); }
+.sl-legend > span { display: inline-flex; align-items: center; gap: 7px; }
+.sl-legend > span[hidden] { display: none; }
+.sl-legend > span[data-sl-monthnote] { display: block; flex-basis: 100%; line-height: 1.5; }
+.sl-thin { font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.sl-thin a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.sl-thin a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+.sl-empty { border: 0; box-shadow: var(--sa-sh-card); border-radius: var(--sa-r-card); }
+
+.sl-lower { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.sl-lower__head { display: flex; align-items: center; gap: 14px; }
+.sl-lower__title { font: 740 20px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
+.sl-skills__sub { margin-top: 3px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+/* the top skills as a ranked bar list: name · count, a light bar sized to the most-asked skill */
+.sl-rank { margin-top: 14px; display: grid; }
+.sl-rank li + li { border-top: 1px solid var(--line); }
+.sl-rank__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name n" "bar bar"; gap: 7px 12px; padding: 10px 0 11px; }
+.sl-rank__name { grid-area: name; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 640 15px/1.3 var(--font); letter-spacing: -0.008em; color: var(--ink); transition: color var(--d-micro) var(--ease); }
+.sl-rank__n { grid-area: n; font-size: 13.5px; line-height: 1.3; color: var(--muted); white-space: nowrap; }
+.sl-rank__bar { grid-area: bar; height: 8px; border-radius: 4px; background: var(--sa-tag); overflow: hidden; }
+.sl-rank__bar i { display: block; height: 100%; border-radius: inherit; background: #AFC4FF; transition: background-color var(--d-micro) var(--ease); }
+.sl-rank__row:hover .sl-rank__name { color: var(--ultra-ink); }
+.sl-rank__row:hover .sl-rank__bar i { background: var(--blue); }
+.sl-method__list { margin-top: 14px; }
+.sl-method__list li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 13px 0; border-top: 1px solid var(--line); font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+.sl-method__list li:first-child { border-top: 0; }
+.sl-method__list strong { color: var(--ink); font-weight: 680; }
+.sl-method__num { font: 700 13px/1.75 var(--font); letter-spacing: .02em; color: var(--ultra-ink); }
+
+/* the navy band, the home's split + leaning phone (superapp.css .sa-split / .sa-lean): the rate calculator's own
+   screen, pushed from "Công cụ", with its result for its default inputs (the tool's navy balance card) */
+.sl-calc .sa-title { margin-top: 18px; }
+.sl-calc .sa-lead { margin-top: 18px; }
+.sl-calc .sa-chips { margin-top: 26px; }
+.sl-calc .sa-actions { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.sl-calc .sa-more { color: #fff; }
+.sl-calc .sa-split__copy > .sa-cap { margin-top: 24px; }
+.va-sl-in .va-card__value { font-variant-numeric: tabular-nums; }
+.va-sl-presets { margin: 12px -14px 0; padding: 0 14px; }
+.va-sl-presets span { height: 28px; padding: 0 10px; font-size: 12.5px; }
+.va-sl-res {
+  margin: 12px 16px 0; padding: 16px 16px 15px; border-radius: 16px; overflow: hidden;
+  display: grid; gap: 2px; color: #fff;
+  background: var(--field-navy-bar);
+  box-shadow: 0 16px 26px -18px rgba(10, 22, 70, .6);
+}
+.va-sl-res__label { font: 600 12.5px/16px var(--font); color: rgba(255, 255, 255, .86); }
+.va-sl-res__big { display: flex; align-items: baseline; gap: 6px; font: 680 14px/1.2 var(--font); color: rgba(255, 255, 255, .88); }
+.va-sl-res__big b { font: 780 40px/1.05 var(--font-wide); font-stretch: 106%; letter-spacing: -0.04em; color: #fff; }
+.va-sl-res__range { margin-top: 8px; padding-top: 9px; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 13px; line-height: 18px; color: rgba(255, 255, 255, .86); }
+.va-sl-res__range b { font-weight: 720; color: #fff; }
+
+@media (max-width: 1240px) {
+  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 40px; }
+}
+/* small laptops and iPad landscape: copy and the chart card stay side by side (no empty right third of the band) */
+@media (max-width: 1100px) {
+  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 36px; }
+  .sl-dist { padding: 22px 22px 18px; }
+  .sl-dist__bars { height: 144px; gap: 3px; }
+  .sl-card { --c-label: 200px; --c-fixed: 0px; --c-gap: 20px; }
+  .sl-col-fixed { display: none; }
+  .sl-rows::before { right: calc(var(--c-val) + var(--c-n) + 2 * var(--c-gap)); }
+  .sl-row, .sl-axis { grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n); }
+  .sl-lower { grid-template-columns: 1fr; }
+}
+/* the kit stacks heroes with art under 900 px and lets the art rise from the floor: this art is a whole card */
+@media (max-width: 960px) {
+  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .sl-hero .sa-hero__art { justify-items: stretch; }
+  .sl-dist { max-width: none; }
+}
+@media (max-width: 900px) {
+  .sl-hero, .sl-hero:has(.sa-hero__art) { --glow-at: 100% 100%; --glow-size: 60% 40%; padding-bottom: 48px; }
+  .sl-hero .sa-hero__art { height: auto; }
+  .sl-hero .sa-hero__art > .sl-dist { order: 0; }
+}
+@media (max-width: 767px) {
+  .sl-hero, .sl-hero:has(.sa-hero__art) { padding-bottom: 36px; }
+  .sl-title { font-size: clamp(30px, 8.4vw, 40px); }
+  .sl-dist { padding: 18px 16px 16px; border-radius: var(--sa-r-card-sm); }
+  .sl-dist__bars { height: 124px; gap: 3px; }
+  .sl-main { padding-bottom: 64px; }
+  .sl-card { padding: 22px 16px 18px; }
+  .sl-toggle { width: 100%; }
+  .sl-toggle .tab { flex: 1 1 0; justify-content: center; }
+  .sl-row--head { display: none; }
+  .sl-rows::before { display: none; }
+  .sl-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 14px 0 12px; }
+  .sl-row:first-child { border-top: 0; }
+  .sl-label { grid-column: 1; grid-row: 1; }
+  .sl-value { grid-column: 2; grid-row: 1; }
+  .sl-track {
+    grid-column: 1 / -1; grid-row: 2; height: 16px;
+    background: linear-gradient(var(--sa-tag), var(--sa-tag)) 0 50% / 100% 4px no-repeat;
+  }
+  .sl-n { display: none; }
+  .sl-label__n { display: inline; }
+  .sl-axis { grid-template-columns: 1fr; margin-top: 4px; }
+  .sl-axis > span:not(.sl-ticks) { display: none; }
+  .sl-lower__head { align-items: flex-start; }
+  .sl-rank__name { font-size: 14.5px; }
+}
