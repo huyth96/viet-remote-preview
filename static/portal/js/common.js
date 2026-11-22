@@ -32,12 +32,27 @@
    VR.fieldHeader()          html[data-field] = the field under the header's centre line (home V4 sections carry data-field)
    view transitions          pageswap / pagereveal name a job card title and the job page h1 "vt-job-title" (title morph)
 
-   V3 motion (elevated.css), all off under prefers-reduced-motion:
-   VR.live(els, cls)         toggle cls (default "is-live") while each element is on screen; every
-                             .obj gets it on load, so matte objects bob only while visible
-   [data-tilt]               a floating card tilts ≤ 3° toward the pointer (fine pointers only);
-                             data-tilt="5" sets the max angle
-   .fan.reveal               a fanned card stack spreads on enter (common reveal; see .fan in CSS)
+   THE CRAFT LAYER (rv pages; DESIGN_SYSTEM_REVOLUT.md §13; inert on the home: it runs only on body.rv or on an opt-in
+   attribute the home never carries)
+   VR.toast(msg, {tone})     tone "ok" | "error" | "info" draws the icon (rv.css §17); a repeat is announced again
+   VR.copy(text, msg, btn)   clipboard + toast; btn gets .is-copied and its [data-copy-label] says "Đã sao chép" 1.6 s
+   [data-copy-text="…"] / [data-copy-from="#id"]   any button: copies that text / that element's value or text
+   VR.num.parse(s) / VR.num.format(n, d)           "20.000.000" -> 20000000 · "8,5" -> 8.5 · 8.1 -> "8,1"
+   VR.formatInput(input)     live thousands separators keeping the caret; wired on input[data-format="int|dec"]
+   VR.validateField(el) / VR.validateForm(form)    inline validation on blur, Vietnamese messages, wired on
+                             form[data-validate]: the first invalid field takes focus on submit
+   VR.busy(btn, on)          the pending state (aria-busy: a spinner, the width kept, no double submit)
+   VR.sheet.open(id|el, opener) / VR.sheet.close()  the bottom sheet: focus trap, Esc, scrim, drag to close, scroll
+                             lock, focus back to the opener; wired on [data-sheet-open="id"] / [data-sheet-close]
+   VR.actionbar(el)          the sticky bottom bar: [data-actionbar][data-actionbar-while][data-actionbar-hide]
+   VR.liveCount(el, n)       a count that changes (tabular, a short dip, announced by its aria-live parent)
+
+   THE LIVELY LAYER (rv.css §26, DESIGN_SYSTEM_REVOLUT.md §26; rv pages only)
+   VR.live(root)             [data-live] blocks come alive once on entry (.is-live): .rv-in rise, bars/rings/meters
+                             fill, flags sweep, ticks pop, carets blink; [data-stagger] > * get --i; [data-to] counts
+                             up. Pre-states exist only under html.rv-live (base.html head: not reduced motion, not lite)
+
+   (The V3 motion helpers VR.live / [data-tilt] / .fan went with elevated.css at the Revolut rollout: no page used them.)
 */
 (function () {
   "use strict";
@@ -207,10 +222,16 @@
       const on = Boolean(saved[job.id]);
       btn.classList.toggle("is-on", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
-      btn.setAttribute("aria-label", on ? "Bỏ lưu việc" : "Lưu việc");
-      btn.title = on ? "Bỏ lưu việc" : "Lưu việc";
       const text = btn.querySelector("[data-save-label]");
-      if (text) text.textContent = on ? "Đã lưu" : "Lưu việc";
+      if (text) {
+        /* a visible label names the button ("Đã lưu" + aria-pressed): no aria-label that disagrees with the text */
+        text.textContent = on ? "Đã lưu" : "Lưu việc";
+        btn.removeAttribute("aria-label");
+        btn.removeAttribute("title");
+      } else {
+        btn.setAttribute("aria-label", on ? "Bỏ lưu việc" : "Lưu việc");
+        btn.title = on ? "Bỏ lưu việc" : "Lưu việc";
+      }
     });
     document.querySelectorAll("[data-saved-count]").forEach((badge) => {
       const n = VR.saved.count();
@@ -226,12 +247,20 @@
     event.preventDefault();
     const job = jobFromElement(btn);
     if (!job) return;
+    const rv = document.body.classList.contains("rv");
     if (VR.saved.has(job.id)) {
       VR.saved.remove(job.id);
-      VR.toast("Đã bỏ lưu việc này");
+      VR.toast("Đã bỏ lưu việc này", rv ? { tone: "info" } : undefined);
     } else {
       VR.saved.add(job);
-      VR.toast("Đã lưu — xem trong mục Việc đã lưu");
+      VR.toast("Đã lưu — xem trong mục Việc đã lưu", rv ? { tone: "ok" } : undefined);
+      if (rv) {
+        /* a satisfying beat: the bookmark pops, the header count bumps (rv.css §21) */
+        const beat = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+          el.addEventListener("animationend", () => el.classList.remove(cls), { once: true }); };
+        beat(btn, "is-pop");
+        document.querySelectorAll(".saved-link__count").forEach((c) => beat(c, "is-bump"));
+      }
     }
   });
   document.addEventListener("vr:saved", () => syncSaveButtons());
@@ -242,15 +271,19 @@
 
   /* ---------- toast & clipboard ---------- */
   let toastTimer;
-  VR.toast = (message) => {
+  VR.toast = (message, opts) => {
     const el = document.querySelector("[data-toast]");
     if (!el) return;
-    el.textContent = message;
-    el.classList.add("is-on");
+    const o = opts || {};
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove("is-on"), 2600);
+    if (o.tone) el.dataset.tone = o.tone; else el.removeAttribute("data-tone");
+    // empty the live region first, so the same message twice is announced twice
+    el.textContent = "";
+    requestAnimationFrame(() => { el.textContent = message; el.classList.add("is-on"); });
+    toastTimer = setTimeout(() => el.classList.remove("is-on"), o.duration || (o.tone === "error" ? 4200 : 2600));
   };
-  VR.copy = async (text, message) => {
+  VR.copy = async (text, message, btn) => {
+    let ok = true;
     try {
       await navigator.clipboard.writeText(text);
     } catch (_) {
@@ -261,11 +294,36 @@
       area.style.opacity = "0";
       document.body.appendChild(area);
       area.select();
-      try { document.execCommand("copy"); } catch (__) { /* ignore */ }
+      try { ok = document.execCommand("copy"); } catch (__) { ok = false; }
       area.remove();
     }
-    VR.toast(message || "Đã sao chép");
+    if (!ok) { VR.toast("Không sao chép được. Hãy chọn đoạn chữ và sao chép bằng tay.", { tone: "error" }); return false; }
+    VR.toast(message || "Đã sao chép", { tone: "ok" });
+    if (btn) {
+      const label = btn.querySelector("[data-copy-label]");
+      if (label && !btn.dataset.copyIdle) btn.dataset.copyIdle = label.textContent;
+      btn.classList.add("is-copied");
+      if (label) label.textContent = btn.dataset.copyDone || "Đã sao chép";
+      clearTimeout(btn._vrCopied);
+      btn._vrCopied = setTimeout(() => {
+        btn.classList.remove("is-copied");
+        if (label && btn.dataset.copyIdle) label.textContent = btn.dataset.copyIdle;
+      }, 1600);
+    }
+    return true;
   };
+  /* [data-copy-text="…"] copies that text; [data-copy-from="#id"] copies a field's value or an element's text */
+  document.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-copy-text], [data-copy-from]");
+    if (!btn) return;
+    event.preventDefault();
+    let text = btn.dataset.copyText;
+    if (text == null) {
+      const src = document.querySelector(btn.dataset.copyFrom);
+      text = !src ? "" : src.matches("input, textarea, select") ? src.value : src.innerText.trim();
+    }
+    if (text) VR.copy(text, btn.dataset.copyToast, btn);
+  });
 
   /* ---------- number formatting ---------- */
   VR.fmt = {
@@ -370,11 +428,19 @@
 
   const dataAttrs = (job) =>
     `data-job-id="${Number(job.id)}" data-title="${VR.escape(job.title)}" data-company="${VR.escape(job.company)}" data-url="${VR.escape(job.url)}" data-salary="${VR.escape(job.salary)}" data-field="${VR.escape(job.field_label)}"`;
-  /* logo only when it reads at 40px (VR.iconLogo); initials share one neutral treatment (ink on
-     --surface-2), no per-job tints */
+  /* logo only when it reads at 40px (VR.iconLogo); without one, the monogram (or an anonymous client's field glyph,
+     data-f) on a soft tint (data-tone, rv.css §18). VR.logoTone is the twin of the logo_tone filter: the same hash,
+     keyed on the company for a named employer and on the field for an anonymous client. */
+  VR.logoTone = (job) => {
+    const j = job || {};
+    const key = String((j.initials ? j.company : j.field) || j.field || "");
+    let h = 0;
+    for (const ch of key) h = (h * 31 + ch.codePointAt(0)) % 2147483647;
+    return (h % 6) + 1;
+  };
   const logoHtml = (job) => {
     const src = VR.iconLogo(job);
-    return `<span class="logo" aria-hidden="true" data-initials="${VR.escape(job.initials)}">${src
+    return `<span class="logo" aria-hidden="true" data-tone="${VR.logoTone(job)}" data-f="${VR.escape(job.field || "")}" data-initials="${VR.escape(job.initials)}">${src
       ? `<img src="${VR.escape(src)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
       : VR.escape(job.initials)}</span>`;
   };
@@ -546,6 +612,13 @@
     const d = decimals === undefined || decimals === "" ? 0 : Number(decimals);
     return n.toLocaleString("vi-VN", { minimumFractionDigits: 0, maximumFractionDigits: d });
   };
+  /* a figure whose marks sit in their own span (portal_tags |num_seps, so a display size can set the comma smaller):
+     <b data-to="8.1" data-decimals="1" data-seps>8<span class="nsep">,</span>1</b>; the roll keeps the span */
+  const putNum = (el, text) => {
+    if (el.hasAttribute("data-seps")) el.innerHTML = text.replace(/(\d)([.,])(?=\d)/g, '$1<span class="nsep">$2</span>');
+    else el.textContent = text;
+    return text;
+  };
   /** Roll el's number to target (Vietnamese format). opts: {from, decimals, duration}.
       Without opts.from it starts from el.dataset.count (the last value shown).
       If page code writes el.textContent itself mid-roll (e.g. a dash for "no value"), the roll
@@ -557,7 +630,7 @@
     const from = o.from ?? (Number(el.dataset.count) || 0);
     el.dataset.count = String(target);
     VR.countStop(el);
-    if (VR.reducedMotion) { el.textContent = numText(target, decimals); return; }
+    if (VR.reducedMotion) { putNum(el, numText(target, decimals)); return; }
     const start = performance.now();
     const dur = o.duration || 900;
     let shown = el.textContent;
@@ -566,7 +639,7 @@
       const p = Math.max(0, Math.min(1, (t - start) / dur));   // a frame stamped before start: never below the start
       const eased = 1 - Math.pow(1 - p, 3);
       const factor = Math.pow(10, Number(decimals) || 0);
-      el.textContent = shown = numText(Math.round((from + (target - from) * eased) * factor) / factor, decimals);
+      shown = putNum(el, numText(Math.round((from + (target - from) * eased) * factor) / factor, decimals));
       el._vrCount = p < 1 ? requestAnimationFrame(step) : 0;
     };
     el._vrCount = requestAnimationFrame(step);
@@ -584,44 +657,6 @@
       });
     }, Object.assign({ threshold: 0.35 }, opts || {}));
     io.observe(el);
-  };
-
-  /** Toggle cls on each element while it is on screen (idle loops that should not run off-screen). */
-  VR.live = (els, cls) => {
-    const list = Array.from(els || []);
-    const name = cls || "is-live";
-    if (!list.length || VR.reducedMotion || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => entry.target.classList.toggle(name, entry.isIntersecting));
-    }, { rootMargin: "40px 0px" });
-    list.forEach((el) => io.observe(el));
-  };
-
-  /** [data-tilt]: a floating card leans ≤ 3° toward the pointer, and settles back on leave. */
-  VR.tilt = (root) => {
-    if (VR.reducedMotion || !window.matchMedia || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    (root || document).querySelectorAll("[data-tilt]").forEach((el) => {
-      const max = Number(el.dataset.tilt) || 3;
-      let frame = 0;
-      let settle = 0;
-      el.addEventListener("pointermove", (event) => {
-        const r = el.getBoundingClientRect();
-        const x = (event.clientX - r.left) / r.width - 0.5;
-        const y = (event.clientY - r.top) / r.height - 0.5;
-        clearTimeout(settle);
-        cancelAnimationFrame(frame);
-        frame = requestAnimationFrame(() => {
-          el.style.transition = "transform 160ms linear";
-          el.style.transform = `perspective(900px) rotateX(${(-y * max).toFixed(2)}deg) rotateY(${(x * max).toFixed(2)}deg)`;
-        });
-      });
-      el.addEventListener("pointerleave", () => {
-        cancelAnimationFrame(frame);
-        el.style.transition = "transform 420ms cubic-bezier(.2,.7,.2,1)";
-        el.style.transform = "";
-        settle = setTimeout(() => { el.style.transition = ""; }, 460);  /* hand transitions back to the stylesheet */
-      });
-    });
   };
 
   /* ---------- Vietnam time (static-export safe: every relative word is computed here) ----------
@@ -663,11 +698,12 @@
   };
 
   /* ---------- header field: the header takes the colour of the field under its centre line ----------
-     Sections carry data-field="porcelain|paper|night|navy|ultra|cobalt|deep|sun|sky"; one IntersectionObserver watches a 1px line
+     Sections carry data-field="porcelain|paper|night|navy|ultra|cobalt|deep|sun|sky" (the Revolut kit adds "graphite" and
+     "mist": rv.css .rv-sec--*, base.css §17 the bars); one IntersectionObserver watches a 1px line
      at y = 36 (rebuilt on resize) and writes html[data-field]. Overlapping sheets: the later one wins. */
   VR.fieldHeader = () => {
     // only field markers (job cards also carry data-field: their field label, never one of these values)
-    const FIELDS = new Set(["porcelain", "paper", "night", "navy", "ultra", "cobalt", "deep", "sun", "sky"]);
+    const FIELDS = new Set(["porcelain", "paper", "night", "navy", "ultra", "cobalt", "deep", "sun", "sky", "graphite", "mist"]);
     const fields = Array.from(document.querySelectorAll("main [data-field], .site-footer[data-field], .site-footer [data-field]"))
       .filter((el) => FIELDS.has(el.dataset.field));
     if (!fields.some((el) => el.closest("main")) || !("IntersectionObserver" in window)) return;  // inner pages keep the V2 header
@@ -678,6 +714,8 @@
       const top = fields.filter((el) => live.has(el)).pop();
       const value = top ? top.dataset.field : "porcelain";
       if (root.dataset.field !== value) root.dataset.field = value;
+      // an inner page's navy band (rv.css §3) under the header: the bar keeps the band's colour once scrolled
+      root.classList.toggle("vr-band", Boolean(top && (top.classList.contains("rv-hero") || top.classList.contains("rv-cta"))));
     };
     const build = () => {
       if (io) io.disconnect();
@@ -737,6 +775,392 @@
   document.addEventListener("error", (event) => {
     if (event.target instanceof HTMLImageElement) logoFallback(event.target);
   }, true);
+
+  /* =====================================================================
+     THE CRAFT LAYER (DESIGN_SYSTEM_REVOLUT.md §13, rv.css §21–§25). Opt-in attributes and body.rv only: the home
+     never carries them, so none of this touches it.
+     ===================================================================== */
+
+  /* ---------- numbers: Vietnamese grouping (1.234.567), comma decimals (8,1) ---------- */
+  const group = (digits) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  VR.num = {
+    /** "20.000.000" -> 20000000 · "8,5" -> 8.5 · "26 000 đ" -> 26000 · "" -> null */
+    parse(value) {
+      const s = String(value ?? "").replace(/[^\d,-]/g, "");
+      if (!/\d/.test(s)) return null;
+      const n = Number(s.replace(",", "."));
+      return Number.isFinite(n) ? n : null;
+    },
+    /** 8.1 -> "8,1" · 20000000 -> "20.000.000" (decimals: at most, default 0) */
+    format(n, decimals) {
+      return Number(n).toLocaleString("vi-VN", { maximumFractionDigits: decimals ?? 0 });
+    },
+  };
+  /** Live thousands separators as you type, the caret kept after the same digit.
+      <input inputmode="numeric" data-format="int"> · data-format="dec" keeps one comma (data-decimals, default 2) */
+  VR.formatInput = (el) => {
+    const raw = el.value;
+    const caret = el.selectionStart == null ? raw.length : el.selectionStart;
+    const kept = raw.slice(0, caret).replace(/[^\d,]/g, "").length;      // digits (and the comma) before the caret
+    let out;
+    if (el.dataset.format === "dec") {
+      const [int, ...rest] = raw.replace(/[^\d,]/g, "").split(",");
+      const intDigits = int.replace(/^0+(?=\d)/, "").slice(0, 15);
+      out = (intDigits ? group(intDigits) : rest.length ? "0" : "") + (rest.length ? "," + rest.join("").slice(0, Number(el.dataset.decimals || 2)) : "");
+    } else {
+      const digits = raw.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 15);
+      out = digits ? group(digits) : "";
+    }
+    if (out === raw) return;
+    el.value = out;
+    let pos = 0;
+    for (let seen = 0; pos < out.length && seen < kept; pos += 1) if (/[\d,]/.test(out[pos])) seen += 1;
+    if (document.activeElement === el) { try { el.setSelectionRange(pos, pos); } catch (_) { /* type=number */ } }
+  };
+  document.addEventListener("input", (event) => {
+    const el = event.target;
+    if (el instanceof HTMLInputElement && el.dataset.format) VR.formatInput(el);
+  });
+
+  /* ---------- pending state ---------- */
+  /** VR.busy(button, true): a spinner in the label's place (rv.css §21), the width kept, clicks ignored */
+  VR.busy = (el, on) => {
+    if (!el) return;
+    if (on) { el.setAttribute("aria-busy", "true"); el.setAttribute("aria-disabled", "true"); }
+    else { el.removeAttribute("aria-busy"); el.removeAttribute("aria-disabled"); }
+  };
+  /** VR.liveCount(el, 1309): a count that changes (results, characters): formatted, a short dip, no sideways jump.
+      A display figure with data-seps keeps its decimal comma in <span class="nsep"> (set small by the page CSS). */
+  VR.liveCount = (el, n) => {
+    if (!el) return;
+    const text = typeof n === "number" ? VR.num.format(n) : String(n);
+    if (el.textContent === text) return;
+    el.classList.add("rv-count", "is-changing");
+    putNum(el, text);
+    clearTimeout(el._vrCount2);
+    el._vrCount2 = setTimeout(() => el.classList.remove("is-changing"), 140);
+  };
+
+  /* ---------- inline validation (form[data-validate]) ----------
+     On blur a field says what is wrong, in Vietnamese, under itself (.rv-error with the icon, aria-invalid,
+     aria-describedby); while it is wrong it re-checks as you type, so the message leaves the moment it is right.
+     On submit every field is checked and the first wrong one takes focus. Messages: data-msg-required,
+     data-msg-type, data-msg-min, data-msg-max, data-msg-pattern, data-msg-minlength override the defaults. */
+  const labelOf = (el) => {
+    if (el.dataset.label) return el.dataset.label;
+    const fs = el.type === "radio" && el.closest("fieldset");
+    const l = (fs && fs.querySelector("legend")) || (el.labels && el.labels[0]) || (el.id && document.querySelector(`label[for="${el.id}"]`));
+    /* innerText: only the wording on screen (a label that swaps its text by kind keeps the other variants hidden) */
+    const node = l ? (l.querySelector(".rv-label__text") || l) : null;
+    const t = node ? String(node.innerText || node.textContent).replace(/\(.*?\)|\*/g, "").replace(/\s+/g, " ").trim() : "";
+    return t ? t.charAt(0).toLowerCase() + t.slice(1) : "";
+  };
+  const groupOf = (el) => Array.from((el.form || document).querySelectorAll("input[type=radio]")).filter((r) => r.name === el.name);
+  VR.fieldError = (el) => {
+    if (el.type === "radio") {
+      const group = groupOf(el);
+      if (!group.some((r) => r.required) || group.some((r) => r.checked)) return "";
+      return group[0].dataset.msgRequired || el.dataset.msgRequired || `Vui lòng chọn ${labelOf(group[0]) || "một mục"}.`;
+    }
+    const v = el.type === "checkbox" ? (el.checked ? "1" : "") : String(el.value || "").trim();
+    const d = el.dataset;
+    const name = labelOf(el);
+    if (el.required && !v) {
+      if (d.msgRequired) return d.msgRequired;
+      if (el.type === "checkbox") return "Vui lòng đánh dấu ô này để tiếp tục.";
+      return el.tagName === "SELECT" ? `Vui lòng chọn ${name || "một mục"}.` : `Vui lòng nhập ${name || "ô này"}.`;
+    }
+    if (!v) return "";
+    if (el.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return d.msgType || "Email chưa đúng dạng: cần có @ và tên miền, như ten@congty.com.";
+    if (el.type === "url" && !/^https?:\/\/[^\s.]+\.[^\s]{2,}/i.test(v)) return d.msgType || "Đường dẫn cần bắt đầu bằng https:// và có tên miền.";
+    if (el.type === "tel" && v.replace(/\D/g, "").length < 9) return d.msgType || "Số điện thoại cần ít nhất 9 chữ số.";
+    const minLen = Number(el.getAttribute("minlength") || 0);
+    if (minLen && v.length < minLen) return d.msgMinlength || `Cần ít nhất ${minLen} ký tự (đang có ${v.length}).`;
+    const numeric = el.type === "number" || d.format || el.inputMode === "numeric" || el.inputMode === "decimal";
+    if (numeric && (el.hasAttribute("min") || el.hasAttribute("max"))) {
+      const n = VR.num.parse(v);
+      const unit = d.unit ? " " + d.unit : "";
+      if (n == null) return d.msgType || "Nhập một con số.";
+      if (el.hasAttribute("min") && n < Number(el.min)) return d.msgMin || `Tối thiểu ${VR.num.format(Number(el.min), 2)}${unit}.`;
+      if (el.hasAttribute("max") && n > Number(el.max)) return d.msgMax || `Tối đa ${VR.num.format(Number(el.max), 2)}${unit}.`;
+    }
+    if (el.pattern && !new RegExp(`^(?:${el.pattern})$`, "u").test(v)) return d.msgPattern || "Định dạng chưa đúng.";
+    return "";
+  };
+  VR.validateField = (el) => {
+    if (el.type === "radio") return validateGroup(el);
+    const msg = VR.fieldError(el);
+    const field = el.closest(".rv-field, .field");
+    const id = (el.id || el.name || "f") + "-err";
+    let out = document.getElementById(id);
+    if (!out && msg) {
+      out = document.createElement("p");
+      out.className = "rv-error";
+      out.id = id;
+      out.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span>';
+      const after = el.closest(".rv-affix, .suffix-input, .rv-check, .rv-switch, .rv-search") || el;
+      after.insertAdjacentElement("afterend", out);
+    }
+    if (out) {
+      const slot = out.querySelector("span") || out;
+      if (slot.textContent !== msg) slot.textContent = msg;
+      out.hidden = !msg;
+      const ids = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+      if (!ids.includes(id)) el.setAttribute("aria-describedby", ids.concat(id).join(" "));
+    }
+    if (msg) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    if (field) field.classList.toggle("rv-field--error", Boolean(msg));
+    return !msg;
+  };
+  /* a required radio group: one message under the group (after its .rv-seg / radiogroup, else at the end of its
+     fieldset or field), every radio described by it */
+  function validateGroup(el) {
+    const msg = VR.fieldError(el);
+    const group = groupOf(el);
+    const box = el.closest("fieldset, .rv-field, .field, [role=radiogroup]") || el.parentElement;
+    const id = "grp-" + String(el.name).replace(/[^\w-]/g, "") + "-err";
+    let out = document.getElementById(id);
+    if (!out && msg) {
+      out = document.createElement("p");
+      out.className = "rv-error";
+      out.id = id;
+      out.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span>';
+      const seg = box.matches(".rv-seg, .rv-filters, [role=radiogroup]") ? null : box.querySelector(".rv-seg, .rv-filters, [role=radiogroup]");
+      if (seg) seg.insertAdjacentElement("afterend", out); else box.insertAdjacentElement(box.matches("fieldset") ? "beforeend" : "afterend", out);
+    }
+    if (out) {
+      const slot = out.querySelector("span") || out;
+      if (slot.textContent !== msg) slot.textContent = msg;
+      out.hidden = !msg;
+    }
+    group.forEach((r) => {
+      const ids = (r.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+      if (out && !ids.includes(id)) r.setAttribute("aria-describedby", ids.concat(id).join(" "));
+      if (msg) r.setAttribute("aria-invalid", "true"); else r.removeAttribute("aria-invalid");
+    });
+    box.classList.toggle("rv-field--error", Boolean(msg));
+    return !msg;
+  }
+  const CONTROLS = "input:not([type=hidden]):not([type=submit]):not([type=button]), select, textarea";
+  VR.validateForm = (form) => {
+    if (!form || form._vrValidate) return;
+    form._vrValidate = true;
+    form.noValidate = true;
+    form.addEventListener("focusout", (event) => {
+      const el = event.target;
+      if (!el.matches || !el.matches(CONTROLS) || el.type === "radio") return;
+      if (el.value || el.dataset.touched || el.required) { el.dataset.touched = "1"; VR.validateField(el); }
+    });
+    form.addEventListener("input", (event) => {
+      const el = event.target;
+      if (el.getAttribute && el.getAttribute("aria-invalid") === "true") VR.validateField(el);
+    });
+    form.addEventListener("change", (event) => {
+      const el = event.target;
+      if ((el.type === "checkbox" && el.required) || (el.type === "radio" && el.getAttribute("aria-invalid") === "true")) VR.validateField(el);
+    });
+    /* capture: runs before the page's own submit handler, which never sees an invalid form */
+    form.addEventListener("submit", (event) => {
+      const seen = new Set();
+      const bad = Array.from(form.querySelectorAll(CONTROLS)).filter((el) => {
+        if (el.disabled) return false;
+        if (el.type === "radio") { if (seen.has(el.name)) return false; seen.add(el.name); }
+        return !VR.validateField(el);
+      });
+      if (!bad.length) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      bad[0].focus();
+      VR.toast(bad.length === 1 ? "Còn 1 ô cần sửa" : `Còn ${bad.length} ô cần sửa`, { tone: "error" });
+    }, true);
+  };
+
+  /* ---------- bottom sheet (rv.css §22) ---------- */
+  VR.sheet = (() => {
+    const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let current = null;
+    let opener = null;
+    const openers = (sheet) => document.querySelectorAll(`[data-sheet-open="${sheet.id}"]`);
+    const focusables = (sheet) => Array.from(sheet.querySelectorAll(FOCUSABLE)).filter((el) => el.getClientRects().length > 0);
+    function open(target, from) {
+      const sheet = typeof target === "string" ? document.getElementById(target) : target;
+      if (!sheet || current === sheet) return;
+      if (current) close(current, true);
+      current = sheet;
+      opener = from || document.activeElement;
+      const panel = sheet.querySelector(".rv-sheet__panel");
+      if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+      sheet.hidden = false;
+      document.documentElement.classList.add("rv-lock");
+      openers(sheet).forEach((b) => b.setAttribute("aria-expanded", "true"));
+      void sheet.offsetWidth;                                           // the closed state is laid out first
+      sheet.classList.add("is-open");
+      const first = sheet.querySelector("[autofocus]") || panel;
+      if (first) first.focus({ preventScroll: true });
+      sheet.dispatchEvent(new CustomEvent("vr:sheet", { detail: { open: true } }));
+    }
+    function close(target, quick) {
+      const sheet = (typeof target === "string" ? document.getElementById(target) : target) || current;
+      if (!sheet || sheet.hidden) return;
+      sheet.classList.remove("is-open", "is-dragging");
+      sheet.style.removeProperty("--rv-drag");
+      const hide = () => { if (!sheet.classList.contains("is-open")) sheet.hidden = true; };
+      if (quick || VR.reducedMotion) hide(); else setTimeout(hide, 240);
+      document.documentElement.classList.remove("rv-lock");
+      openers(sheet).forEach((b) => b.setAttribute("aria-expanded", "false"));
+      if (current === sheet) {
+        current = null;
+        if (!quick && opener && opener.focus && document.contains(opener)) opener.focus({ preventScroll: true });
+        opener = null;
+      }
+      sheet.dispatchEvent(new CustomEvent("vr:sheet", { detail: { open: false } }));
+    }
+    document.addEventListener("click", (event) => {
+      const o = event.target.closest("[data-sheet-open]");
+      if (o) { event.preventDefault(); open(o.dataset.sheetOpen, o); return; }
+      const c = event.target.closest("[data-sheet-close]");
+      if (c && c.closest(".rv-sheet")) close(c.closest(".rv-sheet"));
+    });
+    document.addEventListener("keydown", (event) => {
+      if (!current) return;
+      if (event.key === "Escape") { event.preventDefault(); close(current); return; }
+      if (event.key !== "Tab") return;
+      const items = focusables(current);
+      if (!items.length) { event.preventDefault(); return; }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const inside = current.contains(document.activeElement) && document.activeElement !== current.querySelector(".rv-sheet__panel");
+      if (event.shiftKey && (document.activeElement === first || !inside)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !inside)) { event.preventDefault(); first.focus(); }
+    });
+    /* phones: drag the head down past 80 px to close (transform only; the move listeners live only during a drag) */
+    let drag = null;
+    const move = (event) => {
+      if (!drag) return;
+      drag.dy = Math.max(0, event.clientY - drag.y);
+      drag.sheet.style.setProperty("--rv-drag", drag.dy + "px");
+    };
+    const end = () => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", end);
+      document.removeEventListener("pointercancel", end);
+      if (!drag) return;
+      const { sheet, dy } = drag;
+      drag = null;
+      sheet.classList.remove("is-dragging");
+      if (dy > 80) close(sheet); else sheet.style.removeProperty("--rv-drag");
+    };
+    document.addEventListener("pointerdown", (event) => {
+      if (!current) return;
+      const head = event.target.closest(".rv-sheet__head");
+      if (!head || !current.contains(head) || event.target.closest("button, a, input") || !window.matchMedia("(max-width: 767px)").matches) return;
+      drag = { sheet: current, y: event.clientY, dy: 0 };
+      current.classList.add("is-dragging");
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", end);
+      document.addEventListener("pointercancel", end);
+    });
+    return { open, close, get current() { return current; } };
+  })();
+
+  /* ---------- sticky action bar (rv.css §23) ---------- */
+  VR.actionbar = (bar) => {
+    if (!bar || bar._vrBar) return;
+    bar._vrBar = true;
+    const pick = (sel) => (sel ? document.querySelector(sel) : null);
+    const whileEl = pick(bar.dataset.actionbarWhile);
+    const hideEl = pick(bar.dataset.actionbarHide);
+    let inWhile = !whileEl;
+    let inHide = false;
+    let typing = false;
+    /* data-actionbar-ready="false": the bar stays down until the page has something to show (a result, a total);
+       the page flips it with VR.actionbar.ready(bar, true) or by setting the attribute */
+    const sync = () => {
+      const on = bar.dataset.actionbarReady !== "false" && inWhile && !inHide && !typing;
+      bar.classList.toggle("is-on", on);
+      if (on) bar.removeAttribute("inert"); else bar.setAttribute("inert", "");
+      document.documentElement.classList.toggle("has-actionbar", on && getComputedStyle(bar).display !== "none");
+    };
+    if ("IntersectionObserver" in window) {
+      if (whileEl) new IntersectionObserver((entries) => { inWhile = entries[entries.length - 1].isIntersecting; sync(); }, { rootMargin: "0px 0px -72px 0px" }).observe(whileEl);
+      if (hideEl) new IntersectionObserver((entries) => { inHide = entries[entries.length - 1].isIntersecting; sync(); }).observe(hideEl);
+    }
+    const isField = (el) => el && el.matches && el.matches("input:not([type=checkbox]):not([type=radio]):not([type=range]), textarea, select");
+    /* the bar hides at once when a field takes the keyboard, but comes back only 320 ms after the field lets go: the
+       tap that moved the focus (a "Đặt lại" button low on the screen) lands first, and the keyboard has closed */
+    let blurT = 0;
+    document.addEventListener("focusin", (event) => { if (isField(event.target)) { clearTimeout(blurT); typing = true; sync(); } });
+    document.addEventListener("focusout", () => { clearTimeout(blurT); blurT = setTimeout(() => { typing = isField(document.activeElement); sync(); }, 320); });
+    if ("MutationObserver" in window) new MutationObserver(sync).observe(bar, { attributes: true, attributeFilter: ["data-actionbar-ready"] });
+    bar._vrSync = sync;
+    sync();
+  };
+  VR.actionbar.ready = (bar, on) => {
+    if (!bar) return;
+    bar.dataset.actionbarReady = on ? "true" : "false";
+    if (bar._vrSync) bar._vrSync();
+  };
+
+  /* ---------- go to a field: <a href="#tool" data-focus-target="#cv-text"> ----------
+     A band pill that leads to the tool: the field scrolls into view (smooth unless reduced motion) and takes the
+     cursor; without JS the href still jumps to the section. */
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest && event.target.closest("[data-focus-target]");
+    if (!link || event.defaultPrevented || event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+    const target = document.querySelector(link.dataset.focusTarget);
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "center" });
+    target.focus({ preventScroll: true });
+  });
+
+  /* ---------- the lively layer (rv.css §26.7): a block comes alive ONCE, when it enters ----------
+     base.html's head sets html.rv-live on rv pages (never with reduced motion, never under html.hm-lite, only with
+     IntersectionObserver), which turns on the pre-states; VR.live() watches every [data-live] block and adds
+     .is-live once its top passes 88 % of the window. Blocks that wake in the same frame get --live-i (0, 1, 2 …: a
+     60 ms stagger in rv.css); [data-stagger] > * get --i (their index: 50 ms apart). [data-to] counts up once its block
+     is live: <b data-to="8.1" data-decimals="1" data-from="0" data-delay="120">8,1</b> (the final text is in the HTML;
+     data-seps keeps |num_seps' <span class="nsep"> round the comma). Blocks that start off screen get .rv-pre: only
+     they hide their .rv-in until entry, so the first screen is never empty while the script starts.
+     Without html.rv-live (no JS, reduced motion, lite) every final state already shows and nothing here moves. */
+  VR.live = (root) => {
+    const html = document.documentElement;
+    const scope = root || document;
+    scope.querySelectorAll("[data-stagger]").forEach((list) => {
+      Array.from(list.children).forEach((el, i) => { if (!el.style.getPropertyValue("--i")) el.style.setProperty("--i", String(i)); });
+    });
+    const blocks = Array.from(scope.querySelectorAll("[data-live]")).filter((el) => !el.classList.contains("is-live"));
+    const animate = html.classList.contains("rv-live") && "IntersectionObserver" in window;
+    const count = (block) => block.querySelectorAll("[data-to]").forEach((el) => {
+      if (el._vrTo || el.closest("[data-live]:not(.is-live)")) return;   // an inner block counts its own numbers
+      const to = Number(el.dataset.to);
+      if (!Number.isFinite(to)) return;
+      el._vrTo = true;
+      if (!animate) return;
+      const from = Number(el.dataset.from || 0);
+      const wait = Number(el.dataset.delay || 0) + 60 * (Number(block.style.getPropertyValue("--live-i")) || 0);
+      putNum(el, numText(from, el.dataset.decimals));                   // the start value until the roll begins (no flash of the end)
+      setTimeout(() => VR.countTo(el, to, { from, decimals: el.dataset.decimals, duration: 900 }), wait);
+    });
+    const wake = (block, i) => {
+      if (i) block.style.setProperty("--live-i", String(i));
+      block.classList.add("is-live");
+      count(block);
+      block.querySelectorAll(".is-live[data-live]").forEach(count);
+    };
+    if (!animate) { blocks.forEach((b) => wake(b, 0)); return; }
+    /* what the first screen shows is never hidden: only the blocks that start off screen wait in the .rv-pre state
+       (their .rv-in rise in on entry); a block on the first screen shows from the first paint and only its bars,
+       rings, meters, flags and numbers come alive (one layout read for all of them) */
+    const vh = window.innerHeight;
+    blocks.map((b) => [b, b.getBoundingClientRect()]).forEach(([b, r]) => { if (r.top >= vh || r.bottom <= 0) b.classList.add("rv-pre"); });
+    const io = new IntersectionObserver((entries) => {
+      entries.filter((e) => e.isIntersecting)
+        .sort((a, b) => (a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+        .forEach((e, i) => { io.unobserve(e.target); wake(e.target, i); });
+    }, { threshold: 0, rootMargin: "0px 0px -12% 0px" });
+    blocks.forEach((b) => io.observe(b));
+  };
 
   /* ---------- header behaviour, reveal-on-scroll, clocks, numbers ---------- */
   VR.onReady(() => {
@@ -800,6 +1224,12 @@
     }
 
     document.querySelectorAll("[data-tabs]").forEach((root) => VR.tabs(root));
+    /* the craft layer's declarative hooks (inert where nothing opts in, i.e. on the home) */
+    document.querySelectorAll("form[data-validate]").forEach((form) => VR.validateForm(form));
+    document.querySelectorAll("[data-actionbar]").forEach((bar) => VR.actionbar(bar));
+    document.querySelectorAll("input[data-format]").forEach((el) => { if (el.value) VR.formatInput(el); });
+    /* the lively layer: rv pages only (the home never carries [data-live]) */
+    if (document.body.classList.contains("rv")) { VR.liveReady = true; VR.live(); }
 
     /* Once the fade-in has played, drop .reveal (keep .is-in for child animations): its
        transition/transform rules outrank the block's own, so .tile / a.card would never lift on
@@ -868,9 +1298,6 @@
       counters.forEach((el) => io.observe(el));
     }
 
-    // V3: matte objects bob only while on screen; floating cards tilt toward the pointer
-    VR.live(document.querySelectorAll(".obj"));
-    VR.tilt();
 
     syncSaveButtons();
   });

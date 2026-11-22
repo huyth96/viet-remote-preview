@@ -55,7 +55,8 @@
                     is left centred), "0đ" lands, the 3D pop with the small struck price, the panels rise one by one,
                     each demo after it lands. The pin's progress (from 1200 px on tall windows), or each part's place
                     in the window in flow (phones, short windows, 900-1199 px). It tells flight() when "0đ" stands
-                    landed (VR.homeStageDone): the plane fades behind it only from then.
+                    landed (VR.homeStageDone): the plane fades behind it only from then; in flow the path's way in
+                    behind it (tc) is held until then too (VR.homeStageLandAt), as the pin's data-p hold it.
      dawn()         the landing (HOME_ROUND4_SPEC §2b), scrubbed by scroll (reversible): the horizon draws out from
                     the centre and brightens (--h), the rays fan up (--r), the portraits rise one by one from behind
                     the horizon (centre first), the dawn risen just before the plane docks in the pill on the horizon.
@@ -744,6 +745,15 @@
         if (pt.layer === "doc") pt.S = g.flTop + pt.y - pt.f * vh;
         else pt.S = layerS(layerFor(pt.layer), pt.y, pt.f, pt.p, pt.out);
       });
+      // 2B in flow (from 900 px: short windows, 900-1199 px): the way in behind the numeral (tc) is a held key, no
+      // earlier than "0đ" has landed on its line (stage(): VR.homeStageLandAt), as the pin's data-p hold it: the
+      // plane glides round the lane while the price rolls and never crosses the numeral while it grows (the pace's
+      // fit had it over the "đ" mid-growth on a short wide window); the stretch behind it follows at its pace
+      if (withMotion && desk && !g.tools && VR.homeStageLandAt) {
+        const tcPt = pts.find((pt) => pt.layer === "doc" && pt.el && pt.el.classList.contains("fl-a--tc"));
+        const landS = tcPt ? VR.homeStageLandAt(vh) : null;
+        if (landS != null && isFinite(landS)) { tcPt.S = Math.max(tcPt.S, landS); tcPt.fixed = true; }
+      }
       // the landing (desktop): the plane docks as the section's top comes clear of the header (the h2, the risen
       // arc, the horizon, the pill and the note in the window together), or, on a window too short for all of it,
       // once the note is 24 px over the window's foot (later: the pill and the plane always in view)
@@ -1758,8 +1768,9 @@
       odo._rest = false;
       wheels(valueAt(p));
       // a folding glyph fades out where it stands (over the first 40 % of its fold), then the glyphs on its left
-      // close up over the rest (a move, never a squeeze: no ghost of a narrowed glyph)
-      let shut = 0;
+      // close up over the rest (a move, never a squeeze: no ghost of a narrowed glyph). gone: the advance of what
+      // has faded, as it fades (the glyphs fold from the left, so it is the empty run at the price's left end)
+      let shut = 0, gone = 0;
       for (let i = items.length - 1; i >= 0; i--) {
         const it = items[i];
         const x = span(p, it.pf, it.pf + B.fold);
@@ -1770,13 +1781,16 @@
           it.el.style.transform = shut > 0.05 ? `translate3d(${shut.toFixed(2)}px,0,0)` : "";
         }
         shut += it.w * sstep(span(x, 0.4, 1));
+        gone += it.w * sstep(span(x, 0, 0.4));
       }
-      // the price holds still while it rolls and folds: what is left of it centred on the frame's axis under the h2
-      // (the visible advance runs −(L − shut) … w0 around the odo's box, scaled about its centre), lifted; then "0đ"
-      // (already centred) grows and drops onto its own line in ONE move, ending on the pop
+      // the price holds still while it rolls and folds: what is still seen of it centred on the frame's axis under
+      // the h2 (its visible advance runs −(L − gone) … w0 around the odo's box, scaled about its centre: it glides
+      // as a glyph fades, never left off the axis by half a glyph until the close-up ends), at most maxW wide (the
+      // whole price: measure()), lifted; then "0đ" (already centred) grows and drops onto its own line in ONE move,
+      // ending on the pop
       const sc0 = Math.min(0.7, geo.maxW / (geo.L + geo.w0 || 1));
       const e = eio(span(p, B.land[0], B.land[1]));
-      const tf = `translate3d(${(sc0 * (geo.L - shut) / 2 * (1 - e)).toFixed(2)}px,${lerp(-geo.lift, 0, e).toFixed(2)}px,0) scale(${lerp(sc0, 1, e).toFixed(4)})`;
+      const tf = `translate3d(${(sc0 * (geo.L - gone) / 2 * (1 - e)).toFixed(2)}px,${lerp(-geo.lift, 0, e).toFixed(2)}px,0) scale(${lerp(sc0, 1, e).toFixed(4)})`;
       if (tf !== odo._tf) { odo._tf = tf; odo.style.transform = tf; }
     }
 
@@ -1859,10 +1873,31 @@
     const pin = $("[data-tools-pin]", root), wrap = pin && pin.parentElement;
     // a box's top in the page, its transforms aside (the panels' rise, the price's scale): the offset chain
     const docTop = (el) => { let y = 0; for (let e = el; e; e = e.offsetParent) y += e.offsetTop; return y; };
+    // in flow, the numeral's run in a window vh tall: its beats end as its centre reaches 40 % of the window, or
+    // higher where its head (the h2, the struck price) would by then be under the sticky header (a large numeral:
+    // tablets, short desktop windows); doneS: the scroll at which "0đ" has landed (q at B.done of the run)
+    const flowRun = (vh) => {
+      const num = docTop(numIn) + numIn.offsetHeight / 2, head = $(".ft__head", root), hdr = $(".site-header");
+      const end = Math.min(0.6, Math.max(0.4, ((hdr ? hdr.offsetHeight : 64) + 16 + num - (head ? docTop(head) : num)) / vh));
+      return { num, end, doneS: num - (0.95 - (B.done / B.end) * (0.95 - end)) * vh };
+    };
+    // for flight()'s measure (it runs before this one): in flow, the scroll at which "0đ" lands, read afresh (the path
+    // holds its way in behind the numeral until then, as the pin's data-p do); pinned, null
+    VR.homeStageLandAt = (vh) => (pin && getComputedStyle(pin).position === "sticky" ? null : flowRun(vh || window.innerHeight).doneS);
     let M = null, lastS = null, lastK = "";
     let held = null;                     // in flow: the panel that has the focus shows its finished demo
     function measure() {
-      items.forEach((it) => { it.w = adv(it.el); });
+      // the leading glyphs are measured laid out. Once "0đ" has landed (.is-done) home.css takes them out of the
+      // layout, where a width reads "auto" (and a border-box digit's −.1 em margins made its advance negative): a
+      // measure there (a resize, the fonts, a change of the page's height while below the landing) collapsed the
+      // price's width, so on the way back up it rolled at the .7 cap, anchored on its "0đ", off the window's left
+      // edge and into the path's lane (client 21/11). The class is back before anything paints; widths that still
+      // cannot be read (printing) keep the last good ones
+      const wasDone = odo.classList.contains("is-done");
+      if (wasDone) odo.classList.remove("is-done");
+      const ws = items.map((it) => adv(it.el));
+      if (wasDone) odo.classList.add("is-done");
+      if (ws.every((w) => w > 0)) items.forEach((it, i) => { it.w = ws[i]; });
       const em = parseFloat(getComputedStyle(odo).fontSize) || 1;
       const fw = frame.clientWidth || root.clientWidth;
       const arc = mq("(min-width: 1200px)").matches;          // the stage's arc (home.css: in flow below)
@@ -1885,14 +1920,10 @@
         M.doneS = M.s0 + B.done * M.run;
       } else {
         // in flow: two panels side by side (the 2 × 2 grid) never rise together: the right one a tenth of the window
-        // later. The numeral's beats end as its centre reaches 40 % of the window, or higher where its head (the h2,
-        // the struck price) would by then be under the sticky header (a large numeral: tablets, short desktop windows)
-        const num = docTop(numIn) + numIn.offsetHeight / 2, head = $(".ft__head", root), hdr = $(".site-header");
-        const end = Math.max(0.4, ((hdr ? hdr.offsetHeight : 64) + 16 + num - (head ? docTop(head) : num)) / vh);
-        M = { pin: false, vh, num, end: Math.min(0.6, end), foot: foot ? docTop(foot) : 0 };
-        // the scroll at which "0đ" has landed (q at B.done of the numeral's run)
-        M.doneS = num - (0.95 - (B.done / B.end) * (0.95 - M.end)) * vh;
-        M.sMin = num - 1.3 * vh; M.sMax = Math.max(M.foot, num) + vh;
+        // later. The numeral's run: flowRun()
+        const R = flowRun(vh);
+        M = { pin: false, vh, num: R.num, end: R.end, foot: foot ? docTop(foot) : 0, doneS: R.doneS };
+        M.sMin = M.num - 1.3 * vh; M.sMax = Math.max(M.foot, M.num) + vh;
         panels.forEach((p, i) => {
           p.top = docTop(p.el);
           const left = i > 0 && Math.abs(panels[i - 1].top - p.top) < 4;

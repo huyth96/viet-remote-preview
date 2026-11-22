@@ -9,7 +9,7 @@
      [data-inv-field="a.b"]      inputs bound to state paths (from.name, to.email, number…)
      [data-inv-items]            line items list (rendered here), [data-inv-add] adds a row
      input[name="inv-method"]    payment method radios; [data-pay-group="wise"] field groups
-     [data-inv-sheet]            the A4 sheet; [data-inv-stage] its scaled container
+     [data-inv-sheet]            the invoice; on screen a fluid white card ([data-inv-stage]), in print A4
      [data-inv-print] [data-inv-next] [data-inv-reset] [data-inv-status] [data-inv-total]
      [data-inv-due-chip="14"]    quick due-date chips */
 (function () {
@@ -17,7 +17,6 @@
 
   const VR = window.VR;
   const KEY = "vr.invoice";
-  const SHEET_W = 794; /* A4 at 96 dpi = 210 mm */
 
   const pad = (n) => String(n).padStart(2, "0");
   const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -187,41 +186,32 @@
       s.from.taxId ? `Tax ID: ${e(s.from.taxId)}` : "",
     ].filter(Boolean);
     const toLines = [
-      s.to.company && s.to.name ? e(s.to.company) : "",
       s.to.email ? e(s.to.email) : "",
       s.to.address ? lines(s.to.address) : "",
     ].filter(Boolean);
-    const toName = s.to.name || s.to.company;
+    const toName = [s.to.name, s.to.company].map((x) => String(x || "").trim()).filter(Boolean).join(" · ");
     const overdue = s.due && s.issue && s.due < s.issue;
 
+    /* the concept's order: INVOICE and its number, From, Bill to, the dates, the lines, the total, how to pay */
     return `
       <header class="inv-head">
-        <div>
-          <p class="inv-title">Invoice</p>
-          <p class="inv-no">${val(s.number, "INV-001")}</p>
-        </div>
-        <div class="inv-from">
-          <p class="inv-from__name">${val(s.from.name, "Your name or business")}</p>
-          ${fromLines.length ? `<p>${fromLines.join("<br>")}</p>` : `<p><span class="inv-ph">you@email.com</span></p>`}
-        </div>
+        <p class="inv-title">Invoice</p>
+        <p class="inv-no">${val(s.number, "INV-001")}</p>
       </header>
 
-      <section class="inv-meta">
+      <section class="inv-parties">
+        <div class="inv-from">
+          <p class="inv-label">From</p>
+          <p class="inv-strong">${val(s.from.name, "Your name or business")}</p>
+          <p class="inv-sub">${fromLines.length ? fromLines.join("<br>") : `<span class="inv-ph">you@email.com</span>`}</p>
+        </div>
         <div class="inv-meta__to">
-          <p class="inv-label">Billed to</p>
+          <p class="inv-label">Bill to</p>
           <p class="inv-strong">${val(toName, "Client name")}</p>
-          ${toLines.length ? `<p>${toLines.join("<br>")}</p>` : `<p><span class="inv-ph">client@company.com</span></p>`}
-        </div>
-        <div class="inv-meta__dates">
-          <div><p class="inv-label">Issued</p><p class="inv-strong">${val(dateEn(s.issue), "—")}</p></div>
-          <div><p class="inv-label">Due</p><p class="inv-strong${overdue ? " is-warn" : ""}">${val(dateEn(s.due), "—")}</p></div>
-        </div>
-        <div class="inv-meta__due">
-          <p class="inv-label">Amount due</p>
-          <p class="inv-due">${e(money(t.total, cur))}</p>
-          <p class="inv-due__cur">${e(cur)}${s.due ? ` · due ${e(dateEn(s.due))}` : ""}</p>
+          <p class="inv-sub">${toLines.length ? toLines.join("<br>") : `<span class="inv-ph">client@company.com</span>`}</p>
         </div>
       </section>
+      <p class="inv-dates">Issued <b>${val(dateEn(s.issue), "—")}</b> · Due <b${overdue ? ' class="is-warn"' : ""}>${val(dateEn(s.due), "—")}</b></p>
 
       <table class="inv-t">
         <thead><tr><th class="inv-t__desc">Description</th><th class="inv-t__num">Qty</th><th class="inv-t__num">Rate</th><th class="inv-t__num">Amount</th></tr></thead>
@@ -230,17 +220,16 @@
 
       <div class="inv-sum">
         <dl>
-          <div class="inv-sum__row"><dt>Subtotal</dt><dd>${e(money(t.subtotal, cur))}</dd></div>
+          ${t.discount || t.taxRate ? `<div class="inv-sum__row"><dt>Subtotal</dt><dd>${e(money(t.subtotal, cur))}</dd></div>` : ""}
           ${t.discount ? `<div class="inv-sum__row"><dt>Discount${s.discountType === "percent" ? ` (${e(pct(num(s.discount, "%")))})` : ""}</dt><dd>−${e(money(t.discount, cur))}</dd></div>` : ""}
           ${t.taxRate ? `<div class="inv-sum__row"><dt>Tax (${e(pct(t.taxRate))})</dt><dd>${e(money(t.tax, cur))}</dd></div>` : ""}
-          <div class="inv-sum__row inv-sum__total"><dt>Total due</dt><dd>${e(money(t.total, cur))}</dd></div>
+          <div class="inv-sum__row inv-sum__total"><dt>Total</dt><dd>${e(money(t.total, cur))}</dd></div>
         </dl>
       </div>
 
       <section class="inv-foot">
         <div class="inv-pay">
-          <p class="inv-label">Payment details</p>
-          <p class="inv-strong">${e(m.label)}</p>
+          <p class="inv-pay__method">Payment: <b>${e(m.label)}</b></p>
           <dl>${payRows}</dl>
           <p class="inv-ref">Please use <b>${val(s.number, "the invoice number")}</b> as the payment reference.</p>
         </div>
@@ -265,7 +254,6 @@
       sheet: $("[data-inv-sheet]"),
       stage: $("[data-inv-stage]"),
       desk: $("[data-inv-desk]"),
-      zoom: $("[data-inv-zoom]"),
       status: $("[data-inv-status]"),
       totals: Array.from(root.querySelectorAll("[data-inv-total]")),
       curLabels: Array.from(root.querySelectorAll("[data-inv-cur]")),
@@ -285,6 +273,7 @@
     let state = load();
     let syncStart = null;
     let badInputs = []; /* number fields the parser cannot read, in form order */
+    let overDisc = false; /* a discount over 100% or over the items' subtotal */
 
     /* mark a number field as unreadable: red border (.field--error), aria-invalid, message link */
     function flag(input, bad, errId) {
@@ -313,6 +302,7 @@
       els.fields.forEach((input) => {
         const v = get(input.dataset.invField);
         input.value = v == null ? "" : v;
+        if ((input.type === "email" || input.type === "url") && input.getAttribute("aria-invalid") === "true") VR.validateField(input);
       });
       els.methods.forEach((r) => { r.checked = r.value === state.method; });
     }
@@ -322,7 +312,7 @@
       return `<li class="inv-item" data-index="${i}">
         <span class="inv-item__n" aria-hidden="true">${pad(n)}</span>
         <div class="field inv-item__desc"><label class="sr-only" for="inv-desc-${i}">Mô tả hạng mục ${n}</label>
-          <input id="inv-desc-${i}" type="text" data-item="desc" value="${e(it.desc)}" placeholder="VD: Video editing, 4 YouTube episodes" autocomplete="off"></div>
+          <input id="inv-desc-${i}" type="text" data-item="desc" value="${e(it.desc)}" placeholder="Video editing, 4 YouTube episodes" autocomplete="off"></div>
         <div class="field inv-item__qty"><label class="inv-item__lab" for="inv-qty-${i}">Số lượng</label>
           <input id="inv-qty-${i}" type="text" inputmode="decimal" data-item="qty" value="${e(it.qty)}" placeholder="1" autocomplete="off"></div>
         <div class="field inv-item__rate"><label class="inv-item__lab" for="inv-rate-${i}">Đơn giá</label>
@@ -379,15 +369,19 @@
       });
       const badDisc = isBad(state.discount, discUnit(state));
       const badTax = isBad(state.tax, "%");
+      /* a discount the invoice cannot give: over 100%, or more than the items add up to (never silently $0.00) */
+      const disc = badDisc ? 0 : num(state.discount, discUnit(state));
+      overDisc = state.discountType === "percent" ? disc > 100 : t.subtotal > 0 && disc > t.subtotal;
       if (els.adjustErr) {
-        const text = message([
+        const over = !overDisc ? "" : state.discountType === "percent" ? "Giảm giá tối đa 100%." : `Giảm giá lớn hơn tổng các hạng mục (${money(t.subtotal, cur)}).`;
+        const text = [message([
           { label: "ô giảm giá", raw: state.discount, unit: discUnit(state), bad: badDisc },
           { label: "ô thuế", raw: state.tax, unit: "%", bad: badTax },
-        ], "Chỉ ghi số, ví dụ 10 hoặc 7,5.");
+        ], "Chỉ ghi số, ví dụ 10 hoặc 7,5."), over].filter(Boolean).join(" ");
         els.adjustErr.hidden = !text;
         els.adjustErr.textContent = text;
       }
-      flag(els.discInput, badDisc, els.adjustErr && els.adjustErr.id);
+      flag(els.discInput, badDisc || overDisc, els.adjustErr && els.adjustErr.id);
       flag(els.taxInput, badTax, els.adjustErr && els.adjustErr.id);
       els.groups.forEach((g) => { g.hidden = g.dataset.payGroup !== state.method; });
       const late = Boolean(state.due && state.issue && state.due < state.issue);
@@ -398,32 +392,30 @@
       els.dueChips.forEach((chip) => {
         chip.setAttribute("aria-pressed", addDays(state.issue, Number(chip.dataset.invDueChip)) === state.due ? "true" : "false");
       });
-      fit();
       root.dataset.total = String(t.total);
+      root.classList.toggle("is-zero", !(t.total > 0));   /* the big total stays grey until there is one */
+      requestAnimationFrame(() => moreHint());
+      const bar = document.querySelector("[data-inv-bar]");
+      if (bar) VR.actionbar.ready(bar, t.total > 0);
     }
 
-    /* scale the 794px sheet to the stage width ("Xem cỡ thật" shows it at 100% in a scrollable desk) */
-    let scale = 1;
-    let zoomed = false;
-    function fit() {
-      if (!els.stage) return;
-      const w = els.stage.clientWidth;
-      scale = zoomed ? 1 : Math.min(1, w / SHEET_W);
-      els.sheet.style.transform = scale < 1 ? `scale(${scale})` : "";
-      els.stage.style.height = Math.ceil(els.sheet.offsetHeight * scale) + "px";
-      els.stage.style.width = zoomed ? SHEET_W + "px" : "";
+    /* the preview is a fluid card on screen (tools-b.css .inv-stage .inv-sheet), nothing to scale; print copies the
+       same markup into body > .inv-print, where the sheet is A4 */
+
+    /* the preview box scrolls when the invoice is taller than the window: fade its edge while more is below */
+    const moreHint = () => {
+      if (!els.desk) return;
+      els.desk.classList.toggle("is-more", els.desk.scrollHeight - els.desk.scrollTop - els.desk.clientHeight > 4);
+      els.desk.classList.toggle("is-scrolled", els.desk.scrollTop > 4);
+    };
+    if (els.desk) {
+      els.desk.addEventListener("scroll", moreHint, { passive: true });
+      window.addEventListener("resize", moreHint, { passive: true });
     }
-    if (els.zoom) els.zoom.addEventListener("click", () => {
-      zoomed = !zoomed;
-      root.classList.toggle("is-zoom", zoomed);
-      els.zoom.setAttribute("aria-pressed", zoomed ? "true" : "false");
-      els.zoom.textContent = zoomed ? "Thu nhỏ" : "Xem cỡ thật";
-      fit();
-    });
 
     /* the preview follows the section being edited: scroll the desk to it (every time focus
        enters a section) and tint it briefly when you arrive from another section */
-    const ZONES = { head: ".inv-head", meta: ".inv-meta", items: ".inv-t", pay: ".inv-pay", notes: ".inv-notes" };
+    const ZONES = { head: ".inv-from", meta: ".inv-meta__to", items: ".inv-t", pay: ".inv-pay", notes: ".inv-notes" };
     let zoneTimer;
     root.addEventListener("focusin", (ev) => {
       const sec = ev.target.closest("[data-inv-zone]");
@@ -440,17 +432,19 @@
       }
       if (els.desk.scrollHeight > els.desk.clientHeight + 4) {
         /* measured against the desk itself, so the sticky toolbar above it does not count */
-        const top = target.getBoundingClientRect().top - els.desk.getBoundingClientRect().top - els.desk.clientTop + els.desk.scrollTop - 24;
+        /* the sender's section shows the invoice from its top (the title and number belong to it) */
+        const top = zone === "head" ? 0 : target.getBoundingClientRect().top - els.desk.getBoundingClientRect().top - els.desk.clientTop + els.desk.scrollTop - 40;
         els.desk.scrollTo({ top: Math.max(0, Math.round(top)), behavior: VR.reducedMotion ? "auto" : "smooth" });
       }
     });
-    if ("ResizeObserver" in window && els.stage) new ResizeObserver(() => fit()).observe(els.stage);
-    window.addEventListener("resize", fit, { passive: true });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 
     /* autosave */
     let saveTimer;
-    function setStatus(text) { if (els.status) els.status.textContent = text; }
+    function setStatus(text) {
+      if (!els.status) return;
+      const span = els.status.querySelector("[data-inv-status-text]");
+      (span || els.status).textContent = text;
+    }
     function saveNow() {
       state.savedAt = new Date().toISOString();
       const ok = VR.store.set(KEY, state);
@@ -531,6 +525,12 @@
       changed();
     }));
 
+    /* e-mail and link fields: checked on blur in Vietnamese (the kit's VR.validateField), re-checked as you fix them */
+    root.querySelectorAll('input[type="email"], input[type="url"]').forEach((el) => {
+      el.addEventListener("blur", () => { if (el.value.trim() || el.getAttribute("aria-invalid") === "true") VR.validateField(el); });
+      el.addEventListener("input", () => { if (el.getAttribute("aria-invalid") === "true") VR.validateField(el); });
+    });
+
     /* print: copy the sheet into a body-level container the print stylesheet keeps */
     let printBox = document.querySelector(".inv-print");
     if (!printBox) {
@@ -554,7 +554,8 @@
       if (badInputs.length) {
         /* never print a wrong amount on a document that goes to a client */
         goTo(badInputs[0]);
-        VR.toast(badInputs.length === 1 ? "Còn một ô số chưa rõ. Sửa ô đó rồi in lại." : `Còn ${badInputs.length} ô số chưa rõ. Sửa các ô đó rồi in lại.`);
+        if (overDisc && badInputs.length === 1 && badInputs[0] === els.discInput) VR.toast("Giảm giá lớn hơn số tiền của invoice. Sửa ô giảm giá rồi in lại.");
+        else VR.toast(badInputs.length === 1 ? "Còn một ô số chưa rõ. Sửa ô đó rồi in lại." : `Còn ${badInputs.length} ô số chưa rõ. Sửa các ô đó rồi in lại.`);
         return;
       }
       if (payMissing() && !payWarned) {
@@ -638,7 +639,7 @@
       fillFields();
       renderItems();
       changed();
-      VR.toast("Đã điền ví dụ. Sửa từng ô thành thông tin của bạn.");
+      VR.toast("Đã điền bản mẫu. Sửa từng ô thành thông tin của bạn.");
       const first = root.querySelector('[data-inv-field="from.name"]');
       if (first) first.focus();
     });
@@ -650,9 +651,7 @@
     if (state.savedAt) {
       const d = new Date(state.savedAt);
       setStatus(`Mở lại nháp lưu lúc ${d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ngày ${d.toLocaleDateString("vi-VN")}`);
-    } else {
-      setStatus("Nháp sẽ tự lưu trên trình duyệt này khi bạn gõ");
-    }
+    }   /* else the server's line stays: the privacy promise ("Chạy trên máy bạn…") until the first save */
     root.classList.add("is-ready");
   }
 

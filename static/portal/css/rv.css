@@ -1,0 +1,1891 @@
+/* =====================================================================
+   Việt Remote — rv.css  (the "Revolut" kit: the approved home's language for every inner page)
+   Binding: portal/DESIGN_SYSTEM_REVOLUT.md. Living reference: /_kit/ (dev server only).
+   Loaded by base.html on every page that says {% block kit %}rv{% endblock %} (body.rv; since 19/11 every page but
+   the home): base.css → rv.css → the page's own CSS. The home never loads it (it keeps base.css, superapp.css,
+   home.css and is FROZEN); the header and footer every page shares are base.css §17.
+   Direction B "Tờ sáng" (client 19/11, concepts static/portal/concepts/gen-v7/b-light-sheet-*.png): the home's header
+   over a SHORT dark navy band (breadcrumb, a confident h1, one grey line), then a light cool-grey SHEET that slides
+   over the band's foot with large rounded top corners and carries the page: white cards lifted by soft layered
+   shadows (no hairline boxes), filled light-grey fields, grey pills with the chosen one in ink, cobalt used sparingly
+   (a sort, a tick, a figure), near-black result cards. ONE accent (cobalt #2C4FE6), TikTok Sans (headings 600 on
+   inner pages, tight tracking), white/ink pills (no arrows), tabular figures, one easing (cubic-bezier(.2,.8,.2,1)).
+   Calm and expensive, lots of air. Motion: a subtle reveal at most (none with reduced motion; html.hm-lite: no
+   travel, no grain).
+   ---------------------------------------------------------------------
+   Every component reads the SURFACE it sits on: .rv (the page), .rv-dark (night, graphite) and .rv-light (paper,
+   mist) set --rv-fg / --rv-fg-2 / --rv-fg-3 / --rv-line / --rv-card-* / --rv-pill-* …, so one card, pill, field or
+   row works on black and on white. Sections set the surface for you (.rv-sec--night|graphite|paper|mist).
+     §0  Tokens, surfaces, page shell, focus, glyphs, grain
+     §1  Type          .rv-h1 .rv-h2 .rv-h3 .rv-h4 .rv-lead .rv-sub .rv-small .rv-meta .rv-num .rv-kicker
+     §2  Layout        .rv-sec[--night|--graphite|--paper|--mist][--tight|--flush|--glow] .rv-rule .rv-grid[--2|--3|--4]
+                       .rv-split .rv-stack .wrap--narrow
+     §3  Page hero     .rv-hero[--center|--compact|--light] > .wrap.rv-hero__grid > .rv-hero__copy + .rv-hero__aside
+     §4  Section head  .rv-head[--center|--split] > .rv-chip + .rv-h2 + .rv-sub (+ .rv-head__aside)
+     §5  Pills, links  .rv-pill[--primary|--white|--ink|--line][--sm|--lg|--block] .rv-actions .rv-link .rv-icon-btn
+     §6  Chips, badges .rv-chip[--quiet] .rv-badge[--ok|--risk|--warn|--info|--solid] .rv-verified .rv-stamp
+     §7  Cards, panels .rv-card[--link|--flat|--white|--lg] (__ico __title __text __meta __foot __link) .rv-ico .rv-panel
+     §8  Lists         .rv-list > .rv-row (__ico __main __title __meta __aside __go) · .rv-checks · .rv-steps
+     §9  Figures       .rv-stats > .rv-stat (__num __unit __label) [--cards]
+     §10 Tabs, filters .rv-seg (tabs, segmented) · .rv-filters > .rv-filter (+ __count)
+     §11 Forms         .rv-form-grid .rv-field[--error|--full] .rv-label .rv-hint .rv-error .rv-input .rv-select
+                       .rv-textarea .rv-check .rv-radio .rv-switch .rv-option .rv-search
+     §12 Tables        .rv-table-wrap > table.rv-table
+     §13 Notes, empty  .rv-note[--ok|--risk|--warn] · .rv-empty
+     §14 Navigation    .breadcrumb (restyled) · .rv-pager · .rv-more (load more)
+     §15 Prose         .rv-prose
+     §16 Join band     .rv-cta (includes/cta_band.html) · .rv-orbit (includes/rv_orbit.html)
+     §17 Toast         .toast (common.js VR.toast)
+     §18 Bridge        the base.css pieces markup and JS still emit, in this language: .btn .chip .badge .logo
+                       .save-btn .card .notice .empty .field .search .tabs .check .option .range .pager .prose .h1–.h4
+                       .lead .mark .eyebrow .job-card .job-row .njc
+     §19 (removed: inner pages carry no phones)
+     §20 Motion        .reveal (subtle rise), reduced motion, html.hm-lite
+   THE CRAFT LAYER (direction B, 19/11: "engineered by a senior team, not vibe-coded"; common.js wires the behaviour)
+     §21 States        one state model for every control: hover · focus-visible · :active (pressed) · disabled ·
+                       .is-loading / [aria-busy] (a spinner, the label keeps its width) · .is-copied · the save pop
+     §22 Bottom sheet  .rv-sheet[data-sheet] > .rv-sheet__scrim + .rv-sheet__panel (__head __handle __title __close
+                       __body __foot): a bottom sheet on phones, a centred dialog from 768; VR.sheet (focus trap, Esc,
+                       scrim, drag to close, scroll lock, focus back to the opener)
+     §23 Action bar    .rv-actionbar[data-actionbar] (__main __label __value): the sticky bottom bar on phones
+                       (apply on a job, a calculator's result); VR.actionbar shows/hides it; safe-area aware
+     §24 Kit pieces    .rv-kv (labels left, values right) · .rv-affix (a field with its unit) · .rv-logo sizes ·
+                       .rv-skel (skeletons, no layout shift) · .rv-copy (copy button icons) · .rv-count (live counts)
+                       · .rv-card__head · .rv-note--card · .rv-sec--sheet-end
+     §25 Page polish   cross-document view transitions (a short fade, the header steady) · the skip link · print
+   THE LIVELY LAYER "Sống động" (client 19/11: "thiếu sự sinh động, bị flat", "toàn chữ là chữ, thiếu phân cấp")
+     §26 Sống động     the hue map (--hue-* tokens + [data-hue]) · .rv-appicon (36/48/56/64) · .rv-stage + mini-UI
+                       blocks (.rv-mini, .rv-bar, .rv-stackbar, .rv-legend, .rv-range, .rv-ring, .rv-meter, .rv-paper,
+                       .rv-bubble + .rv-flag, .rv-caret, .rv-ticks) · .rv-bento > .rv-tile[--feature|--wide|--w3|--tall]
+                       · .rv-sec--tint / .rv-sec--product · .rv-hero__anchor + .rv-iconcluster · motion: [data-live]
+                       .rv-in [data-stagger] [data-to] .rv-lift (common.js VR.live)
+   Breakpoints: 1200 · 1024 · 900 · 767 · 480 · 380 (phones 360–390: 16 px gutter, no horizontal scroll).
+   Page CSS: one prefix per page (.jl- .fd- .jd- .sl- .sv- .tl- .gd- .cm- .ev- .st- .sd- .pj- .ab- .nf-); never
+   restyle an .rv- class from a page file (extend with your prefix), never edit this file for one page.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 0 tokens, surfaces, page shell */
+:root {
+  --rv-night: #000;
+  --rv-ink: #0B0B0C;
+  --rv-graphite: #0F1013;          /* a graphite section */
+  --rv-paper: #FFFFFF;
+  --rv-mist: #EEF1F5;              /* THE SHEET: the cool light grey every page body sits on; white cards lift off it */
+  --rv-band: #0C1026;              /* the hero band: dark navy (the concept's #0B1025), under the home's header */
+  --rv-ink-card: #10131C;          /* a near-black card on the sheet (a tool's result) */
+  --rv-text: #16181D;              /* ink on light: 17.9:1 on white, 15.7:1 on the sheet */
+  --rv-grey-l: #5F636B;            /* grey on light: 6.1:1 on white, 5.4:1 on the sheet */
+  --rv-grey-d: #A1A1AA;            /* grey on dark: 8.1:1 on black, 6.4:1 on a graphite card */
+  --rv-cobalt: #2C4FE6;            /* THE accent: 6.2:1 on white (links, chips, the stamp, focus on light) */
+  --rv-cobalt-600: #2342C9;
+  --rv-cobalt-l: #8EA2FF;          /* cobalt on dark: 7.9:1 on black (links, focus) */
+  --rv-cobalt-50: #EEF1FE;
+  --rv-green: #1E9E52;
+  --rv-red: #C8303B;               /* white on it 5.3:1 */
+  --rv-r: 20px;                    /* cards, panels, photos */
+  --rv-r-md: 14px;                 /* inputs, notes, small tiles */
+  --rv-r-sm: 12px;                 /* icon tiles */
+  --rv-r-lg: 24px;                 /* the ink result card, the bottom sheet, the dialog */
+  --rv-r-pill: 999px;
+  --rv-ease: cubic-bezier(.2, .8, .2, 1);   /* the one easing family (HOME_ROUND3_SPEC §8) */
+  /* ONE motion token set (§21): every transition in the kit and the page files uses these three, nothing longer */
+  --rv-dur-1: 120ms;               /* pressed, small swaps (a count, an icon) */
+  --rv-dur-2: 180ms;               /* hover, focus, checked, the chosen pill */
+  --rv-dur-3: 220ms;               /* surfaces that enter: toast, sheet, action bar, a page's fade */
+  --rv-t: var(--rv-dur-2);         /* (older name, same value) */
+  --rv-dur-4: 560ms;               /* §26 only: a mini-UI coming alive ONCE on entry (a tile rising, a bar filling) */
+  --rv-press: .97;                 /* :active scale of every pressable control */
+  /* ONE elevation scale on light: 1 a row · 2 a card · 3 a lifted card (hover) · 4 an overlay (sheet, toast, bar) */
+  --rv-sh-1: 0 0 0 1px rgba(20, 30, 60, .03), 0 1px 2px rgba(20, 30, 60, .04), 0 8px 24px -12px rgba(20, 30, 60, .1);
+  --rv-sh-2: 0 0 0 1px rgba(20, 30, 60, .035), 0 1px 2px rgba(20, 30, 60, .04), 0 6px 16px -4px rgba(20, 30, 60, .05), 0 22px 48px -18px rgba(20, 30, 60, .11);
+  --rv-sh-3: 0 0 0 1px rgba(20, 30, 60, .05), 0 2px 4px rgba(20, 30, 60, .05), 0 12px 28px -8px rgba(20, 30, 60, .09), 0 32px 64px -24px rgba(20, 30, 60, .18);
+  --rv-sh-4: 0 0 0 1px rgba(10, 14, 30, .06), 0 10px 24px -8px rgba(10, 14, 30, .22), 0 32px 72px -24px rgba(10, 14, 30, .42);
+  /* ONE spacing scale (px): 4 8 12 16 20 24 32 40 48 64 96 */
+  --rv-s1: 4px; --rv-s2: 8px; --rv-s3: 12px; --rv-s4: 16px; --rv-s5: 20px; --rv-s6: 24px; --rv-s7: 32px; --rv-s8: 40px; --rv-s9: 48px; --rv-s10: 64px; --rv-s11: 96px;
+  --rv-actionbar-h: 64px;          /* the sticky bottom bar (§23); the toast rises above it */
+  --rv-h1: clamp(40px, 4.2vw, 60px);
+  --rv-h1-c: var(--rv-h1);         /* (compact heroes are the B hero too: one size) */
+  --rv-h2: clamp(30px, 2.95vw, 44px);
+  --rv-h1-d: clamp(36px, 3.3vw, 48px);   /* a detail page's h1 (a job, a guide): a long real title keeps to ~2 lines */
+  --rv-hc: clamp(22px, calc(14px + 1vw), 28px);   /* the heading that opens a white card on the sheet ("Thông tin chính") */
+  --rv-h3: clamp(19px, 1.45vw, 22px);
+  --rv-sec: clamp(72px, 8.6vw, 128px);
+  --rv-sec-t: clamp(48px, 5vw, 80px);
+  --rv-gap: 20px;
+  --rv-sheet: 32px;                /* the sheet's rounded top where it slides over the band (§3) */
+  --rv-r-row: 18px;                /* a list row lifted as its own white card */
+  --rv-dock-h: 64px;               /* a search docked on the sheet's edge (§3) */
+  --rv-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .055 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --rv-grain-mask: radial-gradient(60% 55% at 50% 50%, #000 0%, rgba(0, 0, 0, .5) 55%, transparent 100%);
+  --sh-phone: 0 60px 90px -36px rgba(0, 0, 0, .9), 0 30px 110px -30px rgba(44, 79, 230, .38);
+}
+@media (max-width: 767px) { :root { --rv-sec: 64px; --rv-sec-t: 48px; --rv-gap: 16px; --rv-sheet: 24px; --rv-r-row: 16px; --rv-dock-h: 56px; } }
+
+/* surfaces: dark (the page's default, night, graphite, the hero, the join band) */
+.rv, .rv-dark, .rv-sec--night, .rv-sec--graphite, .rv-sec--product, .rv-hero, .rv-cta {
+  --rv-bg: #000;
+  --rv-fg: #FFFFFF;
+  --rv-fg-2: #C9C9D2;              /* body copy on dark: 12.6:1 on black */
+  --rv-fg-3: var(--rv-grey-d);
+  --rv-ph: #85858F;                /* placeholders: 5.0:1 on the field */
+  --rv-line: rgba(255, 255, 255, .08);
+  --rv-line-2: rgba(255, 255, 255, .16);
+  --rv-inset: rgba(255, 255, 255, .06);
+  --rv-accent: var(--rv-cobalt-l);
+  --rv-card-bg: linear-gradient(160deg, #23252D, #17181E 70%);
+  --rv-card-solid: #1A1B21;
+  --rv-card-sh: 0 26px 44px -24px rgba(0, 0, 0, .95), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 1px 0 rgba(255, 255, 255, .06);
+  --rv-card-sh-h: 0 30px 50px -24px rgba(0, 0, 0, .95), 0 30px 80px -30px rgba(76, 107, 255, .42), inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 1px 0 rgba(255, 255, 255, .09);
+  --rv-ico-bg: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .045));
+  --rv-ico-sh: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .09);
+  --rv-pill-bg: #FFFFFF; --rv-pill-fg: #000; --rv-pill-bg-h: #F1F2F6;
+  --rv-pill-sh: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .3);
+  --rv-pill-sh-h: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 8px 22px -8px rgba(0, 0, 0, .6), 0 0 34px -6px rgba(110, 138, 255, .55);
+  --rv-pill-line: rgba(255, 255, 255, .62);
+  /* fields are filled, not outlined: a soft fill, a lighter one on hover, a solid one + the cobalt ring on focus */
+  --rv-field-bg: rgba(255, 255, 255, .07);
+  --rv-field-bg-h: rgba(255, 255, 255, .1);
+  --rv-field-focus: #15161B;
+  --rv-field-line: transparent;
+  --rv-chip-bg: rgba(255, 255, 255, .08);       /* grey pills (presets, filters, sorts) */
+  --rv-chip-bg-h: rgba(255, 255, 255, .13);
+  --rv-lit-bg: #FFFFFF; --rv-lit-fg: #000;      /* the chosen chip or segment */
+  --rv-box-line: rgba(255, 255, 255, .34);      /* checkbox, radio */
+  --rv-seg-bg: rgba(255, 255, 255, .08);        /* segmented track */
+  --rv-seg-div: rgba(255, 255, 255, .1);
+  --rv-tog-off: rgba(255, 255, 255, .2);        /* a switch that is off */
+  --rv-row-sh: var(--rv-card-sh);
+  --rv-tint-base: #191B23; --rv-tint-a: 34%; --rv-tint-b: 24%; --rv-tint-ink: #fff; --rv-tint-ink-a: 34%; --rv-tint-hi: .06;   /* logo tiles (§18) */
+  --rv-ok-bg: rgba(30, 158, 82, .16); --rv-ok: #6EDC9A;
+  --rv-risk-bg: rgba(200, 48, 59, .2); --rv-risk: #FF9DA2;
+  --rv-warn-bg: rgba(245, 194, 107, .14); --rv-warn: #F5C26B;
+  --rv-info-bg: rgba(44, 79, 230, .22); --rv-info: #B4C1FF;
+  --rv-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.75 6 6 6-6'/%3E%3C/svg%3E");
+  --focus: var(--rv-cobalt-l);
+  color-scheme: dark;
+}
+/* surfaces: light (the sheet, paper, a white card, the white search field on the band) */
+.rv-light, .rv-sec--paper, .rv-sec--mist, .rv-sec--tint, .rv-hero--light, .rv-card--white, .rv .site-menu, .rv-search, .rv-mini {
+  --rv-bg: #FFFFFF;
+  --rv-fg: var(--rv-text);
+  --rv-fg-2: #3A3E46;              /* body copy on light: 10.9:1 */
+  --rv-fg-3: var(--rv-grey-l);
+  --rv-ph: #6B7079;
+  --rv-line: #E8EBF0;
+  --rv-line-2: #D5D9E0;
+  --rv-inset: rgba(28, 48, 92, .05);            /* a soft fill that reads on white and on the sheet alike */
+  --rv-accent: var(--rv-cobalt);
+  --rv-card-bg: #FFFFFF;
+  --rv-card-solid: #FFFFFF;
+  /* elevation, not hairlines: a barely-there edge, then soft wide layers (the concept's floating white cards) */
+  --rv-card-sh: var(--rv-sh-2);
+  --rv-card-sh-h: var(--rv-sh-3);
+  --rv-row-sh: var(--rv-sh-1);
+  --rv-ico-bg: #F0F2F6;
+  --rv-ico-sh: inset 0 0 0 1px rgba(20, 30, 60, .04);
+  --rv-pill-bg: #0D0F14; --rv-pill-fg: #FFFFFF; --rv-pill-bg-h: #000;
+  --rv-pill-sh: 0 1px 2px rgba(0, 0, 0, .14);
+  --rv-pill-sh-h: 0 10px 24px -10px rgba(0, 0, 0, .45);
+  --rv-pill-line: rgba(20, 22, 29, .28);
+  /* filled fields: light grey (the concept's #E8EAEF on white), white with a cobalt edge on focus */
+  --rv-field-bg: rgba(28, 48, 92, .1);
+  --rv-field-bg-h: rgba(28, 48, 92, .135);
+  --rv-field-focus: #FFFFFF;
+  --rv-field-line: transparent;
+  --rv-chip-bg: rgba(28, 48, 92, .065);
+  --rv-chip-bg-h: rgba(28, 48, 92, .11);
+  --rv-lit-bg: #0D0F14; --rv-lit-fg: #FFFFFF;
+  --rv-box-line: #C2C7D0;
+  --rv-seg-bg: rgba(28, 48, 92, .065);
+  --rv-seg-div: rgba(28, 48, 92, .12);
+  --rv-tog-off: #D9DDE4;
+  --rv-tint-base: #fff; --rv-tint-a: 8%; --rv-tint-b: 15%; --rv-tint-ink: #000; --rv-tint-ink-a: 82%; --rv-tint-hi: .7;
+  --rv-ok-bg: #E7F5EC; --rv-ok: #12733B;
+  --rv-risk-bg: #FCEBEC; --rv-risk: #B42632;
+  --rv-warn-bg: #FDF3E1; --rv-warn: #8A5A00;
+  --rv-info-bg: var(--rv-cobalt-50); --rv-info: var(--rv-cobalt-600);
+  --rv-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235F6368' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9.75 6 6 6-6'/%3E%3C/svg%3E");
+  --focus: var(--rv-cobalt);
+  color-scheme: light;
+}
+
+/* the page: black under everything (the hero and the footer are black), body copy 16/1.6 */
+body.rv {
+  background: var(--rv-night);
+  color: var(--rv-fg-2);
+  font: 400 16px/1.6 var(--font);
+}
+/* the header's field swap (common.js writes html[data-field]) never restyles the whole page: the root's --focus stays */
+html[data-field]:has(> body.rv) { --focus: #2C4FE6; }
+.rv [data-field="night"], .rv [data-field="graphite"] { --focus: var(--rv-cobalt-l); }
+.rv [data-field="paper"], .rv [data-field="mist"] { --focus: var(--rv-cobalt); }
+.rv :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.rv ::selection { background: rgba(44, 79, 230, .4); color: inherit; }
+.rv a { scroll-margin-block: calc(var(--header-h) + 24px) 24px; }
+/* filled glyphs (#g-*, includes/home_glyphs.svg) */
+.rv .glyph { width: 20px; height: 20px; flex: none; fill: currentColor; stroke: none; }
+/* a faint grain over a large dark gradient, so it never bands (add .rv-grain to any dark surface) */
+.rv-grain { position: relative; isolation: isolate; }
+.rv-grain::after, .rv-hero::after, .rv-cta::after, .rv-sec--glow::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--rv-grain); -webkit-mask-image: var(--rv-grain-mask); mask-image: var(--rv-grain-mask);
+}
+.rv-num, .rv .tnum { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- 1 type */
+/* TikTok Sans only, the home's display face at a touch more weight (direction B's confidence): h1 and h2 600, h3/h4
+   and labels 600, body 400; tight tracking, line-height >= 1.04 and a little block padding so stacked marks (ể, ẫ,
+   ộ, ữ) never clip. One strict scale: h1 60 · h2 44 · card head 28 · h3 22 · h4 17 · lead 19 · body 16 · small 14 ·
+   meta 13 (desktop; phones h1 34–40 · h2 27–30 · card head 22). A detail page's h1 (a job, a guide) is 48 (phones
+   29–34). Nothing between, nothing smaller than 13. */
+.rv-h1, .rv-hero__title {
+  font: 600 var(--rv-h1)/1.06 var(--font); letter-spacing: -0.034em; color: var(--rv-fg);
+  text-wrap: balance; padding-block: .04em;
+}
+.rv-h2 {
+  font: 600 var(--rv-h2)/1.1 var(--font); letter-spacing: -0.028em; color: var(--rv-fg);
+  text-wrap: balance; padding-block: .04em;
+}
+.rv-h3 { font: 600 var(--rv-h3)/1.25 var(--font); letter-spacing: -0.018em; color: var(--rv-fg); text-wrap: balance; }
+.rv-h4 { font: 600 17px/1.3 var(--font); letter-spacing: -0.012em; color: var(--rv-fg); }
+/* the heading that opens a white card on the sheet (between the section h2 and a card title); page classes use the token */
+.rv-hc { font: 600 var(--rv-hc)/1.2 var(--font); letter-spacing: -0.024em; color: var(--rv-fg); text-wrap: balance; }
+.rv-lead { font: 400 clamp(17px, 1.4vw, 20px)/1.5 var(--font); color: var(--rv-fg-3); text-wrap: pretty; }
+.rv-sub { margin-top: 16px; max-width: 40em; font: 400 clamp(17px, 1.3vw, 19px)/1.55 var(--font); color: var(--rv-fg-3); text-wrap: pretty; }
+.rv-body { font-size: 16px; line-height: 1.6; color: var(--rv-fg-2); }
+.rv-small { font-size: 14px; line-height: 1.5; color: var(--rv-fg-3); }
+.rv-meta { font-size: 13px; line-height: 1.4; color: var(--rv-fg-3); font-variant-numeric: tabular-nums; }
+.rv-kicker { font: 500 14px/1.3 var(--font); color: var(--rv-fg-3); letter-spacing: 0; }
+.rv-strong { color: var(--rv-fg); font-weight: 500; }
+.rv-accent { color: var(--rv-accent); }
+@media (max-width: 767px) {
+  :root { --rv-h1: clamp(33px, 9.4vw, 40px); --rv-h2: clamp(27px, 7.6vw, 30px); --rv-h1-d: clamp(29px, 8.2vw, 34px); --rv-hc: 22px; --rv-h3: 19px; }
+}
+
+/* ---------------------------------------------------------------- 2 layout */
+.rv .wrap--narrow { width: min(100% - 2 * var(--gutter), 760px); }
+.rv-sec { position: relative; padding-block: var(--rv-sec); color: var(--rv-fg-2); }
+.rv-sec--tight { padding-block: var(--rv-sec-t); }
+.rv-sec--flush { padding-top: 0; }
+.rv-sec--night { background: var(--rv-night); }
+.rv-sec--graphite { background: var(--rv-graphite); }
+.rv-sec--paper { background: var(--rv-paper); }
+.rv-sec--mist { background: var(--rv-mist); }
+/* one soft cobalt pool behind a dark section's content (night/graphite only; never behind small text) + the grain */
+.rv-sec--glow { isolation: isolate; overflow: clip; }
+.rv-sec--glow::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(42% 60% at var(--glow-at, 50% 40%), rgba(44, 79, 230, .2), rgba(44, 79, 230, .06) 55%, rgba(44, 79, 230, 0) 100%);
+}
+/* a hairline between two sections of the same colour (inside the wrap) */
+.rv-rule { padding-top: var(--rv-sec-t); border-top: 1px solid var(--rv-line); }
+.rv-grid { display: grid; gap: var(--rv-gap); grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0; margin: 0; list-style: none; }
+.rv-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rv-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rv-grid--auto { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+@media (max-width: 1024px) { .rv-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rv-grid:not(.rv-grid--2):not(.rv-grid--4):not(.rv-grid--auto) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .rv-grid, .rv-grid--2 { grid-template-columns: minmax(0, 1fr) !important; } }
+@media (max-width: 767px) { .rv-grid--keep2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }   /* phones too (small link cards) */
+.rv-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 6vw, 96px); align-items: center; }
+.rv-split--start { align-items: start; }
+@media (max-width: 899px) { .rv-split { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+.rv-stack { display: grid; gap: var(--stack, 16px); align-content: start; }
+
+/* ---------------------------------------------------------------- 3 page hero: the band and the sheet */
+/* Direction B. The BAND: dark navy from the window's top (pulled up under the sticky header, transparent over it at
+   the top; common.js marks html.vr-band so the header keeps the band's navy once scrolled), SHORT and calm:
+   breadcrumb → h1 → one grey line (→ ≤ 2 pills or ≤ 1 note when the page needs them). No chip above the h1 (the
+   breadcrumb names the place), no generic figures card beside it; an aside only when it is the page's real object
+   (a job's pay card, a real result). The SHEET: the first light block after the band slides over its foot with
+   large rounded top corners, so the page reads as a light sheet over the brand band.
+     .rv-hero--dock + .rv-dock   a search (or one control) docked on the sheet's top edge: half on the band, half on
+                                 the sheet (the board). The docked element is the sheet's first child.
+     --center · --light (a light band, /_kit/ only) · --compact (kept for older markup; same as the default now) */
+.rv-hero {
+  position: relative; isolation: isolate; overflow: clip;
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + clamp(14px, 1.2vw, 18px)) 0 calc(var(--rv-hero-foot, clamp(28px, 2.4vw, 34px)) + var(--rv-hero-dock, 0px) + var(--rv-hero-sheet, 0px));
+  background: var(--rv-band); color: var(--rv-fg-2);
+}
+.rv-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(48% 120% at var(--glow-at, 88% 0%), rgba(52, 84, 220, .16) 0%, rgba(52, 84, 220, .05) 48%, rgba(52, 84, 220, 0) 100%),
+    linear-gradient(180deg, rgba(4, 6, 18, .35) 0%, rgba(4, 6, 18, 0) 46%);
+}
+/* the sheet: the first light block after a dark band */
+.rv-hero:not(.rv-hero--light):has(+ :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light), + * > :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):first-child) { --rv-hero-sheet: var(--rv-sheet); }
+.rv-hero:not(.rv-hero--light) + :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light),
+.rv-hero:not(.rv-hero--light) + * > :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):first-child {
+  position: relative; z-index: 1;
+  margin-top: calc(-1 * var(--rv-sheet));
+  border-top-left-radius: var(--rv-sheet); border-top-right-radius: var(--rv-sheet);
+}
+.rv-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(32px, 4vw, 64px); align-items: center; }
+.rv-hero__grid:has(> .rv-hero__aside) { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.rv-hero__copy { position: relative; z-index: 2; max-width: 1040px; }
+.rv-hero .breadcrumb { margin-bottom: 12px; }
+.rv-hero .breadcrumb ol { font-size: 15px; color: #A3A9BD; }
+.rv-hero .breadcrumb :is(a, li + li::before) { color: #A3A9BD; }
+.rv-hero .breadcrumb [aria-current] { color: #E4E6EE; }
+/* no chip above the headline: the breadcrumb names the place. (.rv-chip--eyebrow: the rare one that adds a fact the
+   breadcrumb cannot, e.g. "Upwork · Bước 3/6" on a guide in the reading path: a soft pill on the band, concept b-article) */
+.rv-hero__copy > .rv-chip:not(.rv-chip--eyebrow) { display: none; }
+.rv-hero__copy > .rv-chip { margin-bottom: 10px; }
+.rv-hero__copy > .rv-chip--eyebrow {
+  display: block; width: fit-content; height: 30px; padding: 0 12px; margin-bottom: 14px; border: 0; border-radius: var(--rv-r-pill);
+  background: rgba(255, 255, 255, .1); color: #E4E6EE; font: 500 14.5px/30px var(--font); letter-spacing: 0; text-transform: none;
+}
+.rv-hero__title { color: #fff; }
+.rv-hero__lead { margin-top: 12px; max-width: 60em; font: 400 clamp(17px, 1.32vw, 19px)/1.5 var(--font); color: #C3C7D5; text-wrap: pretty; }
+.rv-hero__copy > .rv-actions, .rv-hero__copy > .rv-search, .rv-hero__copy > form { margin-top: 28px; }
+.rv-hero__note { margin-top: 16px; display: flex; align-items: center; gap: 8px; font: 400 14px/1.45 var(--font); color: #A3A9BD; }
+.rv-hero__note .icon, .rv-hero__note .glyph { width: 16px; height: 16px; flex: none; }
+.rv-hero__aside { position: relative; z-index: 1; min-width: 0; }
+/* centred: no aside */
+.rv-hero--center { --glow-at: 50% 0%; text-align: center; }
+.rv-hero--center .rv-hero__copy { margin-inline: auto; }
+.rv-hero--center .rv-hero__copy > .rv-chip, .rv-hero--center .rv-hero__lead { margin-inline: auto; }
+.rv-hero--center .breadcrumb ol, .rv-hero--center .rv-actions, .rv-hero--center .rv-hero__note { justify-content: center; }
+.rv-hero--center .rv-search { margin-inline: auto; }
+.rv-hero--compact .rv-hero__title { font-size: var(--rv-h1-c); }
+/* the dock: a search that sits on the sheet's top edge (rises half its height into the band) */
+.rv-hero--dock { --rv-hero-dock: calc(var(--rv-dock-h) / 2); --rv-hero-foot: clamp(24px, 2vw, 30px); }
+.rv-dock { position: relative; z-index: 3; margin-top: calc(var(--rv-dock-h) / -2); }
+.rv-sec:has(> .wrap > .rv-dock:first-child) { padding-top: 0; display: flow-root; }   /* flow-root: the dock's negative margin must not collapse into the sheet's */
+/* light: a mist band (/_kit/ only) */
+.rv-hero--light { background: var(--rv-mist); }
+.rv-hero--light::before, .rv-hero--light::after { display: none; }
+.rv-hero--light .rv-hero__title { color: var(--rv-fg); }
+.rv-hero--light .rv-hero__lead { color: var(--rv-fg-3); }
+.rv-hero--light .breadcrumb :is(ol, a, li + li::before) { color: var(--rv-fg-3); }
+.rv-hero--light .breadcrumb [aria-current] { color: var(--rv-fg-2); }
+@media (max-width: 899px) {
+  .rv-hero__grid:has(> .rv-hero__aside) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .rv-hero { padding: calc(var(--header-h) + 16px) 0 calc(var(--rv-hero-foot, 30px) + var(--rv-hero-dock, 0px) + var(--rv-hero-sheet, 0px)); }
+  .rv-hero--dock { --rv-hero-foot: 22px; }
+  .rv-hero .breadcrumb { margin-bottom: 12px; }
+  .rv-hero .breadcrumb ol { font-size: 14px; }
+  .rv-hero__copy > .rv-chip--eyebrow { height: 28px; font-size: 13.5px; line-height: 28px; margin-bottom: 12px; }
+  .rv-hero__lead { margin-top: 10px; font-size: 16.5px; }
+  .rv-hero__copy > .rv-actions, .rv-hero__copy > .rv-search, .rv-hero__copy > form { margin-top: 22px; }
+}
+
+/* the header over the band: once scrolled it keeps the band's navy rather than the night black (common.js sets
+   html.vr-band while the band is under the bar; the header itself, base.css §17, is the home's, untouched) */
+html.vr-band[data-field="night"] body.rv .site-header.is-scrolled:not(.is-open) { --hdr-bg: var(--rv-band); }
+/* over the sheet the bar takes the sheet's grey (base.css paints mist #F5F5F7) */
+html[data-field="mist"] body.rv .site-header:not(.is-open) { --hdr-bg: var(--rv-mist); --hdr-line: #E1E5EB; }
+
+/* ---------------------------------------------------------------- 4 section head */
+.rv-head { max-width: 820px; margin-bottom: clamp(40px, 4.2vw, 64px); }
+.rv-head > .rv-chip { margin-bottom: 14px; }
+.rv-head--center { margin-inline: auto; text-align: center; }
+.rv-head--center > .rv-chip, .rv-head--center .rv-sub { margin-inline: auto; }
+.rv-head--split { max-width: none; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px 48px; }
+.rv-head--split > :first-child { max-width: 760px; }
+.rv-head__aside { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rv-head--tight { margin-bottom: 28px; }
+
+/* ---------------------------------------------------------------- 5 pills, links */
+/* One height (48; 44 on phones), 16/500, no arrows. --primary reads the surface: white on dark, ink on light.
+   --white / --ink force one; --line is the outlined second action. At most two per block. */
+.rv-pill, .rv main .btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 26px; border-radius: 999px; border: 1.5px solid transparent;
+  font: 500 16px/1 var(--font); font-stretch: 100%; letter-spacing: -0.005em; white-space: nowrap;
+  cursor: pointer; text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease), border-color var(--rv-dur-2) var(--rv-ease),
+              box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-1) var(--rv-ease);
+}
+.rv-pill:active, .rv main .btn:active { transform: scale(.97); }
+.rv-pill .icon, .rv main .btn .icon { width: 18px; height: 18px; stroke-width: 1.8; }
+.rv-pill .glyph, .rv main .btn .glyph { width: 18px; height: 18px; }
+.rv-pill--primary { background: var(--rv-pill-bg); color: var(--rv-pill-fg); box-shadow: var(--rv-pill-sh); }
+.rv-pill--primary:hover, .rv-pill--primary:focus-visible { background: var(--rv-pill-bg-h); translate: 0 -1px; box-shadow: var(--rv-pill-sh-h); }
+.rv-pill--white { background: #fff; color: #000; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .3); }
+.rv-pill--white:hover, .rv-pill--white:focus-visible { background: #F1F2F6; translate: 0 -1px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 8px 22px -8px rgba(0, 0, 0, .6), 0 0 34px -6px rgba(110, 138, 255, .55); }
+.rv-pill--ink { background: var(--rv-text); color: #fff; }
+.rv-pill--ink:hover, .rv-pill--ink:focus-visible { background: #000; translate: 0 -1px; }
+/* light text on black blooms: the outlined pill a little lighter, so the pair reads at one weight */
+.rv-pill--line { background: transparent; color: var(--rv-fg); border-color: var(--rv-pill-line); font-weight: 460; }
+.rv-pill--line:hover, .rv-pill--line:focus-visible { border-color: var(--rv-fg); background: var(--rv-inset); translate: 0 -1px; }
+.rv-pill--sm { height: 40px; padding: 0 18px; font-size: 15px; }
+.rv-pill--lg { height: 56px; padding: 0 34px; font-size: 17.5px; }
+.rv-pill--block { display: flex; width: 100%; }
+.rv-pill[disabled], .rv-pill.is-disabled, .rv-pill[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+@media (max-width: 767px) {
+  .rv-pill, .rv main .btn { height: 44px; padding: 0 22px; font-size: 15.5px; }
+  .rv-pill--sm { height: 40px; padding: 0 16px; font-size: 14.5px; }
+  .rv-pill--lg { height: 52px; padding: 0 28px; font-size: 16.5px; }
+}
+.rv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rv-actions--center { justify-content: center; }
+@media (max-width: 380px) { .rv-actions > .rv-pill { flex: 1 1 auto; } }
+/* the quiet text link (the home's "Xem 1.336 việc remote đã kiểm tra"): underlined, no arrow */
+.rv-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  font: 400 16px/1.4 var(--font); color: var(--rv-fg);
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 38%, transparent);
+  text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: text-decoration-color var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-3) var(--rv-ease);
+}
+.rv-link:hover { text-decoration-color: currentColor; }
+.rv-link--accent { color: var(--rv-accent); }
+.rv-link .icon { width: 15px; height: 15px; }
+/* links inside running text */
+.rv-text-link, .rv-prose a { color: var(--rv-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); }
+.rv-text-link:hover, .rv-prose a:hover { text-decoration-color: currentColor; }
+.rv-icon-btn {
+  width: 44px; height: 44px; flex: none; display: inline-grid; place-items: center; border-radius: 50%;
+  color: var(--rv-fg-2); box-shadow: inset 0 0 0 1px var(--rv-line-2); background: transparent;
+  transition: background-color var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-3) var(--rv-ease), box-shadow var(--rv-dur-3) var(--rv-ease);
+}
+.rv-icon-btn:hover { color: var(--rv-fg); background: var(--rv-inset); }
+.rv-icon-btn .icon { width: 20px; height: 20px; }
+
+/* ---------------------------------------------------------------- 6 chips, badges, the stamp */
+/* the label over a title ("Chặng 01", "Upwork · Bước 3/6"): a quiet eyebrow in the accent, no box. A label above
+   every heading reads as a template; use one only where it says something the heading does not (a step, a series,
+   a status). --quiet: grey. --solid: the home's cobalt pill, for the rare label that must stand out. */
+.rv-chip {
+  display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 8px;
+  height: auto; padding: 0; border-radius: 0; background: none;
+  color: var(--rv-accent);
+  font: 500 15px/1.3 var(--font); letter-spacing: -0.003em; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.rv-chip .icon, .rv-chip .glyph { width: 16px; height: 16px; stroke-width: 1.9; }
+.rv-chip--quiet { color: var(--rv-fg-3); }
+.rv-chip--sm { font-size: 14px; }
+.rv-chip--solid { height: 32px; padding: 0 14px; border-radius: 999px; background: var(--rv-cobalt); color: #fff; font-size: 14.5px; line-height: 1; }
+@media (max-width: 767px) { .rv-chip { font-size: 14px; } }
+/* status badges (small, never a call to action): a soft fill, no hairline */
+.rv-badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px;
+  background: var(--rv-inset); color: var(--rv-fg-2);
+  font: 500 13px/1 var(--font); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.rv-badge .icon { width: 14px; height: 14px; stroke-width: 2; }
+.rv-badge--ok { background: var(--rv-ok-bg); color: var(--rv-ok); box-shadow: none; }
+.rv-badge--risk { background: var(--rv-risk-bg); color: var(--rv-risk); box-shadow: none; }
+.rv-badge--warn { background: var(--rv-warn-bg); color: var(--rv-warn); box-shadow: none; }
+.rv-badge--info { background: var(--rv-info-bg); color: var(--rv-info); box-shadow: none; }
+.rv-badge--solid { background: var(--rv-fg); color: var(--rv-bg); box-shadow: none; }
+/* "Đã kiểm tra": the inline form of the stamp (job rows, cards, facts) */
+.rv-verified {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 8px; border-radius: 999px;
+  background: var(--rv-cobalt); color: #fff; font: 500 13.5px/1 var(--font); white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+.rv-verified .icon { width: 16px; height: 16px; stroke-width: 2.2; }
+/* the round stamp (includes/verified_stamp.html), as on the home's job cards: pressed on, turned -8° */
+.rv-stamp { position: relative; flex: none; display: inline-block; width: var(--stamp, 70px); height: var(--stamp, 70px); transform: rotate(-8deg); filter: drop-shadow(0 6px 8px rgba(20, 30, 90, .35)); pointer-events: none; }
+.rv-stamp svg { display: block; width: 100%; height: 100%; }
+.rv-stamp__disc { fill: var(--rv-cobalt); }
+.rv-stamp__ring { fill: none; stroke: rgba(255, 255, 255, .72); stroke-width: 1.3; }
+.rv-stamp__txt { fill: #fff; font: 600 17px/1 var(--font); letter-spacing: .01em; text-anchor: middle; }
+.rv-stamp__txt--2 { font-size: 15.5px; }
+
+/* ---------------------------------------------------------------- 7 cards, panels, icon tiles */
+.rv-card {
+  position: relative; display: flex; flex-direction: column;
+  padding: clamp(22px, 2.2vw, 32px); border-radius: var(--rv-r);
+  background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); color: var(--rv-fg-2);
+  transition: box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease), background-color var(--rv-dur-2) var(--rv-ease);
+}
+.rv-card--lg { padding: clamp(24px, 3vw, 40px); }
+.rv-card--flat { box-shadow: inset 0 0 0 1px var(--rv-line-2); background: transparent; }   /* --rv-line-2: --rv-line is nearly invisible on the sheet */
+/* a near-black card on the sheet (a tool's result, the one dark object on a light page): dark tokens, no gradient */
+.rv-card--ink {
+  --rv-bg: var(--rv-ink-card); --rv-fg: #fff; --rv-fg-2: #CDD0DA; --rv-fg-3: #9EA3B3; --rv-line: rgba(255, 255, 255, .09);
+  --rv-line-2: rgba(255, 255, 255, .16); --rv-inset: rgba(255, 255, 255, .06); --rv-accent: var(--rv-cobalt-l); --focus: var(--rv-cobalt-l);
+  --rv-pill-bg: #fff; --rv-pill-fg: #000; --rv-pill-bg-h: #E9EBF1; --rv-pill-line: rgba(255, 255, 255, .5);
+  --rv-pill-sh: 0 1px 2px rgba(0, 0, 0, .3); --rv-pill-sh-h: 0 8px 22px -8px rgba(0, 0, 0, .6);
+  --rv-chip-bg: rgba(255, 255, 255, .08); --rv-chip-bg-h: rgba(255, 255, 255, .13); --rv-lit-bg: #fff; --rv-lit-fg: #000;
+  --rv-field-bg: rgba(255, 255, 255, .07); --rv-field-bg-h: rgba(255, 255, 255, .1); --rv-seg-bg: rgba(255, 255, 255, .08); --rv-seg-div: rgba(255, 255, 255, .1);
+  --rv-ok-bg: rgba(30, 158, 82, .16); --rv-ok: #6EDC9A; --rv-risk-bg: rgba(200, 48, 59, .2); --rv-risk: #FF9DA2;
+  --rv-warn-bg: rgba(245, 194, 107, .14); --rv-warn: #F5C26B; --rv-info-bg: rgba(44, 79, 230, .22); --rv-info: #B4C1FF;
+  background: var(--rv-ink-card); color: var(--rv-fg-2); border-radius: 24px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 2px 6px rgba(10, 14, 30, .12), 0 30px 60px -28px rgba(10, 14, 30, .45);
+  color-scheme: dark;
+}
+/* a white card on a dark surface (a real job, the "popped" card of the home's Chặng 02) */
+.rv-card--white {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F4F5F8 100%); color: var(--rv-fg-2);
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0, 0, 0, .04), inset 0 -2px 0 rgba(0, 0, 0, .05),
+    0 2px 4px rgba(0, 0, 0, .18), 0 14px 26px -10px rgba(0, 0, 0, .55), 0 40px 60px -30px rgba(0, 0, 0, .8), 0 30px 80px -30px rgba(44, 79, 230, .4);
+}
+.rv-card__ico { margin-bottom: 18px; }
+.rv-card__kicker { margin-bottom: 10px; font: 500 14px/1.3 var(--font); color: var(--rv-fg-3); font-variant-numeric: tabular-nums; }
+.rv-card__title { font: 600 20px/1.25 var(--font); letter-spacing: -0.016em; color: var(--rv-fg); text-wrap: balance; }
+.rv-card__text { margin-top: 8px; font-size: 16px; line-height: 1.55; color: var(--rv-fg-3); text-wrap: pretty; }
+.rv-card__meta { margin-top: 12px; font-size: 14px; line-height: 1.4; color: var(--rv-fg-3); font-variant-numeric: tabular-nums; }
+.rv-card__foot { margin-top: auto; padding-top: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+/* the whole card is the link: a stretched hit area on the title's link, a gentle lift and glow, a ring on focus */
+.rv-card__link { color: inherit; text-decoration: none; }
+.rv-card__link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.rv-card__link:focus-visible { outline: none; }
+.rv-card:has(.rv-card__link:focus-visible) { outline: 2px solid var(--focus); outline-offset: 4px; }
+.rv-card--link .rv-card__title .icon { display: inline-block; width: 15px; height: 15px; margin-left: 6px; vertical-align: 0; color: var(--rv-fg-3); }
+@media (hover: hover) and (pointer: fine) {
+  .rv-card--link:hover { translate: 0 -3px; box-shadow: var(--rv-card-sh-h); }
+}
+.rv-card--link:focus-within { translate: 0 -3px; box-shadow: var(--rv-card-sh-h); }
+/* buttons and links inside a link card stay clickable above the stretched link */
+.rv-card :is(.rv-pill, .save-btn, .rv-icon-btn, .rv-link) { position: relative; z-index: 2; }
+/* the icon tile: one family (24 px line icons, stroke 1.75, or a filled glyph) in a 44 px tile */
+.rv-ico {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--rv-r-sm);
+  color: var(--rv-fg); background: var(--rv-ico-bg); box-shadow: var(--rv-ico-sh);
+}
+.rv-ico .icon { width: 22px; height: 22px; stroke-width: 1.75; }
+.rv-ico .glyph { width: 21px; height: 21px; }
+.rv-ico--sm { width: 36px; height: 36px; border-radius: 10px; }
+.rv-ico--sm .icon, .rv-ico--sm .glyph { width: 18px; height: 18px; }
+.rv-ico--lg { width: 56px; height: 56px; border-radius: 16px; }
+.rv-ico--lg .icon, .rv-ico--lg .glyph { width: 26px; height: 26px; }
+.rv-ico--accent { background: linear-gradient(180deg, #3A5CF2, #2343D6); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .22); }
+/* a graphite panel that groups things (filters, a form, a figure block); on light: mist, no shadow */
+.rv-panel {
+  position: relative; padding: clamp(20px, 2.4vw, 32px); border-radius: var(--rv-r);
+  background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); color: var(--rv-fg-2);
+}
+.rv-light .rv-panel, .rv-sec--paper .rv-panel { background: var(--rv-mist); box-shadow: none; }
+.rv-sec--mist .rv-panel { background: #fff; box-shadow: var(--rv-card-sh); }
+/* the icon card (includes/icon_card.html on an rv page) */
+.rv-icard { min-height: 100%; }
+.rv-icard .rv-card__title { font-size: 19px; }
+.rv-icard .rv-card__text { margin-top: 6px; }
+.rv-icard__short { display: none; }
+@media (max-width: 479px) {
+  .rv-grid--keep2 .rv-icard { padding: 18px 16px; }
+  .rv-grid--keep2 .rv-icard .rv-card__ico { margin-bottom: 14px; }
+  .rv-grid--keep2 .rv-icard .rv-card__title { font-size: 17px; }
+  .rv-grid--keep2 .rv-icard__long { display: none; }
+  .rv-grid--keep2 .rv-icard__short { display: inline; }
+}
+
+/* ---------------------------------------------------------------- 8 lists: rows, checks, steps */
+/* hairline rows inside a card or on paper; on the sheet, .rv-list--cards lifts every row as its own white card */
+.rv-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rv-line); container: rv-list / inline-size; }
+.rv-list--cards { display: grid; gap: 10px; border-top: 0; }
+.rv-list--cards > .rv-row { padding: 16px 20px; border: 0; border-radius: var(--rv-r-row); background: #fff; box-shadow: var(--rv-row-sh); transition: box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) { .rv-list--cards > .rv-row:has(.rv-row__title a):hover { translate: 0 -2px; box-shadow: var(--rv-card-sh-h); } }
+.rv-row {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px;
+  min-height: 72px; padding: 16px 0; border-bottom: 1px solid var(--rv-line);
+}
+.rv-row:has(> .rv-row__ico, > .logo, > .rv-ico) { grid-template-columns: auto minmax(0, 1fr) auto; }
+/* a row with a save toggle at its far right (the board's rows): tile · main · aside · bookmark */
+.rv-row:has(> .rv-row__ico, > .logo, > .rv-ico):has(> .save-btn) { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.rv-row > .save-btn { position: relative; z-index: 2; width: 44px; height: 44px; }
+.rv-row__main { min-width: 0; }
+.rv-row__title { font: 600 17px/1.3 var(--font); letter-spacing: -0.012em; color: var(--rv-fg); }
+.rv-row__title a { color: inherit; text-decoration: none; }
+.rv-row__title a::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.rv-row__title a:focus-visible { outline: none; }
+.rv-row:has(.rv-row__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+.rv-row__meta { margin-top: 4px; font-size: 14px; line-height: 1.4; color: var(--rv-fg-3); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rv-row__aside { justify-self: end; text-align: right; font: 500 16px/1.3 var(--font); color: var(--rv-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rv-row__aside small { display: block; margin-top: 2px; font: 400 13px/1.3 var(--font); color: var(--rv-fg-3); }
+.rv-row__title a { transition: color var(--rv-dur-2) var(--rv-ease); }
+.rv-row__go { width: 18px; height: 18px; color: var(--rv-fg-3); transition: translate var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .rv-row:has(.rv-row__title a):hover .rv-row__title { color: var(--rv-accent); }
+  .rv-row:has(.rv-row__title a):hover .rv-row__go { translate: 3px 0; color: var(--rv-fg); }
+}
+.rv-card > .rv-list, .rv-panel > .rv-list { border-top: 0; }
+.rv-card > .rv-list > .rv-row:last-child, .rv-panel > .rv-list > .rv-row:last-child { border-bottom: 0; }
+/* .rv-row--wrap: in a narrow list (a panel beside copy, a phone) the aside drops under the title, never squeezing it */
+@container rv-list (max-width: 440px) {
+  .rv-row { gap: 12px; }
+  .rv-row--wrap { grid-template-columns: auto minmax(0, 1fr) !important; }
+  .rv-row--wrap .rv-row__aside { grid-column: 2; justify-self: start; text-align: left; white-space: normal; }
+  .rv-row--wrap:has(> .save-btn) { grid-template-columns: auto minmax(0, 1fr) auto !important; }
+  .rv-row--wrap > .save-btn { grid-column: 3; grid-row: 1; align-self: start; margin-top: -8px; }
+  .rv-row--wrap:has(> .save-btn) .rv-row__aside { grid-column: 2 / -1; }
+  .rv-row--wrap > :is(.logo, .rv-ico, .rv-row__ico) { align-self: start; }
+}
+/* a check list (the five checks) */
+.rv-checks { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.rv-checks li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 15.5px; line-height: 1.45; color: var(--rv-fg-2); }
+.rv-checks .icon { width: 20px; height: 20px; margin-top: 1px; color: var(--rv-accent); stroke-width: 2; }
+/* a list of passed checks (the five checks): .rv-toggles > li > span + .rv-tog. On inner pages the mark is a quiet
+   cobalt tick in a disc (a switch that cannot be switched reads as decoration); the home keeps its toggles. */
+.rv-toggles { margin: 0; padding: 0; list-style: none; }
+.rv-toggles > li { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 56px; padding: 8px 0; border-bottom: 1px solid var(--rv-line); font: 500 16px/1.3 var(--font); letter-spacing: -0.01em; color: var(--rv-fg); }
+.rv-toggles > li:first-child { border-top: 1px solid var(--rv-line); }
+.rv-tog {
+  position: relative; flex: none; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--rv-cobalt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-7.6'/%3E%3C/svg%3E") center / 16px no-repeat;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+/* numbered steps: <ol class="rv-steps"><li><div><b>Title</b><p>…</p></div></li> (the <div> keeps title + text in the
+   second column of the li's grid; without it the <p> drops under the number) */
+.rv-steps { margin: 0; padding: 0; list-style: none; counter-reset: rv-step; display: grid; gap: 22px; }
+.rv-steps > li { counter-increment: rv-step; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; align-items: start; }
+.rv-steps > li::before {
+  content: counter(rv-step, decimal-leading-zero); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--rv-inset); color: var(--rv-fg); font: 500 14px/1 var(--font); font-variant-numeric: tabular-nums;
+}
+.rv-steps b { display: block; padding-top: 8px; font: 500 17px/1.3 var(--font); color: var(--rv-fg); }
+.rv-steps p { margin-top: 4px; font-size: 15px; line-height: 1.55; color: var(--rv-fg-3); }
+
+/* ---------------------------------------------------------------- 9 figures */
+/* real figures only (catalog, the verified member label); tabular, 500, tight */
+.rv-stats { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+.rv-stat { display: flex; flex-direction: column; min-width: 0; padding: 4px clamp(16px, 2.4vw, 32px); border-left: 1px solid var(--rv-line); }
+.rv-stat:first-child { padding-left: 0; border-left: 0; }
+.rv-stat__num { order: -1; margin: 0; font: 500 clamp(40px, 4.2vw, 60px)/1.02 var(--font); letter-spacing: -0.035em; color: var(--rv-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rv-stat__unit { margin-left: .08em; font-size: .52em; letter-spacing: -0.015em; color: var(--rv-fg-3); }
+.rv-stat__label { margin: 12px 0 0; max-width: 24ch; font: 400 15px/1.45 var(--font); color: var(--rv-fg-3); }
+.rv-stat__meta { margin: 8px 0 0; font-size: 13px; color: var(--rv-fg-3); }
+.rv-stats--cards { gap: var(--rv-gap); }
+.rv-stats--cards .rv-stat { padding: 24px; border-left: 0; border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); }
+.rv-stats__note { margin-top: 24px; font-size: 14px; line-height: 1.5; color: var(--rv-fg-3); }
+@media (max-width: 899px) {
+  .rv-stats:not(.rv-stats--cards) { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
+  .rv-stats:not(.rv-stats--cards) .rv-stat:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .rv-stats--cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 479px) {
+  .rv-stat { padding-inline: 14px; }
+  .rv-stat__num { font-size: clamp(32px, 9vw, 40px); }
+  .rv-stat__label { font-size: 14px; }
+  .rv-stats--cards .rv-stat { padding: 18px 16px; }
+}
+
+/* ---------------------------------------------------------------- 10 tabs, segmented, filters */
+/* Three choosers, one family (direction B):
+     .rv-seg           a SEGMENTED control: a soft filled track with thin dividers, the chosen segment an ink block
+                       (white on dark); rounded rectangles, not pills. Tabs (VR.tabs: [data-tabs] with [role=tab]
+                       [aria-controls]), radios ([role=radio][aria-checked]), toggles ([aria-pressed]).
+     .rv-seg--pills    separate grey pills, the chosen one COBALT (a sort or a view: the board's "Đề xuất").
+     .rv-filter        a grey pill toggle (presets, quick filters, skills), the chosen one ink.
+   Lit = [aria-selected|aria-pressed|aria-checked="true"], [aria-current="page"] or .is-on; it stays lit on hover. */
+.rv-seg {
+  position: relative; display: inline-flex; gap: 0; padding: 4px; max-width: 100%; border-radius: 14px;
+  background: var(--rv-seg-bg); box-shadow: none;
+  overflow-x: auto; scrollbar-width: none;
+}
+.rv-seg::-webkit-scrollbar { display: none; }
+.rv-seg > :is(button, a, [role="tab"], [role="radio"], label) {
+  position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 18px; border-radius: 10px;
+  font: 500 15px/1 var(--font); color: var(--rv-fg-2); white-space: nowrap; text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease), box-shadow var(--rv-dur-2) var(--rv-ease);
+}
+/* a thin divider between two unlit segments */
+.rv-seg > * + *::before {
+  content: ""; position: absolute; left: 0; top: 25%; bottom: 25%; width: 1px; background: var(--rv-seg-div);
+  transition: opacity var(--rv-dur-2) var(--rv-ease);
+}
+.rv-seg > :is([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked))::before,
+.rv-seg > :is([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)) + *::before { opacity: 0; }
+.rv-seg > :is(button, a, [role="tab"], [role="radio"], label):not([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)):hover { color: var(--rv-fg); }
+.rv-seg > :is([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)) {
+  background: var(--rv-lit-bg); color: var(--rv-lit-fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 4px 10px -4px rgba(0, 0, 0, .25);
+}
+.rv-seg__count { font-size: 13px; font-variant-numeric: tabular-nums; opacity: .7; }
+.rv-seg--block { display: flex; }
+.rv-seg--block > :is(button, a, [role="tab"], [role="radio"], label) { flex: 1 1 0; justify-content: center; }   /* (outweighs the segments' flex: none) */
+/* separate pills, the chosen one cobalt */
+.rv-seg--pills { gap: 10px; padding: 2px; border-radius: 0; background: none; overflow: visible; flex-wrap: wrap; }
+.rv-seg--pills > * + *::before { display: none; }
+.rv-seg--pills > :is(button, a, [role="tab"], [role="radio"], label) {
+  min-height: 40px; padding: 0 20px; border-radius: 999px; background: var(--rv-chip-bg); color: var(--rv-fg);
+  font-size: 15.5px;
+}
+.rv-seg--pills > :is(button, a, [role="tab"], [role="radio"], label):not([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)):hover { background: var(--rv-chip-bg-h); }
+.rv-seg--pills > :is([aria-selected="true"], [aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)) {
+  background: var(--rv-cobalt); color: #fff; box-shadow: 0 1px 2px rgba(20, 40, 140, .25), 0 6px 16px -8px rgba(44, 79, 230, .7);
+}
+[role="tabpanel"]:focus-visible { outline-offset: 8px; }
+/* filter toggles: grey pills; on = ink. A bar that scrolls sideways on phones (faded edge) */
+.rv-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.rv-filters--scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; padding-block: 2px;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); }
+.rv-filters--scroll::-webkit-scrollbar { display: none; }
+.rv-filter {
+  position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; padding: 0 18px; border-radius: 999px; border: 0;
+  background: var(--rv-chip-bg); box-shadow: none; color: var(--rv-fg);
+  font: 500 15px/1 var(--font); white-space: nowrap; cursor: pointer; text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease), box-shadow var(--rv-dur-2) var(--rv-ease);
+}
+.rv-filter:hover { background: var(--rv-chip-bg-h); color: var(--rv-fg); }
+.rv-filter:is([aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)) { background: var(--rv-lit-bg); color: var(--rv-lit-fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .16); }
+.rv-filter__count { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--rv-fg-3); }
+.rv-filter:is([aria-pressed="true"], [aria-checked="true"], [aria-current="page"], .is-on, :has(> input:checked)) .rv-filter__count { color: inherit; opacity: .65; }
+.rv-filter .icon { width: 16px; height: 16px; }
+/* the compact pill (a sample, a quick pick, a due date, the board's "Đăng trong"): 36 px, 44 px hit area on touch */
+.rv-filter--sm { height: 36px; padding: 0 14px; font-size: 14px; }
+.rv-filter--sm .icon { width: 15px; height: 15px; opacity: .8; }
+@media (pointer: coarse) { .rv-filter::after { content: ""; position: absolute; inset: -4px 0; } }
+/* real radios and checkboxes (they post without JS): the LABEL is the segment or the pill, the input inside is visually
+   hidden but keeps the keyboard (arrows move the choice) and its focus ring is drawn on the label.
+     <div class="rv-seg rv-seg--block" role="radiogroup" aria-label="Phí nền tảng">
+       <label><input type="radio" name="fee" value="10" checked><span>Upwork ~10%</span></label>…</div>
+     .rv-seg--pills > label (cobalt chosen) · <div class="rv-filters"><label class="rv-filter"><input type="radio">…</label></div> (ink chosen) */
+:is(.rv-seg > label, label.rv-filter) { cursor: pointer; }
+:is(.rv-seg > label, label.rv-filter) > input:is([type="radio"], [type="checkbox"]) { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+:is(.rv-seg > label, label.rv-filter):has(> input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+:is(.rv-seg > label, label.rv-filter):has(> input:disabled) { opacity: .45; cursor: not-allowed; }
+/* touch: every segment reaches 44 px */
+@media (pointer: coarse) { .rv-seg:not(.rv-seg--pills) > :is(button, a, [role="tab"], [role="radio"], label) { min-height: 44px; } }
+
+/* ---------------------------------------------------------------- 11 forms */
+/* Direction B: bold labels, tall filled fields (52 px, a light grey fill, no outline box) that turn white with a
+   cobalt edge and a soft ring on focus; drawn checkboxes and switches; the search is a white pill on the band. */
+.rv-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 20px; }
+.rv-form-grid > .rv-field { align-content: start; }
+.rv-field--full, .rv-form-grid > .rv-form__actions { grid-column: 1 / -1; }
+@media (max-width: 640px) { .rv-form-grid { grid-template-columns: minmax(0, 1fr); } }
+.rv-field { display: grid; gap: 10px; min-width: 0; }
+.rv-label { font: 600 16px/1.3 var(--font); letter-spacing: -0.008em; color: var(--rv-fg); }
+.rv-label .rv-opt { font-weight: 400; color: var(--rv-fg-3); }
+.rv-hint { font-size: 13.5px; line-height: 1.45; color: var(--rv-fg-3); }
+.rv-error { display: flex; align-items: flex-start; gap: 6px; font-size: 13.5px; line-height: 1.45; color: var(--rv-risk); }
+.rv-error .icon { width: 16px; height: 16px; margin-top: 1px; flex: none; }
+.rv-input, .rv-select, .rv-textarea,
+.rv-field :is(input:where(:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])), select, textarea) {
+  width: 100%; min-height: 52px; padding: 13px 18px; border-radius: 12px;
+  border: 1.5px solid var(--rv-field-line); background-color: var(--rv-field-bg); color: var(--rv-fg);
+  font: 400 17px/1.4 var(--font); font-variant-numeric: tabular-nums;
+  transition: border-color var(--rv-dur-2) var(--rv-ease), box-shadow var(--rv-dur-2) var(--rv-ease), background-color var(--rv-dur-2) var(--rv-ease);
+}
+.rv-textarea, .rv-field textarea { min-height: 132px; resize: vertical; font-size: 16px; line-height: 1.55; }
+.rv-select, .rv-field select {
+  appearance: none; -webkit-appearance: none; padding-right: 44px;
+  background-image: var(--rv-chev); background-repeat: no-repeat; background-position: right 14px center; background-size: 18px;
+}
+.rv-field select option, .rv-select option { background: var(--rv-card-solid); color: var(--rv-fg); }
+.rv-input::placeholder, .rv-textarea::placeholder, .rv-field :is(input, textarea)::placeholder { color: var(--rv-ph); opacity: 1; }
+.rv-input:hover, .rv-select:hover, .rv-textarea:hover, .rv-field :is(input:where(:not([type="checkbox"], [type="radio"])), select, textarea):hover { background-color: var(--rv-field-bg-h); }
+.rv-input:focus, .rv-select:focus, .rv-textarea:focus, .rv-field :is(input, select, textarea):focus {
+  outline: none; border-color: var(--rv-cobalt); background-color: var(--rv-field-focus); box-shadow: 0 0 0 4px rgba(44, 79, 230, .14);
+}
+.rv-field--error :is(input, select, textarea), .rv .rv-field :is(input, select, textarea)[aria-invalid="true"] { border-color: var(--rv-red); }
+.rv-field--error :is(input, select, textarea):focus, .rv .rv-field :is(input, select, textarea)[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px rgba(200, 48, 59, .18); }
+.rv-field--ok :is(input, select, textarea) { border-color: var(--rv-green); }
+.rv-input:disabled, .rv-field :is(input, select, textarea):disabled { opacity: .5; cursor: not-allowed; }
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
+.rv-dark input[type="date"]::-webkit-calendar-picker-indicator, .rv-sec--night input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+.rv-form__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 8px; }
+.rv-form__actions .rv-small { max-width: 44ch; }
+/* checkbox and radio: drawn, 20 px, white with a grey edge, cobalt when on; the label is the hit area */
+.rv-check { display: flex; align-items: flex-start; gap: 12px; font-size: 16px; line-height: 1.45; color: var(--rv-fg); cursor: pointer; }
+.rv-check input, .rv-radio input, input.rv-check__box {
+  appearance: none; -webkit-appearance: none; flex: none; width: 20px; height: 20px; margin: 1px 0 0;
+  border-radius: 6px; border: 1.5px solid var(--rv-box-line); background: var(--rv-field-focus) no-repeat center / 14px;
+  cursor: pointer; transition: background-color var(--rv-dur-2) var(--rv-ease), border-color var(--rv-dur-2) var(--rv-ease);
+}
+.rv-radio { display: flex; align-items: flex-start; gap: 12px; font-size: 16px; line-height: 1.45; color: var(--rv-fg); cursor: pointer; }
+.rv-radio input { border-radius: 50%; }
+.rv-check input:checked, input.rv-check__box:checked {
+  background-color: var(--rv-cobalt); border-color: var(--rv-cobalt);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+.rv-radio input:checked { border-color: var(--rv-cobalt); background: radial-gradient(circle, var(--rv-cobalt) 0 5px, transparent 5.5px), var(--rv-field-focus); }
+.rv-check input:focus-visible, .rv-radio input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* the switch: <label class="rv-switch"><input type="checkbox" role="switch"> Label</label>: grey when off, cobalt on */
+.rv-switch { display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 16px; color: var(--rv-fg); cursor: pointer; }
+.rv-switch input {
+  appearance: none; -webkit-appearance: none; flex: none; order: 2; width: 44px; height: 26px; margin: 0; border-radius: 999px; cursor: pointer;
+  background: radial-gradient(circle, #fff 9.5px, rgba(255, 255, 255, 0) 10.5px) 3px 50% / 20px 20px no-repeat, var(--rv-tog-off);
+  transition: background-position var(--rv-dur-3) var(--rv-ease), background-color var(--rv-dur-3) var(--rv-ease);
+}
+.rv-switch input:checked { background-color: var(--rv-cobalt); background-position: 21px 50%, 0 0; background-image: radial-gradient(circle, #fff 9.5px, rgba(255, 255, 255, 0) 10.5px), linear-gradient(180deg, #3A5CF2, #2343D6); }
+.rv-switch input:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+/* a selectable row (a choice among a few): the whole row is the label */
+.rv-option {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px;
+  box-shadow: none; background: var(--rv-chip-bg); color: var(--rv-fg-2); cursor: pointer;
+  transition: box-shadow var(--rv-dur-2) var(--rv-ease), background-color var(--rv-dur-2) var(--rv-ease);
+}
+.rv-option:hover { background: var(--rv-chip-bg-h); }
+.rv-option:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--rv-cobalt); background: var(--rv-info-bg); color: var(--rv-fg); }
+.rv-option:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.rv-option input { accent-color: var(--rv-cobalt); }
+/* the search: a white pill (it carries the light surface's tokens wherever it sits: on the band it is the one white
+   object), the icon, the field, the ink submit pill inside */
+.rv-search {
+  display: flex; align-items: center; gap: 10px; width: 100%; max-width: 880px; height: var(--rv-dock-h); padding: 6px 6px 6px 22px;
+  border-radius: 999px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .04), 0 2px 4px rgba(10, 16, 40, .08), 0 18px 40px -16px rgba(10, 16, 40, .35);
+  transition: box-shadow var(--rv-dur-2) var(--rv-ease);
+}
+.rv-search:has(input:focus) { box-shadow: 0 0 0 2px var(--rv-cobalt), 0 0 0 6px rgba(44, 79, 230, .18), 0 18px 40px -16px rgba(10, 16, 40, .35); }
+.rv-search > .icon { flex: none; width: 22px; height: 22px; color: var(--rv-fg-3); }
+.rv-search input { flex: 1; width: 0; min-width: 0; height: 100%; border: 0; background: none; outline: none; font: 400 17px/1 var(--font); color: var(--rv-fg); }
+.rv-search input::placeholder { color: var(--rv-ph); opacity: 1; }
+.rv .rv-search input:focus-visible { outline: none; }   /* the pill draws the ring (one ring, not two) */
+.rv-search input::-webkit-search-cancel-button { display: none; }
+.rv-search .rv-pill { flex: none; height: 100%; padding: 0 28px; font-weight: 600; }
+@media (max-width: 479px) {
+  .rv-search { padding: 5px 5px 5px 16px; gap: 8px; }
+  .rv-search > .icon { width: 20px; height: 20px; }
+  .rv-search input { font-size: 16px; }
+  .rv-search .rv-pill { padding: 0 18px; }
+}
+
+/* ---------------------------------------------------------------- 12 tables */
+/* in a scroller of its own (never the page): wide tables scroll sideways inside their card on phones */
+.rv-table-wrap { overflow-x: auto; border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); -webkit-overflow-scrolling: touch; }
+.rv-table { width: 100%; min-width: var(--table-min, 0); border-collapse: collapse; font-size: 15px; line-height: 1.4; color: var(--rv-fg-2); font-variant-numeric: tabular-nums; }
+.rv-table caption { padding: 18px 20px 4px; text-align: left; font: 500 15px/1.3 var(--font); color: var(--rv-fg); caption-side: top; }
+.rv-table th { padding: 14px 20px; text-align: left; vertical-align: bottom; font: 500 13px/1.3 var(--font); color: var(--rv-fg-3); border-bottom: 1px solid var(--rv-line); white-space: nowrap; }
+.rv-table td { padding: 14px 20px; vertical-align: top; border-bottom: 1px solid var(--rv-line); }
+.rv-table tr:last-child td { border-bottom: 0; }
+.rv-table td:first-child, .rv-table th[scope="row"] { color: var(--rv-fg); font-weight: 500; text-align: left; }
+.rv-table .is-num { text-align: right; white-space: nowrap; }
+.rv-table tbody tr { transition: background-color var(--rv-dur-2) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) { .rv-table tbody tr:hover { background: var(--rv-inset); } }
+@media (max-width: 479px) { .rv-table th, .rv-table td { padding: 12px 14px; } }
+
+/* ---------------------------------------------------------------- 13 notes, empty states */
+.rv-note {
+  display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-radius: var(--rv-r-md);
+  background: var(--rv-inset); color: var(--rv-fg-2); font-size: 15px; line-height: 1.55;
+}
+.rv-note > .icon { width: 20px; height: 20px; flex: none; margin-top: 1px; color: var(--rv-accent); }
+.rv-note strong, .rv-note b { color: var(--rv-fg); font-weight: 500; }
+.rv-note--ok > .icon { color: var(--rv-ok); }
+.rv-note--risk { background: var(--rv-risk-bg); box-shadow: none; }
+.rv-note--risk > .icon { color: var(--rv-risk); }
+.rv-note--warn { background: var(--rv-warn-bg); box-shadow: none; }
+.rv-note--warn > .icon { color: var(--rv-warn); }
+.rv-empty {
+  display: grid; justify-items: center; gap: 10px; padding: clamp(40px, 6vw, 72px) 24px; text-align: center;
+  border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh);
+}
+.rv-empty .rv-ico { margin-bottom: 8px; }
+.rv-empty__title { font: 500 22px/1.25 var(--font); letter-spacing: -0.015em; color: var(--rv-fg); text-wrap: balance; }
+.rv-empty__text { max-width: 44ch; font-size: 15.5px; line-height: 1.55; color: var(--rv-fg-3); text-wrap: pretty; }
+.rv-empty .rv-actions { margin-top: 14px; justify-content: center; }
+
+/* ---------------------------------------------------------------- 14 breadcrumb, pagination, load more */
+.rv .breadcrumb ol { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; padding: 0; list-style: none; font: 400 14px/1.4 var(--font); color: var(--rv-fg-3); }
+.rv .breadcrumb li { display: inline-flex; align-items: center; gap: 8px; }
+.rv .breadcrumb li + li::before { content: "/"; width: auto; height: auto; margin: 0; border: 0; transform: none; color: var(--rv-fg-3); opacity: .6; }
+.rv .breadcrumb a { display: inline-block; padding-block: 4px; margin-block: -4px; color: var(--rv-fg-3); text-decoration: none; transition: color var(--rv-dur-2) var(--rv-ease); }   /* a 28 px target without moving the line */
+.rv .breadcrumb a:hover { color: var(--rv-fg); }
+.rv .breadcrumb [aria-current] { color: var(--rv-fg-2); }
+/* touch: each crumb link is a 44 px target (the hit area grows, the line does not) */
+@media (pointer: coarse) { .rv .breadcrumb a { position: relative; } .rv .breadcrumb a::after { content: ""; position: absolute; inset: -12px -4px; } }
+.rv-pager, .rv .pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.rv-pager :is(a, span), .rv .pager :is(a, span) {
+  min-width: 44px; height: 44px; padding: 0 14px; display: inline-grid; place-items: center; border-radius: 999px; border: 0;
+  background: var(--rv-field-bg); box-shadow: none; color: var(--rv-fg-2);
+  font: 500 15px/1 var(--font); font-variant-numeric: tabular-nums; text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease);
+}
+.rv-pager a:hover, .rv .pager a:hover { background: var(--rv-field-bg-h); color: var(--rv-fg); }
+.rv-pager [aria-current="page"], .rv .pager [aria-current="page"] { background: var(--rv-pill-bg); color: var(--rv-pill-fg); box-shadow: none; }
+.rv-pager .is-gap, .rv .pager .is-gap { box-shadow: none; }
+/* load more: the count, then one outlined pill */
+.rv-more { display: grid; justify-items: center; gap: 14px; margin-top: 40px; text-align: center; }
+.rv-more__count { font-size: 14px; color: var(--rv-fg-3); font-variant-numeric: tabular-nums; }
+.rv-more__bar { width: 200px; height: 2px; border-radius: 2px; background: var(--rv-line-2); overflow: hidden; }
+.rv-more__bar > i { display: block; width: var(--p, 0%); height: 100%; background: var(--rv-fg); }
+
+/* ---------------------------------------------------------------- 15 prose (guides, stories, long text) */
+.rv-prose, .rv .prose { max-width: 68ch; font-size: 17.5px; line-height: 1.75; color: var(--rv-fg-2); }
+.rv-prose > * + *, .rv .prose > * + * { margin-top: 1.1em; }
+.rv-prose h2, .rv .prose h2 { margin-top: 2em; font: 500 clamp(26px, 2.4vw, 32px)/1.18 var(--font); letter-spacing: -0.022em; color: var(--rv-fg); text-wrap: balance; }
+.rv-prose h3, .rv .prose h3 { margin-top: 1.7em; font: 500 21px/1.3 var(--font); letter-spacing: -0.014em; color: var(--rv-fg); }
+.rv-prose :is(h2, h3) + *, .rv .prose :is(h2, h3) + * { margin-top: .6em; }
+.rv .prose a { color: var(--rv-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.rv-prose strong, .rv .prose strong { color: var(--rv-fg); font-weight: 600; }
+.rv-prose :is(ul, ol), .rv .prose :is(ul, ol) { padding-left: 1.3em; }
+.rv-prose li + li, .rv .prose li + li { margin-top: .45em; }
+.rv-prose li::marker, .rv .prose li::marker { color: var(--rv-fg-3); }
+.rv-prose blockquote, .rv .prose blockquote { padding: 4px 0 4px 20px; border-left: 2px solid var(--rv-cobalt); color: var(--rv-fg); font-size: 19px; line-height: 1.6; }
+.rv-prose code, .rv .prose code { font-family: var(--font-mono); font-size: .86em; padding: .12em .38em; border-radius: 6px; background: var(--rv-inset); color: var(--rv-fg); }
+.rv-prose hr, .rv .prose hr { border: 0; border-top: 1px solid var(--rv-line); margin: 2.2em 0; }
+.rv-prose img, .rv .prose img { border-radius: var(--rv-r-md); }
+.rv-prose figcaption, .rv .prose figcaption { margin-top: 8px; font-size: 14px; color: var(--rv-fg-3); }
+.rv-prose table, .rv .prose table { width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+.rv-prose :is(th, td), .rv .prose :is(th, td) { padding: 10px 12px; border-bottom: 1px solid var(--rv-line); text-align: left; vertical-align: top; }
+.rv-prose th, .rv .prose th { font-weight: 500; color: var(--rv-fg); background: var(--rv-inset); }
+@media (max-width: 767px) { .rv-prose, .rv .prose { font-size: 17px; line-height: 1.7; } }
+
+/* ---------------------------------------------------------------- 16 the join band, the orbit mark */
+/* The last section above the footer (includes/cta_band.html), direction B + the lively layer (§26): the page's light
+   sheet ENDS with large rounded bottom corners over a short navy band, the hero's twin, so every inner page is a light
+   sheet laid on the brand band (top and bottom). Compact and never text only: its ONE visual is the community, a stack
+   of real member photos with the verified member figure set big (violet, the community's hue) on the left, then the
+   h2, the white pill and the honest note on the right (phones: one centred stack). No horizon, no planet, no glow
+   show; one quiet light at the top. The band fades into the footer's black. */
+.rv-cta {
+  --cta-pad: clamp(56px, 5.4vw, 80px);
+  position: relative; isolation: isolate; overflow: clip;
+  padding: var(--cta-pad) 0 calc(var(--cta-pad) + 8px);
+  background: linear-gradient(180deg, var(--rv-band) 0%, var(--rv-band) 55%, #05070F 100%);
+  color: var(--rv-fg-2); text-align: center;
+}
+.rv-cta::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(46% 70% at 30% 0%, rgba(52, 84, 220, .2) 0%, rgba(52, 84, 220, .06) 50%, rgba(52, 84, 220, 0) 100%);
+}
+.rv-cta__inner { position: relative; z-index: 2; }
+.rv-cta__title { font: 600 clamp(36px, 3.7vw, 54px)/1.06 var(--font); letter-spacing: -0.034em; color: #fff; text-wrap: balance; padding-block: .04em; }
+.rv-cta__lead { margin: 12px auto 0; max-width: 34em; font: 400 clamp(17px, 1.32vw, 19px)/1.5 var(--font); color: #C3C7D5; text-wrap: balance; font-variant-numeric: tabular-nums; }
+.rv-cta__actions { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.rv-cta__note { margin-top: 14px; font: 400 14px/1.45 var(--font); color: #A3A9BD; }
+/* the visual: real member photos (decorative), the verified figure big and tabular in the community's violet */
+.rv-cta__proof { display: grid; justify-items: center; gap: 18px; }
+.rv-cta__avs { --av: 56px; --av-ring: var(--rv-band); }
+.rv-cta__avs > * { box-shadow: 0 0 0 3px var(--av-ring), 0 10px 22px -10px rgba(0, 0, 0, .6); }
+.rv-cta__num { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 12px; font-variant-numeric: tabular-nums; }
+.rv-cta__num b { font: 600 clamp(64px, 6.6vw, 96px)/.92 var(--font); letter-spacing: -0.03em; color: var(--hue-cobalt-l); padding-block: .04em; }
+.rv-cta__plus { margin-left: .04em; font-size: .5em; font-weight: 500; vertical-align: .62em; letter-spacing: 0; }
+.rv-cta__who { flex-basis: 100%; margin-top: 10px; font: 400 clamp(16px, 1.25vw, 18px)/1.4 var(--font); color: #C3C7D5; }
+@media (min-width: 900px) {
+  .rv-cta { text-align: left; }
+  .rv-cta__grid { display: grid; grid-template-columns: auto minmax(0, 560px); justify-content: center; align-items: center; gap: 0; }
+  .rv-cta__proof { justify-items: start; padding-right: clamp(40px, 5vw, 88px); }
+  .rv-cta__num { justify-content: flex-start; }
+  .rv-cta__copy { padding-left: clamp(24px, 4vw, 72px); border-left: 1px solid rgba(255, 255, 255, .1); }
+  .rv-cta__lead { margin-inline: 0; }
+  .rv-cta__actions { justify-content: flex-start; }
+}
+/* the sheet's end: the light section right before the band rounds its bottom corners and lies over the band's top */
+:is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light):has(+ .rv-cta),
+:has(+ .rv-cta) > :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):last-child,
+.rv-sec--sheet-end {
+  position: relative; z-index: 1; border-bottom-left-radius: var(--rv-sheet); border-bottom-right-radius: var(--rv-sheet);
+}
+:is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light):has(+ .rv-cta) + .rv-cta,
+:has(+ .rv-cta):has(> :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):last-child) + .rv-cta {
+  margin-top: calc(-1 * var(--rv-sheet)); padding-top: calc(var(--cta-pad) + var(--rv-sheet));
+}
+@media (max-width: 767px) {
+  .rv-cta { --cta-pad: 52px; }
+  .rv-cta__title { font-size: clamp(32px, 9vw, 40px); }
+  .rv-cta__lead { font-size: 16.5px; max-width: 21em; }
+  .rv-cta__proof { gap: 14px; margin-bottom: 30px; }
+  .rv-cta__avs { --av: 44px; }
+  .rv-cta__num b { font-size: 64px; }
+  .rv-cta__who { margin-top: 6px; font-size: 16px; }
+}
+@media (min-width: 768px) and (max-width: 899px) { .rv-cta__proof { margin-bottom: 36px; } }
+/* --plain: the text-only band the board (/viec-lam/, approved as it is) keeps: centred, the h2, one line with the
+   verified figure, the pill, the note (includes/cta_band.html plain=True; the board's cta "jobs-join" defaults to it) */
+.rv-cta--plain { padding: clamp(80px, 8vw, 120px) 0 clamp(80px, 8vw, 112px); text-align: center; }
+.rv-cta--plain::before { background: radial-gradient(46% 70% at 50% 0%, rgba(52, 84, 220, .2) 0%, rgba(52, 84, 220, .06) 50%, rgba(52, 84, 220, 0) 100%); }
+.rv-cta--plain .rv-cta__title { font-size: clamp(38px, 4.2vw, 60px); }
+.rv-cta--plain .rv-cta__lead { margin: 14px auto 0; }
+.rv-cta--plain .rv-cta__actions { margin-top: 32px; justify-content: center; }
+.rv-cta--plain .rv-cta__note { margin-top: 16px; }
+:is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light):has(+ .rv-cta--plain) + .rv-cta--plain,
+:has(+ .rv-cta--plain):has(> :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):last-child) + .rv-cta--plain { padding-top: calc(clamp(80px, 8vw, 120px) + var(--rv-sheet)); }
+@media (max-width: 767px) {
+  .rv-cta--plain { padding: 72px 0 80px; }
+  :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint, .rv-light):has(+ .rv-cta--plain) + .rv-cta--plain,
+  :has(+ .rv-cta--plain):has(> :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):last-child) + .rv-cta--plain { padding-top: calc(72px + var(--rv-sheet)); }
+  .rv-cta--plain .rv-cta__title { font-size: clamp(32px, 9vw, 40px); }
+}
+/* the orbit mark (includes/rv_orbit.html): the home's carved cobalt orb inside three flat concentric rings, still.
+   Decorative. Size it with --orbit (its width). The back arcs pass behind the orb, the front arcs over it. */
+.rv-orbit { --orbit: 520px; position: relative; width: min(100%, var(--orbit)); aspect-ratio: 640 / 320; margin-inline: auto; pointer-events: none; }
+.rv-orbit::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 70%; aspect-ratio: 1.7; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(52, 88, 245, .32) 0%, rgba(44, 79, 230, .12) 46%, rgba(44, 79, 230, 0) 100%);
+}
+.rv-orbit svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.rv-orbit__back { z-index: 1; }
+.rv-orbit__front { z-index: 3; }
+.rv-orbit__ring { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.rv-orbit__back .rv-orbit__ring { stroke: rgba(220, 228, 255, .2); stroke-width: 1; }
+.rv-orbit__front .rv-orbit__ring { stroke-width: 1.3; }   /* stroke: the SVG's own gradient (includes/rv_orbit.html) */
+.rv-orbit__dot { fill: #fff; stroke: none; filter: drop-shadow(0 0 4px rgba(150, 175, 255, .9)); }
+.rv-orbit__orb { position: absolute; z-index: 2; left: 50%; top: 50%; width: 28.1%; transform: translate(-50%, -50%); }
+.rv-orbit__orb img { width: 100%; height: auto; }
+.rv-orbit__orb::after {        /* the matte sphere's shadow side, as the home's orb */
+  content: ""; position: absolute; inset: 6% 5.5% 5.4% 5.5%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(118% 118% at 30% 24%, rgba(255, 255, 255, 0) 40%, rgba(40, 52, 140, .45) 70%, rgba(10, 14, 64, .78) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* ---------------------------------------------------------------- 17 toast (common.js VR.toast) */
+/* VR.toast(text, {tone: "ok" | "error" | "info"}): one ink pill at the bottom centre (role=status, polite), a tone
+   icon on its left, rises 8 px and fades in (--rv-dur-3), above the sticky action bar when one is up, inside the
+   safe area. One at a time: a new message replaces the current one. */
+.rv .toast {
+  display: inline-flex; align-items: center; gap: 10px; width: max-content; max-width: min(calc(100% - 32px), 520px);
+  bottom: calc(max(20px, env(safe-area-inset-bottom)) + var(--rv-toast-lift, 0px));
+  padding: 12px 20px; border-radius: var(--rv-r-pill);
+  background: #15171E; color: #fff; font: 500 15px/1.35 var(--font); text-wrap: balance;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .06), var(--rv-sh-4);
+  transition: opacity var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-3) var(--rv-ease);
+}
+.rv .toast[data-tone]::before {
+  content: ""; flex: none; width: 20px; height: 20px; border-radius: 50%; margin-left: -4px;
+  background: var(--rv-cobalt) center / 14px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+.rv .toast[data-tone="error"]::before {
+  background-color: var(--rv-red);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 7v6M12 17h.01'/%3E%3C/svg%3E");
+}
+.rv .toast[data-tone="info"]::before {
+  background-color: rgba(255, 255, 255, .14);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 11v6M12 7h.01'/%3E%3C/svg%3E");
+}
+html.has-actionbar .rv .toast { --rv-toast-lift: calc(var(--rv-actionbar-h) + 12px); }
+
+/* ---------------------------------------------------------------- 18 bridge: the base.css pieces, in this language */
+/* Markup a page still writes with the earlier classes, and HTML that JS renders (common.js VR.jobCard / VR.jobRow,
+   saved.js, the tools), look right on an rv page without being rewritten. New markup uses the .rv- classes above. */
+.rv main .btn { --btn-h: 48px; }
+.rv main .btn:is(.btn--primary, .btn--sun, .btn--dark, .btn--light) { background: var(--rv-pill-bg); color: var(--rv-pill-fg); border-color: transparent; box-shadow: var(--rv-pill-sh); }
+.rv main .btn:is(.btn--primary, .btn--sun, .btn--dark, .btn--light):hover { background: var(--rv-pill-bg-h); translate: 0 -1px; box-shadow: var(--rv-pill-sh-h); }
+.rv main .btn:is(.btn--ghost, .btn--ghost-light, .btn--white) { background: transparent; color: var(--rv-fg); border-color: var(--rv-pill-line); }
+.rv main .btn:is(.btn--ghost, .btn--ghost-light, .btn--white):hover { border-color: var(--rv-fg); background: var(--rv-inset); translate: 0 -1px; }
+.rv main .btn--sm { height: 40px; padding: 0 16px; font-size: 15px; }
+.rv main .btn:is(.btn--lg, .btn--xl) { height: 52px; padding: 0 28px; font-size: 16.5px; }
+.rv main .btn--block { display: flex; width: 100%; }
+.rv main .btn[disabled], .rv main .btn.is-disabled { opacity: .45; pointer-events: none; }
+.rv main .btn__go, .rv main .btn__disc { display: none; }        /* no arrows in pills */
+.rv .link { font: 500 15px/1.3 var(--font); font-stretch: 100%; color: var(--rv-accent); }
+.rv .link--ink { color: var(--rv-fg); }
+.rv .text-link { color: var(--rv-accent); }
+.rv :is(.h1, .h2, .h3, .h4, .display) { color: var(--rv-fg); font-weight: 600; font-stretch: 100%; }
+.rv :is(.h1, .display) { letter-spacing: -0.032em; }
+.rv .h2 { letter-spacing: -0.025em; }
+.rv .lead { color: var(--rv-fg-3); }
+.rv .muted { color: var(--rv-fg-3); }
+.rv .ink, .rv .strong { color: var(--rv-fg); }
+.rv .strong { font-weight: 500; }
+.rv .mark { background: none; color: inherit; padding: 0; margin: 0; border-radius: 0; }   /* no marker in this language */
+.rv .eyebrow { background: var(--rv-inset); border-color: var(--rv-line); color: var(--rv-fg-2); }
+.rv .eyebrow::before { background: var(--rv-cobalt); }
+.rv .chip { height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--rv-chip-bg); box-shadow: none; color: var(--rv-fg); font: 500 14.5px/1 var(--font); font-stretch: 100%; }
+.rv .chip:hover { background: var(--rv-chip-bg-h); color: var(--rv-fg); border-color: transparent; }
+.rv .chip:is(.is-on, [aria-pressed="true"]) { background: var(--rv-lit-bg); color: var(--rv-lit-fg); box-shadow: none; border-color: transparent; }
+.rv .chip__count { background: var(--rv-inset); color: var(--rv-fg-3); font-weight: 500; }
+.rv .chip:is(.is-on, [aria-pressed="true"]) .chip__count { background: rgba(127, 127, 127, .18); color: inherit; }
+.rv .chip--sm { height: 34px; padding: 0 12px; font-size: 13.5px; }
+.rv .badge { height: 26px; padding: 0 10px; background: var(--rv-chip-bg); color: var(--rv-fg-2); box-shadow: none; font: 500 12.5px/1 var(--font); }
+.rv .badge:is(.badge--ok, .badge--good) { background: var(--rv-ok-bg); color: var(--rv-ok); box-shadow: none; }
+.rv .badge--risk { background: var(--rv-risk-bg); color: var(--rv-risk); box-shadow: none; }
+.rv .badge:is(.badge--info, .badge--accent) { background: var(--rv-info-bg); color: var(--rv-info); box-shadow: none; }
+.rv .badge--sun { background: var(--rv-warn-bg); color: var(--rv-warn); box-shadow: none; }
+.rv .badge--brand { background: transparent; color: var(--rv-fg); box-shadow: inset 0 0 0 1px var(--rv-line-2); }
+.rv .badge--solid { background: var(--rv-fg); color: var(--rv-bg); box-shadow: none; }
+/* logos (direction B): a rounded tile (56 px on the board's rows; 32-56 elsewhere). A real mark (job|icon_logo,
+   VR.iconLogo: a local, re-padded file) sits on a white tile with a soft edge. Without one, the company's monogram -
+   or, for an anonymous client, its field's line glyph (data-f) - on a soft tint of one of six tones (data-tone: the
+   logo_tone filter / VR.logoTone, the same company or field keeps its tone everywhere). Never flat grey letters. */
+.rv .logo {
+  --tone: #2C4FE6;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tone) var(--rv-tint-a), var(--rv-tint-base)), color-mix(in srgb, var(--tone) var(--rv-tint-b), var(--rv-tint-base)));
+  color: color-mix(in srgb, var(--tone) var(--rv-tint-ink-a), var(--rv-tint-ink));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 14%, transparent), inset 0 1px 0 rgba(255, 255, 255, var(--rv-tint-hi));
+  font: 600 14px/1 var(--font); letter-spacing: -0.02em; font-stretch: 100%;
+}
+.rv .logo[data-tone="1"] { --tone: #2C4FE6; }
+.rv .logo[data-tone="2"] { --tone: #6A4BD3; }
+.rv .logo[data-tone="3"] { --tone: #0E8574; }
+.rv .logo[data-tone="4"] { --tone: #C2631A; }
+.rv .logo[data-tone="5"] { --tone: #C23F67; }
+.rv .logo[data-tone="6"] { --tone: #3F5B85; }
+.rv .logo:has(img) { background: #fff; box-shadow: inset 0 0 0 1px rgba(20, 30, 60, .08), 0 1px 2px rgba(20, 30, 60, .06); }
+.rv .logo img[src*="/img/logos/"] { outline-color: rgba(20, 30, 60, .06); }
+.rv .logo:empty::before {
+  width: 50%; height: 50%; background: currentColor;
+  -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat;
+}
+.rv .logo:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.5' r='3.75'/%3E%3Cpath d='M5 20c.8-3.55 3.6-5.75 7-5.75s6.2 2.2 7 5.75'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="video"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.75' y='6.25' width='12.5' height='11.5' rx='2.25'/%3E%3Cpath d='m16.25 10.5 4-2.5v8l-4-2.5'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="marketing"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 16.5 5.25-5.25 3.5 3.5L20 7.5M14.75 7.5H20v5.25'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="thiet-ke"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 19l1.4-4.6 9.7-9.7a2 2 0 0 1 2.8 2.8l-9.7 9.7L5 19ZM14.6 6.2l2.8 2.8'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="lap-trinh"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.4 5.5l-2.8 13'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="ai-automation"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4.5c.55 3.6 2.2 5.25 5.75 5.75-3.55.5-5.2 2.15-5.75 5.75-.55-3.6-2.2-5.25-5.75-5.75 3.55-.5 5.2-2.15 5.75-5.75ZM17.75 14.75c.25 1.5.95 2.2 2.5 2.5-1.55.3-2.25 1-2.5 2.5-.25-1.5-.95-2.2-2.5-2.5 1.55-.3 2.25-1 2.5-2.5Z'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="ban-hang"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.75' y='7.25' width='16.5' height='12' rx='2.25'/%3E%3Cpath d='M9 7.25v-1.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v1.5M3.75 12.25c2.6 1.25 5.35 1.9 8.25 1.9s5.65-.65 8.25-1.9'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="tro-ly-ao"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='5.25' width='16' height='15' rx='2.25'/%3E%3Cpath d='M4 9.75h16M8.5 3.5v3.25M15.5 3.5v3.25'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="noi-dung"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.75 3.75H7.5c-.97 0-1.75.78-1.75 1.75v13c0 .97.78 1.75 1.75 1.75h9c.97 0 1.75-.78 1.75-1.75V8.25l-4.5-4.5Z'/%3E%3Cpath d='M13.75 3.75v4.5h4.5M9 12.75h6M9 16h4'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="ky-thuat"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7.5h8.5M17.5 7.5H20M4 16.5h2.5M11.5 16.5H20'/%3E%3Ccircle cx='15' cy='7.5' r='2.25'/%3E%3Ccircle cx='9' cy='16.5' r='2.25'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="du-lieu"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.75 19.25h14.5M7.75 16v-4.25M12 16V7.75M16.25 16v-6.5'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="tai-chinh"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.25' y='6.5' width='17.5' height='11' rx='2'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="cham-soc-khach-hang"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.75 4.75h10.5a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2H11.5l-4.25 3.5v-3.5h-.5a2 2 0 0 1-2-2v-7.5a2 2 0 0 1 2-2Z'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="giao-duc"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.75 5.5c2.6-.9 5-.6 7.25 1v13c-2.25-1.6-4.65-1.9-7.25-1V5.5ZM19.25 5.5c-2.6-.9-5-.6-7.25 1v13c2.25-1.6 4.65-1.9 7.25-1V5.5Z'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="nhan-su"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9.5' cy='8.75' r='3.25'/%3E%3Cpath d='M3.75 19.25c.6-3.05 2.9-5 5.75-5s5.15 1.95 5.75 5M15.75 5.8a3.25 3.25 0 0 1 0 5.9M17.5 14.6c1.55.65 2.55 2.2 2.85 4.65'/%3E%3C/svg%3E"); }
+.rv .logo[data-f="ngon-ngu"]:empty { --glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.25'/%3E%3Cpath d='M3.75 12h16.5M12 3.75c2.2 2.25 3.3 5 3.3 8.25s-1.1 6-3.3 8.25C9.8 18 8.7 15.25 8.7 12S9.8 6 12 3.75Z'/%3E%3C/svg%3E"); }
+.rv .logo.logo--fallback { background: var(--rv-ico-bg); color: var(--rv-fg); }
+/* the save toggle (common.js [data-save]): an outlined bookmark, no ring; on = a filled cobalt bookmark */
+.rv .save-btn { background: transparent; border: 0; box-shadow: none; color: var(--rv-fg-2); transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+.rv .save-btn .icon { width: 21px; height: 21px; stroke-width: 1.7; }
+.rv .save-btn:hover { color: var(--rv-fg); background: var(--rv-chip-bg); }
+.rv .save-btn.is-on { background: var(--rv-info-bg); color: var(--rv-accent); box-shadow: none; }
+.rv .save-btn--text { height: 40px; font: 500 14.5px/1 var(--font); background: var(--rv-chip-bg); }
+.rv .save-btn--text .icon { width: 18px; height: 18px; }
+.rv .card { background: var(--rv-card-bg); border: 0; border-radius: var(--rv-r); box-shadow: var(--rv-card-sh); color: var(--rv-fg-2); }
+.rv :is(a.card, .card--hover):hover { transform: translateY(-3px); box-shadow: var(--rv-card-sh-h); }
+.rv .card__title { font: 600 19px/1.3 var(--font); color: var(--rv-fg); }
+.rv .card__text { color: var(--rv-fg-3); }
+.rv .card--inset { background: var(--rv-inset); box-shadow: none; }
+.rv .notice { border-radius: var(--rv-r-md); background: var(--rv-inset); box-shadow: none; color: var(--rv-fg-2); }
+.rv .notice > .icon { color: var(--rv-accent); }
+.rv .notice strong { color: var(--rv-fg); font-weight: 500; }
+.rv .notice--ok > .icon { color: var(--rv-ok); }
+.rv .notice--risk { background: var(--rv-risk-bg); box-shadow: none; }
+.rv .notice--risk > .icon { color: var(--rv-risk); }
+.rv .notice--sun { background: var(--rv-warn-bg); box-shadow: none; }
+.rv .notice--sun > .icon { color: var(--rv-warn); }
+.rv .empty { border: 0; border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); }
+.rv .empty__icon { background: var(--rv-ico-bg); color: var(--rv-fg); box-shadow: var(--rv-ico-sh); }
+.rv .empty__title { font: 600 21px/1.3 var(--font); color: var(--rv-fg); }
+.rv .empty__text { color: var(--rv-fg-3); }
+.rv .stat__num { font-weight: 500; font-stretch: 100%; color: var(--rv-fg); font-variant-numeric: tabular-nums; }
+.rv .stat__label { color: var(--rv-fg-3); }
+.rv .field__label { font: 600 16px/1.3 var(--font); letter-spacing: -0.008em; color: var(--rv-fg); }
+.rv .field__hint { color: var(--rv-fg-3); }
+.rv .field__error { color: var(--rv-risk); }
+.rv :is(.input, .select, .textarea),
+.rv .field :is(input:where(:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])), select, textarea) {
+  min-height: 52px; padding: 13px 18px; border-radius: 12px; border: 1.5px solid var(--rv-field-line);
+  background-color: var(--rv-field-bg); color: var(--rv-fg); font: 400 17px/1.4 var(--font); font-variant-numeric: tabular-nums;
+}
+.rv :is(.textarea, .field textarea) { font-size: 16px; line-height: 1.55; }
+.rv :is(.select, .field select) { background-image: var(--rv-chev); padding-right: 44px; }
+.rv :is(.input, .textarea, .field input, .field textarea)::placeholder { color: var(--rv-ph); }
+.rv :is(.input, .select, .textarea, .field input, .field select, .field textarea):hover { background-color: var(--rv-field-bg-h); }
+.rv :is(.input, .select, .textarea, .field input, .field select, .field textarea):focus { outline: none; border-color: var(--rv-cobalt); background-color: var(--rv-field-focus); box-shadow: 0 0 0 4px rgba(44, 79, 230, .14); }
+.rv .field.field--error :is(input, select, textarea) { border-color: var(--rv-red); }
+.rv .check { color: var(--rv-fg-2); }
+.rv :is(.check, .option) input { accent-color: var(--rv-cobalt); }
+.rv .option { border: 0; box-shadow: none; background: var(--rv-chip-bg); border-radius: 12px; color: var(--rv-fg-2); }
+.rv .option:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--rv-cobalt); background: var(--rv-info-bg); }
+.rv .search { height: 60px; border: 0; background: var(--rv-field-bg); box-shadow: none; }
+.rv .search:focus-within { background: var(--rv-field-focus); box-shadow: inset 0 0 0 1.5px var(--rv-cobalt), 0 0 0 4px rgba(44, 79, 230, .14); }
+.rv .search > .icon { color: var(--rv-fg-3); }
+.rv .search input { color: var(--rv-fg); }
+.rv .search input::placeholder { color: var(--rv-ph); }
+.rv .tabs { border: 0; border-radius: 14px; background: var(--rv-seg-bg); box-shadow: none; }
+.rv .tab { border-radius: 10px; font: 500 15px/1 var(--font); font-stretch: 100%; color: var(--rv-fg-2); }
+.rv .tab:not([aria-selected="true"], [aria-checked="true"], [aria-pressed="true"]):hover { color: var(--rv-fg); }
+.rv .tab:is([aria-selected="true"], [aria-checked="true"], [aria-pressed="true"]) { background: var(--rv-lit-bg); color: var(--rv-lit-fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 4px 10px -4px rgba(0, 0, 0, .25); }
+.rv .tab__count { color: inherit; opacity: .7; }
+.rv .range::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--rv-cobalt) var(--p), var(--rv-line-2) var(--p)); }
+.rv .range::-moz-range-track { background: var(--rv-line-2); }
+.rv .range::-moz-range-progress { background: var(--rv-cobalt); }
+.rv .range::-webkit-slider-thumb { border: 0; box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 3px 8px rgba(0, 0, 0, .35); }
+.rv .range::-moz-range-thumb { border: 0; box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 3px 8px rgba(0, 0, 0, .35); }
+/* job cards and rows (base.css §10; common.js VR.jobCard / VR.jobRow): graphite on dark, white on light */
+.rv :is(.job-card, .job-row) { border: 0; border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); color: var(--rv-fg-2); transition: box-shadow var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-3) var(--rv-ease); }
+.rv :is(.job-card, .job-row):hover { transform: translateY(-3px); box-shadow: var(--rv-card-sh-h); border-color: transparent; }
+.rv .job-row { border-radius: var(--rv-r-row); box-shadow: var(--rv-row-sh); }
+.rv .job-row:hover { transform: none; }
+.rv .job-card:has(.job-card__title a:focus-visible), .rv .job-row:has(.job-row__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.rv .job-row__title a:focus-visible { outline: none; }
+.rv :is(.job-card__company, .job-row__meta span:first-child) { font-weight: 500; color: var(--rv-fg); }
+.rv :is(.job-card__meta, .job-card__info, .job-card__source, .job-row__meta, .job-row__age, .job-row__note, .job-row__pay small) { color: var(--rv-fg-3); }
+.rv :is(.job-card__info > * + *, .job-row__age > * + *)::before, .rv .job-row__meta span::before { color: var(--rv-fg-3); opacity: .6; }
+.rv :is(.job-card__title, .job-row__title) { font: 600 18px/1.32 var(--font); font-stretch: 100%; letter-spacing: -0.014em; color: var(--rv-fg); }
+.rv .job-row__title { font-size: 17px; }
+.rv .job-card__foot { border-top-color: var(--rv-line); }
+.rv :is(.job-card__pay, .job-row__pay) { font: 600 16.5px/1.25 var(--font); color: var(--rv-fg); font-variant-numeric: tabular-nums; }
+.rv :is(.job-card__pay, .job-row__pay) .muted { font-weight: 400; color: var(--rv-fg-3); }
+.rv .job-age.is-new { color: var(--rv-accent); }
+/* the home's "Việc remote mới" card (includes/njc.html) */
+.rv .njc { position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 16px; align-items: start; padding: 22px 22px 20px; border-radius: var(--rv-r); background: var(--rv-card-bg); box-shadow: var(--rv-card-sh); color: var(--rv-fg-2); transition: box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) { .rv .njc:hover { translate: 0 -3px; box-shadow: var(--rv-card-sh-h); } }
+.rv .njc__logo { width: 52px; height: 52px; border-radius: 14px; font-size: 17px; }
+.rv .njc__body { min-width: 0; }
+.rv .njc__title { font: 600 18.5px/1.25 var(--font); letter-spacing: -0.016em; color: var(--rv-fg); }
+.rv .njc__title a { color: inherit; }
+.rv .njc__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.rv .njc__title a:focus-visible { outline: none; }
+.rv .njc:has(.njc__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.rv .njc__meta { margin-top: 8px; display: flex; align-items: center; gap: 14px; min-width: 0; white-space: nowrap; font-size: 13.5px; line-height: 1.3; color: var(--rv-fg-3); }
+.rv .njc__co, .rv .njc__place { display: inline-flex; align-items: center; gap: 6px; }
+.rv .njc__co { min-width: 0; }
+.rv .njc__co > span { overflow: hidden; text-overflow: ellipsis; }
+.rv .njc__place { flex: none; }
+.rv .njc__meta :is(.glyph, .icon) { width: 16px; height: 16px; flex: none; color: var(--rv-fg-3); }
+.rv .njc__pay { margin-top: 12px; font: 600 19px/1.2 var(--font); letter-spacing: -0.015em; color: var(--rv-fg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rv ul.njc__tags { margin: 14px 48px 0 0; padding: 0; list-style: none; height: 30px; display: flex; flex-wrap: wrap; gap: 8px; overflow: hidden; }
+.rv .njc__tags li { flex: none; height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--rv-chip-bg); font: 500 13px/1 var(--font); color: var(--rv-fg-2); }
+.rv .njc__save { position: absolute; right: 18px; bottom: 18px; }
+@media (max-width: 767px) {
+  .rv .njc { grid-template-columns: 46px minmax(0, 1fr); gap: 14px; padding: 18px 16px 16px; }
+  .rv .njc__logo { width: 46px; height: 46px; border-radius: 13px; }
+  .rv .njc__title { font-size: 17px; }
+  .rv .njc__pay { font-size: 18px; margin-top: 10px; }
+  .rv .njc__save { right: 12px; bottom: 12px; }
+}
+
+/* ---------------------------------------------------------------- 19 phone (removed) */
+/* Inner pages carry no phones (client 19/11: no home spectacle). The phone rules lived here until the B rollout; the
+   home draws its own phone in home.css. */
+
+
+/* ---------------------------------------------------------------- 20 motion */
+/* A subtle rise on entry (common.js: .reveal → .is-in, stagger style="--d:N"); nothing loops, nothing scrubs.
+   Reduced motion: everything in its final state. html.hm-lite (weak phones, slow links): no travel, no grain. */
+.js .rv .reveal {
+  opacity: 0; transform: translateY(8px);
+  transition: opacity var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-3) var(--rv-ease);
+  transition-delay: calc(var(--d, 0) * 40ms);
+}
+.js .rv .reveal.is-in { opacity: 1; transform: none; }
+html.hm-lite .rv .reveal { transform: none; transition: opacity var(--rv-dur-2) linear; }
+html.hm-lite .rv :is(.rv-hero, .rv-cta, .rv-sec--glow, .rv-grain)::after { display: none; }
+html.hm-lite .rv :is(.rv-card--link, .rv-pill, .job-card, .njc, .rv-list--cards > .rv-row):hover { translate: none; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js .rv .reveal { opacity: 1; transform: none; transition: none; }
+  .rv :is(.rv-card--link, .rv-pill, .job-card, .njc, main .btn, .rv-list--cards > .rv-row):hover { translate: none; transform: none; }
+}
+@media print {
+  body.rv { background: #fff; color: #000; }
+  .rv-hero, .rv-cta, .rv-sec { background: #fff !important; color: #000; }
+  .rv-hero::before, .rv-hero::after, .rv-cta::before, .rv-cta::after { display: none; }
+}
+
+/* =====================================================================
+   THE CRAFT LAYER (§21–§25). Every rule here is what a senior team ships by default: designed states for every
+   control, one motion token set, no layout shift, feedback for every action. Page files reuse it; never redraw it.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 21 states */
+/* The state model, the same on every control:
+     hover          a deeper fill or a 1 px lift (pointer devices only where it moves something)
+     :focus-visible the cobalt ring, 2 px, offset 3 (rv.css §0); fields: the cobalt edge + a 4 px soft ring
+     :active        pressed: scale(var(--rv-press)) in --rv-dur-1
+     disabled       45 % and not-allowed (never hidden: say why in a hint)
+     .is-loading / [aria-busy="true"]   a spinner in the label's place; the label keeps the width (no shift)
+   Tap targets: 44 px on touch screens (a ::after extends the smaller ones). */
+.rv :is(.rv-filter, .rv-icon-btn, .save-btn, .rv-seg > button, .rv-seg > a, .rv-seg > label, .rv-sheet__close, .rv-copy) {
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease),
+    box-shadow var(--rv-dur-2) var(--rv-ease), transform var(--rv-dur-1) var(--rv-ease), opacity var(--rv-dur-2) var(--rv-ease);
+}
+.rv-pill, .rv main .btn {
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease), border-color var(--rv-dur-2) var(--rv-ease),
+    box-shadow var(--rv-dur-2) var(--rv-ease), translate var(--rv-dur-2) var(--rv-ease), transform var(--rv-dur-1) var(--rv-ease);
+}
+.rv :is(.rv-pill, main .btn, .rv-filter, .rv-icon-btn, .save-btn, .rv-seg > button, .rv-seg > a, .rv-seg > label, .rv-copy):active:not(:disabled, [aria-disabled="true"], :has(> input:disabled)) { transform: scale(var(--rv-press)); }
+.rv :is(.rv-filter, .rv-icon-btn, .save-btn, .rv-seg > button, .rv-copy):is(:disabled, [aria-disabled="true"]) { opacity: .45; cursor: not-allowed; }
+.rv-pill:is(:disabled, [aria-disabled="true"], .is-disabled) { cursor: not-allowed; }
+@media (pointer: coarse) { .rv :is(.rv-icon-btn, .save-btn, .rv-copy) { position: relative; } .rv :is(.save-btn, .rv-copy)::after { content: ""; position: absolute; inset: -4px; } }
+/* loading: the spinner sits where the label was; the label stays (transparent) so the pill keeps its width */
+.rv :is(.rv-pill, main .btn, .rv-filter):is(.is-loading, [aria-busy="true"]) { color: transparent !important; pointer-events: none; }
+.rv :is(.rv-pill, main .btn, .rv-filter):is(.is-loading, [aria-busy="true"]) :is(.icon, .glyph) { visibility: hidden; }
+.rv :is(.rv-pill, main .btn, .rv-filter):is(.is-loading, [aria-busy="true"])::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  border: 2px solid var(--rv-spin-track, color-mix(in srgb, var(--rv-pill-fg) 28%, transparent)); border-top-color: var(--rv-spin, var(--rv-pill-fg));
+  animation: rv-spin .7s linear infinite;
+}
+.rv :is(.rv-pill--line, .rv-filter, main .btn--ghost):is(.is-loading, [aria-busy="true"])::after { --rv-spin: var(--rv-fg); --rv-spin-track: var(--rv-line-2); }
+@keyframes rv-spin { to { transform: rotate(360deg); } }
+/* the save toggle: a quick pop when it turns on (common.js adds .is-pop for one beat), the header count bumps */
+.rv :is(.save-btn, [data-save]).is-pop .icon { animation: rv-pop var(--rv-dur-3) var(--rv-ease); }
+.rv .save-btn.is-on .icon { fill: currentColor; }
+@keyframes rv-pop { 0% { transform: scale(.7); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.rv .saved-link__count.is-bump { animation: rv-pop var(--rv-dur-3) var(--rv-ease); }
+/* a live count that changes (results, characters left): tabular, it never jumps sideways */
+.rv-count { font-variant-numeric: tabular-nums; transition: opacity var(--rv-dur-1) var(--rv-ease); }
+.rv-count.is-changing { opacity: .55; }
+
+/* ---------------------------------------------------------------- 22 bottom sheet (VR.sheet) */
+/* <button data-sheet-open="loc" aria-controls="loc" aria-expanded="false">Bộ lọc</button>
+   <div class="rv-sheet" id="loc" data-sheet role="dialog" aria-modal="true" aria-labelledby="loc-title" hidden>
+     <div class="rv-sheet__scrim" data-sheet-close></div>
+     <div class="rv-sheet__panel">
+       <div class="rv-sheet__head"><span class="rv-sheet__handle" aria-hidden="true"></span>
+         <h2 class="rv-sheet__title" id="loc-title">Bộ lọc</h2>
+         <button class="rv-sheet__close" type="button" data-sheet-close aria-label="Đóng"><svg class="icon"><use href="#i-x"/></svg></button></div>
+       <div class="rv-sheet__body">…</div>
+       <div class="rv-sheet__foot"><button class="rv-pill rv-pill--line">Xóa lọc</button><button class="rv-pill rv-pill--primary" data-sheet-close>Xem 1.309 việc</button></div>
+     </div>
+   </div>
+   Phones: a bottom sheet (handle, drag down to close, safe-area foot). From 768 px: a centred dialog, 560 px. */
+.rv-sheet { position: fixed; inset: 0; z-index: 90; display: grid; align-items: end; justify-items: stretch; }
+.rv-sheet[hidden] { display: none; }
+.rv-sheet__scrim { position: absolute; inset: 0; background: rgba(8, 10, 22, .5); opacity: 0; transition: opacity var(--rv-dur-3) var(--rv-ease); }
+.rv-sheet__panel {
+  position: relative; display: flex; flex-direction: column; width: 100%; max-height: min(88dvh, 780px);
+  border-radius: var(--rv-r-lg) var(--rv-r-lg) 0 0; background: #fff; color: var(--rv-fg-2); box-shadow: var(--rv-sh-4);
+  transform: translateY(100%); transition: transform var(--rv-dur-3) var(--rv-ease); outline: none;
+}
+.rv-sheet.is-open .rv-sheet__scrim { opacity: 1; }
+.rv-sheet.is-open .rv-sheet__panel { transform: translateY(var(--rv-drag, 0px)); }
+.rv-sheet.is-dragging .rv-sheet__panel { transition: none; }
+.rv-sheet__head { position: relative; display: flex; align-items: center; gap: 12px; padding: 26px 14px 14px 22px; border-bottom: 1px solid var(--rv-line); touch-action: none; }
+.rv-sheet__handle { position: absolute; top: 9px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--rv-line-2); }
+.rv-sheet__title { flex: 1; min-width: 0; font: 600 21px/1.25 var(--font); letter-spacing: -0.02em; color: var(--rv-fg); }
+.rv-sheet__close { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--rv-chip-bg); color: var(--rv-fg); }
+.rv-sheet__close:hover { background: var(--rv-chip-bg-h); }
+.rv-sheet__close .icon { width: 20px; height: 20px; }
+.rv-sheet__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 22px 20px; }
+.rv-sheet__foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--rv-line); }
+.rv-sheet__foot > .rv-pill--primary { flex: 1; min-width: 0; }
+html.rv-lock { overflow: hidden; }
+@media (min-width: 768px) {
+  .rv-sheet { align-items: center; justify-items: center; padding: 32px; }
+  .rv-sheet__panel { width: min(100%, var(--rv-sheet-w, 560px)); max-height: min(84vh, 760px); border-radius: var(--rv-r-lg); transform: translateY(12px) scale(.98); opacity: 0;
+    transition: transform var(--rv-dur-3) var(--rv-ease), opacity var(--rv-dur-3) var(--rv-ease); }
+  .rv-sheet.is-open .rv-sheet__panel { transform: none; opacity: 1; }
+  .rv-sheet__handle { display: none; }
+  .rv-sheet__head { padding: 22px 16px 16px 26px; touch-action: auto; }
+  .rv-sheet__body { padding: 20px 26px 24px; }
+  .rv-sheet__foot { padding: 14px 20px; justify-content: flex-end; }
+  .rv-sheet__foot > .rv-pill--primary { flex: none; }
+}
+
+/* ---------------------------------------------------------------- 23 sticky action bar (VR.actionbar) */
+/* Phones: the primary action stays one thumb away (apply on a job page, a calculator's result). Declarative:
+     <div class="rv-actionbar" data-actionbar data-actionbar-while="#form-id" data-actionbar-hide="#result-id">
+       <div class="rv-actionbar__main"><span class="rv-actionbar__label">Giá tối thiểu</span><b class="rv-actionbar__value">8,1 USD/giờ</b></div>
+       <a class="rv-pill rv-pill--primary rv-pill--sm" href="#result-id">Xem chi tiết</a>
+     </div>
+   shown while the [-while] element is on screen and the [-hide] one is not (never while a field has the keyboard);
+   from 768 px it never shows (--always: every width). The toast rises above it (html.has-actionbar). */
+.rv-actionbar {
+  position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 60;
+  display: none; align-items: center; gap: 12px; min-height: var(--rv-actionbar-h); padding: 8px 8px 8px 20px;
+  border-radius: 20px; background: var(--rv-ink-card); color: #CDD0DA; text-decoration: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 1px 0 rgba(255, 255, 255, .06), var(--rv-sh-4);
+  --rv-pill-bg: #fff; --rv-pill-fg: #000; --rv-pill-bg-h: #E9EBF1; --rv-pill-sh: none; --rv-pill-sh-h: none;
+  --rv-fg: #fff; --rv-fg-3: #9EA3B3; --rv-line-2: rgba(255, 255, 255, .2); --focus: var(--rv-cobalt-l);
+  transform: translateY(calc(100% + 24px)); opacity: 0; visibility: hidden;
+  transition: transform var(--rv-dur-3) var(--rv-ease), opacity var(--rv-dur-3) var(--rv-ease), visibility 0s linear var(--rv-dur-3);
+}
+.rv-actionbar.is-on { transform: none; opacity: 1; visibility: visible; transition-delay: 0s; }
+.rv-actionbar__main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rv-actionbar__label { font: 400 13px/1.2 var(--font); color: #9EA3B3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv-actionbar__value { font: 600 18px/1.2 var(--font); letter-spacing: -0.015em; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rv-actionbar > .rv-pill { flex: none; }
+@media (max-width: 767px) { .rv-actionbar { display: flex; } }
+.rv-actionbar--always { display: flex; }
+@media (min-width: 768px) { .rv-actionbar--always { left: 50%; right: auto; width: min(560px, calc(100% - 48px)); margin-left: max(-280px, calc(-50% + 24px)); } }
+
+/* ---------------------------------------------------------------- 24 kit pieces */
+/* key–value list: labels left (quiet), values right (ink, tabular): a result's breakdown, a job's facts.
+   <dl class="rv-kv"><div><dt>Khách trả</dt><dd>969 USD<small>8,1 USD × 120 giờ</small></dd></div>…
+     <div class="rv-kv__total"><dt>Bạn nhận về</dt><dd>20.000.000 đ</dd></div></dl> */
+.rv-kv { margin: 0; display: grid; }
+.rv-kv > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 16px; padding: 12px 0; border-top: 1px solid var(--rv-line); }
+.rv-kv > div:first-child { border-top: 0; }
+.rv-kv dt { font: 400 15.5px/1.4 var(--font); color: var(--rv-fg-2); }
+.rv-kv dd { margin: 0; text-align: right; font: 500 15.5px/1.4 var(--font); color: var(--rv-fg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rv-kv dd small { display: block; margin-top: 2px; font: 400 13px/1.35 var(--font); color: var(--rv-fg-3); white-space: normal; }
+.rv-kv > .rv-kv__total { margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--rv-line-2); }
+.rv-kv__total :is(dt, dd) { font-size: 17px; font-weight: 600; color: var(--rv-fg); }
+/* a field with its unit inside: <div class="rv-affix"><input class="rv-input" inputmode="numeric" data-format="int"><span class="rv-affix__unit">đ</span></div> */
+.rv-affix { position: relative; display: block; }
+.rv-affix > :is(input, .rv-input) { padding-right: 60px; }
+.rv-affix__unit { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font: 500 16px/1 var(--font); color: var(--rv-fg-3); pointer-events: none; }
+/* logo tiles (the .logo of job rows and cards, rv.css §18): one size scale, the monogram a fixed share of the tile */
+.rv .logo.rv-logo--sm { width: 32px; height: 32px; border-radius: 9px; font-size: 12px; }
+.rv .logo.rv-logo--md { width: 44px; height: 44px; border-radius: 12px; font-size: 15px; }
+.rv .logo.rv-logo--lg { width: 56px; height: 56px; border-radius: 14px; font-size: 19px; }
+.rv .logo.rv-logo--xl { width: 72px; height: 72px; border-radius: 18px; font-size: 24px; }
+/* skeletons: the exact box of what loads (no layout shift), a calm opacity breath (no shimmer sweep) */
+.rv-skel { display: block; border-radius: 8px; background: var(--rv-chip-bg-h); }
+.rv-skel--line { height: 12px; width: var(--w, 100%); border-radius: 6px; }
+.rv-skel--title { height: 18px; width: var(--w, 60%); border-radius: 7px; }
+.rv-skel--tile { width: 56px; height: 56px; border-radius: 14px; }
+.rv-skel--pill { width: var(--w, 96px); height: 40px; border-radius: var(--rv-r-pill); }
+.rv-skel-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 20px; min-height: 82px; padding: 13px 20px; border-radius: var(--rv-r-row); background: #fff; box-shadow: var(--rv-sh-1); }
+.rv-skel-row > div { display: grid; gap: 10px; }
+@media (prefers-reduced-motion: no-preference) { .rv-skel { animation: rv-breath 1.2s ease-in-out infinite alternate; } }
+@keyframes rv-breath { from { opacity: 1; } to { opacity: .5; } }
+/* the copy button: <button class="rv-pill rv-pill--line rv-copy" data-copy-from="#id"><svg class="icon rv-copy__i">…#i-copy…</svg>
+   <svg class="icon rv-copy__ok">…#i-check…</svg><span data-copy-label>Sao chép</span></button>: the tick and "Đã sao chép" for 1.6 s */
+.rv-copy { position: relative; }
+.rv-copy .rv-copy__ok { display: none; }
+.rv-copy.is-copied .rv-copy__ok { display: inline-block; animation: rv-pop var(--rv-dur-3) var(--rv-ease); }
+.rv-copy.is-copied .rv-copy__i { display: none; }
+/* a card's head: title left, one quiet action right */
+.rv-card__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin-bottom: 20px; }
+.rv-card__head > :first-child { min-width: 0; }
+/* a note lifted as a white card on the sheet (a callout) */
+.rv-note--card { background: #fff; box-shadow: var(--rv-sh-1); }
+/* a bare number with its unit kept together: <span class="rv-nb">8,1&nbsp;USD/giờ</span> */
+.rv-nb { white-space: nowrap; }
+
+/* ---------------------------------------------------------------- 25 page polish */
+/* cross-document view transitions (base.css turns them on): on an rv page a short fade, the header steady (it keeps
+   its name "site-header" and is swapped without a fade), a job title's morph in --rv-dur-3; reduced motion: none */
+::view-transition-old(root) { animation: rv-vt-out var(--rv-dur-1) var(--rv-ease) both; }
+::view-transition-new(root) { animation: rv-vt-in var(--rv-dur-3) var(--rv-ease) both; }
+::view-transition-group(site-header) { animation: none; }
+::view-transition-old(site-header) { animation: none; opacity: 0; }
+::view-transition-new(site-header) { animation: none; }
+::view-transition-group(vt-job-title) { animation-duration: var(--rv-dur-3); animation-timing-function: var(--rv-ease); }
+@keyframes rv-vt-out { to { opacity: 0; } }
+@keyframes rv-vt-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+/* the skip link: the first Tab on every page, a white pill with the cobalt ring over the band */
+.rv .skip-link { top: -64px; left: 16px; padding: 13px 20px; border-radius: var(--rv-r-pill); background: #fff; color: #000; font: 600 15px/1 var(--font);
+  box-shadow: 0 0 0 2px var(--rv-cobalt), var(--rv-sh-4); transition: top var(--rv-dur-2) var(--rv-ease); }
+.rv .skip-link:focus { top: 12px; outline: none; }
+/* print: the content in black on white, no chrome (an invoice prints as the document only: .rv-print-only shows,
+   .rv-no-print hides) */
+.rv-print-only { display: none; }
+@media print {
+  .rv :is(.site-header, .site-menu, .site-footer, .rv-cta, .toast, .rv-actionbar, .rv-sheet, .skip-link, .rv-no-print) { display: none !important; }
+  .rv-print-only { display: block !important; }
+  .rv :is(.rv-card, .rv-panel, .rv-list--cards > .rv-row) { box-shadow: none !important; border: 1px solid #ddd; break-inside: avoid; }
+  .rv :is(.rv-sec--mist, .rv-sec--paper) { border-radius: 0 !important; margin: 0 !important; padding-block: 16px !important; }
+  .rv .rv-hero { margin-top: 0; padding: 0 0 12px; }
+  .rv .rv-hero .breadcrumb { display: none; }
+  .rv .rv-hero__title { color: #000; font-size: 28px; }
+  .rv .rv-hero :is(.rv-hero__lead, .rv-hero__note, p, li, dd, dt, span) { color: #333 !important; }
+  .rv .rv-hero__copy > .rv-chip--eyebrow { background: none; padding: 0; height: auto; line-height: 1.4; }
+}
+
+/* =====================================================================
+   THE LIVELY LAYER "Sống động" (§26). The client on the flat B build (19/11): "thiếu sự sinh động, bị flat",
+   "toàn chữ là chữ, thiếu phân cấp, nên người dùng không biết nên nhìn vào đâu". The B base stays (band, sheet,
+   white cards, the home's header); every block now carries ONE visual anchor (a real mini-UI of the product, a big
+   number with a small graphic, a saturated matte app icon, a photo, real logos), colour lives in icons, preview
+   stages and key numbers (the backgrounds stay calm), and each page has one centre of gravity. Matte, never glossy;
+   no 3D, no glass, no rainbow, no blobs. DESIGN_SYSTEM_REVOLUT.md §26 has the rules and the per-page checklist.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 26.1 the hue map */
+/* ONE hue map for the whole site. Each hue: the strong value, a lighter top (app-icon gradients), a deep INK for text
+   on white / tints / the sheet (AA: 4.7-7.8:1), a LIGHT value for text on dark (7.7-12.4:1 on the ink card), a soft
+   TINT for preview stages, the RGB triplet for coloured shadows. Aligned with the logo tones (§18: 1 cobalt, 2 violet,
+   3 green, 4 amber, 5 rose/coral, 6 slate-sky). The map (DESIGN_SYSTEM_REVOLUT.md §26.2; portal_tags `hue`):
+     cobalt  brand · rate calculator · jobs · Upwork          coral   scam / risk / danger
+     mint    CV score · success · salary figures              amber   readiness quiz · beginners · events
+     violet  templates / e-mail · community · English         sky     invoice · money · getting paid
+   Set it with data-hue="<name>" on any element; children read --hue --hue-top --hue-ink --hue-l --hue-tint --hue-rgb. */
+:root {
+  --hue-cobalt: #2C4FE6; --hue-cobalt-top: #5E7EFB; --hue-cobalt-ink: #2342C9; --hue-cobalt-l: #8EA2FF; --hue-cobalt-tint: #E8EBF5; --hue-cobalt-rgb: 44, 79, 230;
+  --hue-coral: #EE5A44;  --hue-coral-top: #FF8C70;  --hue-coral-ink: #B5321F;  --hue-coral-l: #FF9C8A;  --hue-coral-tint: #F2EBED;  --hue-coral-rgb: 238, 90, 68;
+  --hue-mint: #17A56B;   --hue-mint-top: #46D395;   --hue-mint-ink: #0B7A4C;   --hue-mint-l: #6EDCA6;   --hue-mint-tint: #E7EFEF;   --hue-mint-rgb: 23, 165, 107;
+  --hue-amber: #F2A116;  --hue-amber-top: #FFCA52;  --hue-amber-ink: #8A5A00;  --hue-amber-l: #FFCB6B;  --hue-amber-tint: #F2EFEB;  --hue-amber-rgb: 242, 161, 22;
+  --hue-violet: #7253DE; --hue-violet-top: #9C85F6; --hue-violet-ink: #5A3DC8; --hue-violet-l: #C6A2FF; --hue-violet-tint: #ECEBF5; --hue-violet-rgb: 114, 83, 222;
+  --hue-sky: #1798C8;    --hue-sky-top: #4FC7EC;    --hue-sky-ink: #0A6A8C;    --hue-sky-l: #7FD3F2;    --hue-sky-tint: #E7EEF4;    --hue-sky-rgb: 23, 152, 200;
+}
+.rv, [data-hue] { --hue: var(--hue-cobalt); --hue-top: var(--hue-cobalt-top); --hue-ink: var(--hue-cobalt-ink); --hue-l: var(--hue-cobalt-l); --hue-tint: var(--hue-cobalt-tint); --hue-rgb: var(--hue-cobalt-rgb); }
+[data-hue="coral"]  { --hue: var(--hue-coral);  --hue-top: var(--hue-coral-top);  --hue-ink: var(--hue-coral-ink);  --hue-l: var(--hue-coral-l);  --hue-tint: var(--hue-coral-tint);  --hue-rgb: var(--hue-coral-rgb); }
+[data-hue="mint"]   { --hue: var(--hue-mint);   --hue-top: var(--hue-mint-top);   --hue-ink: var(--hue-mint-ink);   --hue-l: var(--hue-mint-l);   --hue-tint: var(--hue-mint-tint);   --hue-rgb: var(--hue-mint-rgb); }
+[data-hue="amber"]  { --hue: var(--hue-amber);  --hue-top: var(--hue-amber-top);  --hue-ink: var(--hue-amber-ink);  --hue-l: var(--hue-amber-l);  --hue-tint: var(--hue-amber-tint);  --hue-rgb: var(--hue-amber-rgb); }
+[data-hue="violet"] { --hue: var(--hue-violet); --hue-top: var(--hue-violet-top); --hue-ink: var(--hue-violet-ink); --hue-l: var(--hue-violet-l); --hue-tint: var(--hue-violet-tint); --hue-rgb: var(--hue-violet-rgb); }
+[data-hue="sky"]    { --hue: var(--hue-sky);    --hue-top: var(--hue-sky-top);    --hue-ink: var(--hue-sky-ink);    --hue-l: var(--hue-sky-l);    --hue-tint: var(--hue-sky-tint);    --hue-rgb: var(--hue-sky-rgb); }
+/* a neutral "hue" for a state that means nothing good or bad (a job marked "Không phù hợp", a step not reached) */
+[data-hue="muted"]  { --hue: #8D93A1; --hue-top: #B3B8C3; --hue-ink: #555B67; --hue-l: #C9CDD6; --hue-tint: #F1F2F5; --hue-rgb: 110, 116, 130; }
+/* text in the hue: ink on light surfaces, the light value on dark ones (a salary in mint, a risk in coral) */
+.rv-hue { color: var(--hue-ink); }
+:is(.rv-card--ink, .rv-sec--product, .rv-hero, .rv-dark) .rv-hue, .rv-card--ink.rv-hue { color: var(--hue-l); }
+.rv-mini .rv-hue, .rv-paper .rv-hue, .rv-bubble .rv-hue { color: var(--hue-ink); }
+
+/* ---------------------------------------------------------------- 26.2 the app icon */
+/* A saturated MATTE tile: a rounded square (28 % radius), a vertical gradient of the hue (lighter top -> the hue), a
+   faint inner top light, a soft drop shadow in the hue; one white line icon from the shared set at stroke 2.
+   <span class="rv-appicon rv-appicon--56" data-hue="coral" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
+   Sizes 36 · 48 (default) · 56 · 64. Never a small grey square; never glossy streaks, never 3D. */
+.rv .rv-appicon {
+  --s: 48px;
+  position: relative; flex: none; display: grid; place-items: center;
+  width: var(--s); height: var(--s); border-radius: calc(var(--s) * .28);
+  color: #fff;
+  background: linear-gradient(180deg, var(--hue-top) 0%, var(--hue) 82%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(0, 0, 0, .07),
+    0 1px 2px rgba(var(--hue-rgb), .3),
+    0 calc(var(--s) * .2) calc(var(--s) * .42) calc(var(--s) * -.18) rgba(var(--hue-rgb), var(--appicon-glow, .3));
+}
+.rv .rv-appicon .icon { width: calc(var(--s) * .5); height: calc(var(--s) * .5); stroke-width: 2; }
+.rv .rv-appicon .glyph { width: calc(var(--s) * .48); height: calc(var(--s) * .48); }
+.rv .rv-appicon--36 { --s: 36px; }
+.rv .rv-appicon--36 .icon { stroke-width: 2.1; }
+.rv .rv-appicon--48 { --s: 48px; }
+.rv .rv-appicon--56 { --s: 56px; }
+.rv .rv-appicon--64 { --s: 64px; }
+.rv .rv-appicon--64 .icon { stroke-width: 1.9; }
+/* on dark the shadow is a touch quieter, so it reads as depth, not neon */
+:is(.rv-hero, .rv-card--ink, .rv-sec--product, .rv-cta) .rv-appicon { --appicon-glow: .42; }
+/* on a HUE tile (.rv-tile--hue, the tile is the hue itself) the icon inverts: a white tile, the glyph in the hue, a
+   neutral shadow. {% include "portal/tools/_app.html" with slug=… cls="rv-appicon--inverse" %} */
+.rv .rv-appicon--inverse {
+  color: var(--hue);
+  background: linear-gradient(180deg, #FFFFFF 0%, #EEF3F7 100%);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06), 0 1px 2px rgba(0, 20, 40, .16),
+    0 calc(var(--s) * .2) calc(var(--s) * .42) calc(var(--s) * -.18) rgba(0, 24, 48, .38);
+}
+/* a big figure in place of a glyph (a step number, a count): <span class="rv-appicon …"><b>01</b></span> */
+.rv .rv-appicon > b { font: 600 calc(var(--s) * .36)/1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- 26.3 the preview stage and the mini-UI */
+/* .rv-stage: a hue-tinted area (a soft light from the top-left, an optional faint dot grid) that HOLDS a floating
+   mini-UI of the product with its own shadow. Inset (rounded) by default; .rv-tile__stage runs to the tile's sides
+   and bottom so the preview bleeds off the card's edge (the card clips it) like a screenshot peeking out. On a dark
+   surface (the ink card, the product band) the stage is a glow of the hue instead of a tint. */
+.rv-stage {
+  position: relative; isolation: isolate; overflow: hidden; min-width: 0;
+  padding: var(--stage-pad, 20px); border-radius: 16px;
+  background: radial-gradient(90% 85% at 18% 0%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 62%), var(--stage-base, var(--rv-stage-neutral, #F1F2F5));
+}
+/* a window that runs on past the stage's bottom edge FADES into the stage over its last 28 px (--fade), so a text line
+   is never cut through its glyphs (a cut must fall on a whole block: an option box, a paper's edge) */
+.rv-stage--fade::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; height: var(--fade, 28px); pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), var(--stage-base, var(--rv-stage-neutral, #F1F2F5)) 92%);
+}
+.rv-stage--dots::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(rgba(20, 30, 60, .07) 1px, transparent 1.5px) 0 0 / 16px 16px;
+  -webkit-mask-image: radial-gradient(110% 90% at 85% 100%, #000 0%, transparent 72%); mask-image: radial-gradient(110% 90% at 85% 100%, #000 0%, transparent 72%);
+}
+:is(.rv-card--ink, .rv-sec--product) .rv-stage, .rv-stage--dark {
+  background: radial-gradient(75% 90% at 72% 100%, rgba(var(--hue-rgb), .34), rgba(var(--hue-rgb), 0) 72%), rgba(255, 255, 255, .025);
+}
+:is(.rv-card--ink, .rv-sec--product) .rv-stage--dots::before, .rv-stage--dark.rv-stage--dots::before { background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1.5px); }
+
+/* the mini window: a white floating card (light tokens wherever it sits), soft layered shadow tinted by the hue */
+.rv-mini {
+  position: relative; min-width: 0; padding: 14px 16px; border-radius: 14px;
+  background: #fff; color: var(--rv-text); font: 400 14px/1.45 var(--font); text-align: left;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 2px 4px rgba(20, 30, 60, .06),
+    0 18px 34px -16px rgba(var(--hue-rgb), .42), 0 34px 64px -34px rgba(20, 30, 60, .34);
+}
+.rv-mini--flat { box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 1px 2px rgba(20, 30, 60, .06); }
+.rv-mini__head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font: 500 12.5px/1.3 var(--font); color: var(--rv-grey-l); }
+.rv-mini__head > :last-child:not(:first-child) { margin-left: auto; }
+.rv-mini__dots { display: inline-flex; gap: 5px; }
+.rv-mini__dots i { width: 8px; height: 8px; border-radius: 50%; background: #E3E6EC; }
+.rv-mini__label { font: 500 12.5px/1.3 var(--font); color: var(--rv-grey-l); }
+.rv-mini__field {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; margin-top: 6px; padding: 0 14px;
+  border-radius: 10px; background: rgba(28, 48, 92, .07); font: 500 16px/1 var(--font); color: var(--rv-text); font-variant-numeric: tabular-nums;
+}
+.rv-mini__field > :last-child { color: var(--rv-grey-l); font-weight: 400; }
+.rv-mini__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.rv-mini__chips > * { display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border-radius: 999px; background: rgba(28, 48, 92, .065); font: 500 12.5px/1 var(--font); color: var(--rv-text); white-space: nowrap; }
+.rv-mini__chips > .is-on { background: var(--rv-text); color: #fff; }
+.rv-mini__chips--hue > .is-on { background: var(--hue); }
+.rv-mini__big { display: flex; align-items: baseline; gap: .18em; margin-top: 4px; font: 600 var(--big, 48px)/1 var(--font); letter-spacing: -0.045em; color: var(--hue-ink); font-variant-numeric: tabular-nums; white-space: nowrap; padding-block: .04em; }
+.rv-mini__big small { font-size: .4em; font-weight: 500; letter-spacing: -0.015em; }
+.rv-mini__sep { height: 1px; margin: 12px 0; background: #ECEEF2; border: 0; }
+.rv-mini__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 10px; padding: 5px 0; font-size: 13px; color: #3A3E46; font-variant-numeric: tabular-nums; }
+.rv-mini__row > :last-child { font-weight: 500; color: var(--rv-text); white-space: nowrap; }
+.rv-mini__row--total { margin-top: 4px; padding-top: 9px; border-top: 1px solid #ECEEF2; font-size: 14px; }
+.rv-mini__row--total > * { font-weight: 600 !important; color: var(--rv-text); }
+.rv-dot { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--hue); vertical-align: .05em; }
+
+/* bars: a progress bar, a stacked bar (+ legend), a range with a marker. Values are real; widths are inline vars.
+   <span class="rv-bar" style="--v:.1"><i></i></span>
+   <span class="rv-stackbar"><i data-hue="mint" style="--w:79.4"></i><i data-hue="amber" style="--w:8.8"></i>…</span>
+   <span class="rv-range" style="--a:43.75%;--b:75%;--m:26.25%"><i class="rv-range__band"></i><i class="rv-range__dot"></i></span> */
+.rv-bar { position: relative; display: block; height: 6px; border-radius: 99px; background: rgba(28, 48, 92, .09); overflow: hidden; }
+.rv-bar > i { display: block; width: calc(var(--v, 0) * 100%); height: 100%; border-radius: inherit; background: var(--hue); transform-origin: left center; }
+.rv-stackbar { display: flex; gap: 3px; height: var(--stack-h, 10px); }
+.rv-stackbar > i { flex: var(--w, 1) 1 0; min-width: 4px; height: 100%; border-radius: 3px; background: linear-gradient(180deg, var(--hue-top), var(--hue)); transform-origin: left center; }
+.rv-stackbar > i:first-child { border-radius: 99px 3px 3px 99px; }
+.rv-stackbar > i:last-child { border-radius: 3px 99px 99px 3px; }
+.rv-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font: 400 12.5px/1.3 var(--font); color: #3A3E46; font-variant-numeric: tabular-nums; }
+.rv-legend > span { display: inline-flex; align-items: center; white-space: nowrap; }
+.rv-legend > span::before { content: ""; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--hue); }
+.rv-legend b { margin-left: 4px; font-weight: 600; color: var(--rv-text); }
+.rv-range { position: relative; display: block; height: 8px; border-radius: 99px; background: rgba(28, 48, 92, .09); }
+.rv-range__band { position: absolute; top: 0; bottom: 0; left: var(--a); width: calc(var(--b) - var(--a)); border-radius: 99px; background: var(--hue); transform-origin: left center; }
+.rv-range__dot { position: absolute; top: 50%; left: var(--m); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px var(--hue-ink), 0 2px 6px rgba(20, 30, 60, .3); }
+:is(.rv-card--ink, .rv-sec--product, .rv-dark) :is(.rv-bar, .rv-range) { background: rgba(255, 255, 255, .12); }
+:is(.rv-card--ink, .rv-sec--product, .rv-dark) .rv-range__dot { background: var(--rv-ink-card); box-shadow: 0 0 0 3px var(--hue-l); }
+:is(.rv-card--ink, .rv-sec--product, .rv-dark) .rv-legend { color: #CDD0DA; }
+:is(.rv-card--ink, .rv-sec--product, .rv-dark) .rv-legend b { color: #fff; }
+.rv-mini :is(.rv-bar, .rv-range) { background: rgba(28, 48, 92, .09); }
+.rv-mini .rv-legend { color: #3A3E46; }
+.rv-mini .rv-legend b { color: var(--rv-text); }
+
+/* a score ring (the CV's score, a checklist's progress): an SVG ring, the value in the middle.
+   <span class="rv-ring" style="--v:55"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="rv-ring__track" cx="24" cy="24" r="20"/>
+   <circle class="rv-ring__val" cx="24" cy="24" r="20" pathLength="100"/></svg><b class="rv-ring__num">5,5<small>/10</small></b></span> */
+.rv-ring { position: relative; display: inline-grid; place-items: center; width: var(--ring, 88px); height: var(--ring, 88px); flex: none; }
+.rv-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.rv-ring__track { fill: none; stroke: rgba(28, 48, 92, .1); stroke-width: 5; }
+.rv-ring__val { fill: none; stroke: var(--hue); stroke-width: 5; stroke-linecap: round; stroke-dasharray: var(--v, 0) 100; transform-box: fill-box; transform-origin: center; }
+.rv-ring__num { position: relative; font: 600 calc(var(--ring, 88px) * .3)/1 var(--font); letter-spacing: -0.04em; color: var(--rv-text); font-variant-numeric: tabular-nums; }
+.rv-ring__num small { font-size: .45em; font-weight: 500; color: var(--rv-grey-l); letter-spacing: 0; }
+/* a segmented meter (risk, level): lit segments in the hue. <span class="rv-meter"><i class="is-on"></i><i class="is-on"></i><i class="is-on"></i></span> */
+.rv-meter { display: flex; gap: 4px; width: var(--meter-w, 100%); }
+.rv-meter > i { flex: 1 1 0; height: 6px; border-radius: 99px; background: rgba(28, 48, 92, .1); }
+.rv-meter > i.is-on { background: var(--hue); transform-origin: left center; }
+/* paper (a CV, an invoice): a sheet with a hairline edge and a real shadow, may tilt -2°…2° (--tilt) */
+.rv-paper {
+  position: relative; min-width: 0; padding: 16px 18px 18px; border-radius: 6px; rotate: var(--tilt, 0deg);
+  background: #fff; color: var(--rv-text); font: 400 11.5px/1.45 var(--font); text-align: left;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 2px 3px rgba(20, 30, 60, .06), 0 18px 36px -14px rgba(20, 30, 60, .3);
+}
+.rv-paper__line { display: block; width: var(--w, 100%); height: 5px; margin-top: 7px; border-radius: 3px; background: rgba(28, 48, 92, .1); }
+.rv-paper__h { font: 600 12px/1.3 var(--font); letter-spacing: .02em; color: var(--rv-text); }
+/* a chat bubble with the phrases that matter marked (.rv-flag sweeps in like a highlighter) */
+.rv-bubble {
+  position: relative; isolation: isolate; min-width: 0; max-width: var(--bubble-w, 36ch); padding: 12px 15px 13px; border-radius: 18px 18px 18px 6px;
+  background: #fff; color: #2A2E36; font: 400 14px/1.6 var(--font); text-align: left;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 2px 4px rgba(20, 30, 60, .05), 0 18px 34px -18px rgba(var(--hue-rgb), .45);
+}
+.rv-bubble__who { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 500 12.5px/1.3 var(--font); color: var(--rv-grey-l); }
+.rv-flag { position: relative; z-index: 0; padding: 0 2px; font-weight: 500; color: var(--hue-coral-ink); white-space: nowrap; }
+.rv-flag::before {
+  content: ""; position: absolute; inset: 1px -1px 0; z-index: -1; border-radius: 4px;
+  background: rgba(var(--hue-coral-rgb), .15); box-shadow: inset 0 -2px 0 rgba(var(--hue-coral-rgb), .55); transform-origin: left center;
+}
+/* a typing caret (it blinks a few times when its block comes alive, then rests visible) */
+.rv-caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 2px; vertical-align: -0.18em; border-radius: 1px; background: var(--hue); }
+/* a checklist whose ticks appear in sequence: <ul class="rv-ticks"><li class="is-done">…</li><li>…</li></ul>; inside a
+   link card (no lists there) the items may be spans: <span class="rv-ticks"><span class="is-done">…</span>…</span> */
+.rv-ticks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.35; color: #3A3E46; }
+.rv-ticks > * { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; align-items: center; }
+.rv-ticks > *::before { content: ""; width: 20px; height: 20px; border-radius: 50%; background: rgba(28, 48, 92, .08); }
+.rv-ticks > .is-done::before {
+  background: var(--hue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.5 12.5 3.6 3.6 7.4-7.6'/%3E%3C/svg%3E") center / 13px no-repeat;
+}
+.rv-ticks > .is-done { color: var(--rv-text); }
+
+/* ---------------------------------------------------------------- 26.4 the bento and the title scale */
+/* No uniform grids: ONE feature tile (2×2, the page's centre of gravity), wide tiles (2×1 or 3×1), base tiles. The
+   title scales with the tile: feature 30-34 · wide 24-26 · base 20-22 (body stays 15-16; one short line or none).
+   <ul class="rv-bento" role="list"><li class="rv-card rv-card--link rv-tile rv-tile--feature rv-in" data-hue="cobalt" data-live>
+     <div class="rv-tile__head"><span class="rv-appicon …">…</span><div><h3 class="rv-tile__title"><a class="rv-card__link" href="…">…</a></h3>
+     <p class="rv-tile__text">One line.</p></div></div><div class="rv-tile__stage rv-stage">…the mini-UI…</div></li>…</ul>
+   Phones: one column, the feature first; tiles keep their previews (scaled), never shrink to text. */
+.rv-bento {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(var(--bento-row, 288px), auto);
+  gap: var(--rv-gap); margin: 0; padding: 0; list-style: none;
+}
+.rv-tile { --tile-pad: clamp(22px, 2.1vw, 30px); min-width: 0; padding: var(--tile-pad); overflow: clip; }
+.rv-tile--feature { grid-column: span 2; grid-row: span 2; --tile-pad: clamp(24px, 2.4vw, 34px); }
+.rv-tile--wide { grid-column: span 2; }
+.rv-tile--w3 { grid-column: span 3; }
+.rv-tile--tall { grid-row: span 2; }
+.rv-tile__head { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.rv-tile__head > div { min-width: 0; }
+.rv-tile__title { font: 600 clamp(19px, 1.5vw, 21px)/1.2 var(--font); letter-spacing: -0.02em; color: var(--rv-fg); text-wrap: balance; }
+.rv-tile--wide .rv-tile__title, .rv-tile--w3 .rv-tile__title { font-size: clamp(22px, 1.8vw, 25px); letter-spacing: -0.024em; }
+.rv-tile--feature .rv-tile__title { font-size: clamp(27px, 2.3vw, 33px); letter-spacing: -0.03em; line-height: 1.12; }
+.rv-tile__text { margin-top: 6px; font-size: 15.5px; line-height: 1.45; color: var(--rv-fg-3); text-wrap: pretty; }
+/* the bleeding stage: to the tile's sides and bottom; the mini-UI inside may run past the edge (the tile clips it) */
+.rv-tile__stage { flex: 1 1 auto; margin: 22px calc(-1 * var(--tile-pad)) calc(-1 * var(--tile-pad)); border-radius: 0; }
+/* a HUE tile: the tile IS the hue, matte (the hue deepening toward its ink, a soft light from the top-left, a faint
+   white dot grid toward the bottom right), white type, the app icon inverted, the white preview (a paper, a window)
+   floating on it. The lead of a screen that has no ink card; at most one per screen, never next to the ink card.
+   Text on it is large (the title, >= 22 px: white on the lightest hue, sky, is 3.5:1) plus a white pill; the light
+   sits over the preview's side, never under the title. Cobalt, violet, sky, coral, mint only: white fails on amber. */
+/* TONE A (client 19/11/2026, "Hạ màu"): no full-colour tiles. .rv-tile--hue stays valid markup but renders as an
+   ordinary white tile; its colour lives only in the app icon and the data marks inside the preview. */
+.rv-card.rv-tile--hue { --stage-base: var(--rv-stage-neutral, #F1F2F5); }
+.rv .rv-tile--hue .rv-appicon--inverse { color: #fff; background: linear-gradient(180deg, var(--hue-top) 0%, var(--hue) 82%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 1px 2px rgba(var(--hue-rgb), .3),
+    0 calc(var(--s) * .2) calc(var(--s) * .42) calc(var(--s) * -.18) rgba(var(--hue-rgb), var(--appicon-glow, .3)); }
+.rv .rv-tile--hue .rv-pill--white { background: var(--rv-text, #16181D); color: #fff; border-color: transparent; box-shadow: none; }
+/* a tile split in two: copy left, the stage right running to the tile's top, right and bottom edges */
+.rv-tile--split { display: grid; grid-template-columns: minmax(0, var(--split-a, 5fr)) minmax(0, var(--split-b, 6fr)); gap: 0 var(--tile-pad); }
+.rv-tile--split > .rv-tile__stage { margin: calc(-1 * var(--tile-pad)) calc(-1 * var(--tile-pad)) calc(-1 * var(--tile-pad)) 0; }
+.rv-tile__copy { display: flex; flex-direction: column; min-width: 0; }
+.rv-tile__foot { margin-top: auto; padding-top: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+@media (max-width: 1100px) {
+  .rv-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rv-tile--w3 { grid-column: span 2; }
+  .rv-tile--feature { grid-row: span 1; }
+}
+@media (max-width: 767px) {
+  .rv-bento { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; gap: 14px; }
+  .rv-tile--feature, .rv-tile--wide, .rv-tile--w3 { grid-column: auto; }
+  .rv-tile { --tile-pad: 20px; }
+  .rv-tile--feature { --tile-pad: 22px; }
+  .rv-tile--split { grid-template-columns: minmax(0, 1fr); }
+  .rv-tile--split > .rv-tile__stage { margin: 20px calc(-1 * var(--tile-pad)) calc(-1 * var(--tile-pad)); }
+}
+
+/* ---------------------------------------------------------------- 26.5 section rhythm: tinted band, product band */
+/* Long pages are never one grey sheet of identical cards: sheet (mist) -> white band (paper) -> a tinted band
+   (.rv-sec--tint data-hue="…") -> at most ONE dark product band (.rv-sec--product: a large preview on the ink, the
+   hue's glow behind it). Light sections next to the product band round their corners over it (the sheet motif). */
+.rv-sec--tint { background: linear-gradient(180deg, color-mix(in srgb, var(--hue-tint) 70%, #fff) 0%, var(--hue-tint) 100%); }
+.rv-sec--product { isolation: isolate; overflow: clip; background: var(--rv-ink-card); }
+.rv-sec--product::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(48% 70% at var(--glow-at, 72% 60%), rgba(var(--hue-rgb), .3) 0%, rgba(var(--hue-rgb), .08) 52%, rgba(var(--hue-rgb), 0) 100%);
+}
+:is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint):has(+ .rv-sec--product) { position: relative; z-index: 1; border-bottom-left-radius: var(--rv-sheet); border-bottom-right-radius: var(--rv-sheet); }
+:is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint) + .rv-sec--product { margin-top: calc(-1 * var(--rv-sheet)); padding-top: calc(var(--rv-sec) + var(--rv-sheet)); }
+.rv-sec--product + :is(.rv-sec--mist, .rv-sec--paper, .rv-sec--tint) { position: relative; z-index: 1; margin-top: calc(-1 * var(--rv-sheet)); border-top-left-radius: var(--rv-sheet); border-top-right-radius: var(--rv-sheet); }
+.rv-sec--product + .rv-cta { padding-top: clamp(64px, 6vw, 96px); }
+/* a section head that leads with its visual: H2 40-48 on desktop, one line of sub at most */
+.rv-head--lively { margin-bottom: clamp(28px, 3vw, 44px); }
+.rv-head--lively .rv-sub { margin-top: 10px; }
+
+/* ---------------------------------------------------------------- 26.6 the hero's right-side anchor */
+/* From 1024 px the band may carry ONE small page-relevant anchor on the right (an app-icon cluster, a logo stack, an
+   avatar stack + a real number, a floating mini result card); under 1024 it collapses to a compact row under the copy
+   (--row) or hides. Never a figures card, never decoration. <div class="rv-hero__anchor" aria-hidden="true">…</div> */
+.rv-hero__grid:has(> .rv-hero__anchor) { grid-template-columns: minmax(0, 1fr) auto; }
+.rv-hero__anchor { position: relative; z-index: 1; justify-self: end; align-self: center; min-width: 0; }
+@media (max-width: 1023px) {
+  .rv-hero__grid:has(> .rv-hero__anchor) { grid-template-columns: minmax(0, 1fr); }
+  .rv-hero__anchor { display: none; }
+  .rv-hero__anchor--row { display: block; justify-self: start; margin-top: -8px; }
+}
+/* the app-icon cluster: a calm offset grid of a page's app icons (each may be a link: tabindex="-1", the tiles below
+   are the accessible links) */
+.rv-iconcluster { display: grid; grid-template-columns: repeat(var(--cols, 3), auto); gap: 16px 18px; margin: 0; padding: 0; list-style: none; }
+.rv-iconcluster > :nth-child(3n+2) { translate: 0 -14px; }
+.rv-iconcluster a { display: block; border-radius: 18px; transition: translate var(--rv-dur-3) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) { .rv-iconcluster a:hover { translate: 0 -3px; } }
+@media (max-width: 1023px) {
+  .rv-hero__anchor--row .rv-iconcluster { --cols: 6; gap: 10px; }
+  .rv-hero__anchor--row .rv-iconcluster > :nth-child(3n+2) { translate: none; }
+  .rv-hero__anchor--row .rv-appicon { --s: 40px; }
+}
+/* an avatar stack (real photos from static/portal/img/ph/) beside a real number */
+/* each face an <img> or, where a page must stay free of images, an <i> with an inline background-image */
+.rv-avatars { display: flex; }
+.rv-avatars > :is(img, i) { flex: none; display: block; width: var(--av, 40px); height: var(--av, 40px); border-radius: 50%; object-fit: cover; background: #1C2238 center / cover no-repeat; box-shadow: 0 0 0 2.5px var(--av-ring, var(--rv-band)); }
+.rv-avatars > * + * { margin-left: calc(var(--av, 40px) * -.28); }
+
+/* ---------------------------------------------------------------- 26.7 motion: once, on entry */
+/* html.rv-live is set in base.html's head on rv pages (never with reduced motion, never under html.hm-lite, only with
+   IntersectionObserver); common.js VR.live() adds .is-live to each [data-live] block once it enters. Only transform and
+   opacity move. Blocks waking together are staggered 60 ms apart (--live-i), children 50 ms apart (--i, from
+   [data-stagger]) plus their own --d. Without html.rv-live (no JS, reduced motion, lite, print) every final state shows.
+   What the FIRST screen shows is never hidden: VR.live() marks only the blocks that start off screen .rv-pre, and only
+   those rise in (.rv-in); a first-screen block shows from the first paint and only its bars, rings, meters, flags and
+   numbers come alive. Count up ONE figure per screen (the page's lead): the others are already final.
+     .rv-in              rises 14 px and fades in            .rv-bar > i, .rv-stackbar > i, .rv-range__band, .rv-meter > .is-on   fill
+     .rv-ring__val       sweeps in                           .rv-flag::before                                                   highlights sweep
+     .rv-ticks > .is-done  ticks pop in sequence             .rv-caret   blinks a few times                                     [data-to] counts up (JS)
+   Hover on link cards: lift 2-3 px, deeper shadow, the .rv-lift preview shifts 4 px and scales 1.02. */
+.rv-in, .rv-bar > i, .rv-stackbar > i, .rv-range__band, .rv-meter > .is-on, .rv-ring__val, .rv-flag, .rv-ticks > *, .rv-caret, [data-to] {
+  --rv-in-delay: calc(var(--live-i, 0) * 60ms + var(--i, 0) * 50ms + var(--d, 0ms));
+}
+html.rv-live .rv-in {
+  transition: opacity var(--rv-dur-4) var(--rv-ease) var(--rv-in-delay), transform var(--rv-dur-4) var(--rv-ease) var(--rv-in-delay),
+    translate var(--rv-dur-3) var(--rv-ease), box-shadow var(--rv-dur-3) var(--rv-ease), background-color var(--rv-dur-2) var(--rv-ease);
+}
+html.rv-live :is(.rv-bar > i, .rv-stackbar > i, .rv-range__band, .rv-meter > .is-on) { transition: transform var(--rv-dur-4) var(--rv-ease) calc(var(--rv-in-delay) + 120ms); }
+html.rv-live .rv-ring__val { transition: transform var(--rv-dur-4) var(--rv-ease) calc(var(--rv-in-delay) + 120ms), opacity var(--rv-dur-3) var(--rv-ease) calc(var(--rv-in-delay) + 120ms); }
+html.rv-live .rv-flag::before { transition: transform var(--rv-dur-4) var(--rv-ease) calc(var(--rv-in-delay) + 160ms); }
+html.rv-live .rv-ticks > *::before { transition: transform var(--rv-dur-3) var(--rv-ease) calc(var(--rv-in-delay) + 120ms), opacity var(--rv-dur-3) var(--rv-ease) calc(var(--rv-in-delay) + 120ms); }
+html.rv-live [data-to] { transition: opacity var(--rv-dur-3) var(--rv-ease) var(--rv-in-delay); }
+/* the pre-states (only while a block waits to come alive) */
+html.rv-live :is([data-live].rv-pre:not(.is-live) .rv-in, .rv-in[data-live].rv-pre:not(.is-live)) { opacity: 0; transform: translateY(14px); }
+html.rv-live [data-live]:not(.is-live) :is(.rv-bar > i, .rv-stackbar > i, .rv-range__band, .rv-meter > .is-on) { transform: scaleX(0); }
+html.rv-live [data-live]:not(.is-live) .rv-ring__val { transform: rotate(-120deg); opacity: 0; }
+html.rv-live [data-live]:not(.is-live) .rv-flag::before { transform: scaleX(0); }
+html.rv-live [data-live]:not(.is-live) .rv-ticks > .is-done::before { transform: scale(.4); opacity: 0; }
+html.rv-live [data-live]:not(.is-live) [data-to] { opacity: 0; }
+html.rv-live .is-live .rv-caret { animation: rv-blink 1s steps(1, end) calc(var(--rv-in-delay, 0ms) + 400ms) 4; }
+@keyframes rv-blink { 50% { opacity: 0; } }
+/* hover: the card lifts (rv.css §7), its preview shifts and scales a touch */
+.rv-lift { transition: translate var(--rv-dur-3) var(--rv-ease), scale var(--rv-dur-3) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .rv-card--link:hover .rv-lift { translate: 0 -4px; scale: 1.02; }
+  .rv-card--link:hover .rv-lift--x { translate: -4px -2px; }
+}
+.rv-card--link:focus-within .rv-lift { translate: 0 -4px; }
+@media (prefers-reduced-motion: reduce) {
+  .rv-lift, .rv-iconcluster a { transition: none; }
+  .rv-card--link:is(:hover, :focus-within) .rv-lift { translate: none; scale: none; }
+}
+html.hm-lite .rv-card--link:is(:hover, :focus-within) .rv-lift { translate: none; scale: none; }
+@media print {
+  .rv-stage { background: none !important; }
+  .rv .rv-appicon { box-shadow: none !important; }
+  /* print shows every final state, whatever had come alive on screen */
+  html.rv-live :is(.rv-in, [data-to], .rv-ring__val) { opacity: 1 !important; transform: none !important; transition: none !important; }
+  html.rv-live :is(.rv-bar > i, .rv-stackbar > i, .rv-range__band, .rv-meter > .is-on, .rv-flag::before, .rv-ticks > *::before) { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .rv-stage--fade::after { display: none; }
+}
+
+
+/* ---------------------------------------------------------------- 26.8 shared pieces lifted from the pages
+/* Built by the community group, used by more than one page (community, events, post a job), now the kit's:
+     .rv-faces      the band's right anchor: real member faces + the verified label (a compact row under 1024)
+     .rv-datetile   an event's date as an app-icon square in the hue (month small over the day)
+     .rv-path       a path: numbered app-icon nodes on ONE track; the lead stage lit (neutral panel) with one real object
+   They sit after §26.6 on purpose: .rv-faces overrides .rv-hero__anchor--row on phones. */
+/* the band's right anchor (>= 1024; a compact row under the copy below that): real member faces + the verified label */
+.rv-faces { display: grid; justify-items: end; gap: 14px; margin-right: clamp(0px, 1.6vw, 20px); }
+.rv-faces__avs { --av: 48px; --av-ring: var(--rv-band); }
+.rv-faces__avs > i { box-shadow: 0 0 0 3px var(--av-ring), 0 10px 22px -10px rgba(0, 0, 0, .6); }
+.rv-faces__num { display: grid; justify-items: end; gap: 2px; }
+.rv-faces__num b { font: 600 40px/1 var(--font); letter-spacing: -0.035em; color: #fff; padding-block: .04em; }
+.rv-faces__num span { font: 400 15px/1.35 var(--font); color: #A3A9BD; }
+@media (max-width: 1023px) {
+  .rv-faces { display: flex; align-items: center; justify-items: start; gap: 12px; margin: 4px 0 0; }
+  .rv-faces__avs { --av: 32px; }
+  .rv-faces__avs > i { box-shadow: 0 0 0 2px var(--av-ring); }
+  .rv-faces__num { display: flex; align-items: baseline; gap: 6px; }
+  .rv-faces__num b { font-size: 20px; letter-spacing: -0.02em; }
+}
+
+/* a date tile: the app icon's matte square in the hue, the month small over the day */
+.rv-datetile {
+  --s: 60px; flex: none; display: grid; place-content: center; justify-items: center; gap: 3px;
+  width: var(--s); height: var(--s); border-radius: calc(var(--s) * .28); color: #fff;
+  background: linear-gradient(180deg, var(--hue-top) 0%, var(--hue) 82%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 1px 2px rgba(var(--hue-rgb), .3), 0 12px 24px -12px rgba(var(--hue-rgb), .7);
+}
+.rv-datetile small { font: 600 11.5px/1 var(--font); letter-spacing: .02em; opacity: .92; }
+.rv-datetile b { font: 600 calc(var(--s) * .42)/1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+/* a path: numbered app-icon nodes on ONE track in the section's hue; the lead stage is lit (a tint panel, a bigger
+   node and title) and carries one small real object; the other stages are a title and at most one short chip */
+.rv-path {
+  --gap: 12px; --pad: 22px;
+  position: relative; display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(var(--rest, 2), minmax(0, 1fr));
+  align-items: start; gap: var(--gap); margin: 0; padding: 0; list-style: none;
+}
+.rv-path__stage { position: relative; display: grid; align-content: start; justify-items: start; gap: 14px; min-width: 0; padding: var(--pad); border-radius: 24px; }
+.rv-path__stage.is-lead { background: var(--rv-stage-neutral, #F1F2F5); }
+.rv-path__stage.is-lead .rv-mini { box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 2px 4px rgba(20, 30, 60, .06), 0 22px 40px -18px rgba(var(--hue-rgb), .5), 0 34px 60px -34px rgba(20, 30, 60, .4); }
+.rv-path__stage > * { position: relative; z-index: 2; }
+.rv-path__stage:not(.is-lead) .rv-path__node { margin-top: 4px; }
+/* the track: each stage draws its way out (node -> next stage) and in (its left edge -> its node) */
+.rv-path__stage:not(:last-child)::before, .rv-path__stage:not(:first-child)::after {
+  content: ""; position: absolute; z-index: 1; top: calc(var(--pad) + 26px); height: 4px; border-radius: 99px;
+  background: linear-gradient(90deg, rgba(var(--hue-rgb), .45), var(--hue)); transform-origin: left center;
+}
+.rv-path__stage:not(:last-child)::before { left: calc(var(--pad) + 24px); right: calc(-1 * var(--gap)); }
+.rv-path__stage:not(:first-child)::after { left: 0; width: calc(var(--pad) + 4px); }
+html.rv-live .rv-path:not(.is-live) .rv-path__stage::before, html.rv-live .rv-path:not(.is-live) .rv-path__stage::after { transform: scaleX(0); }
+html.rv-live .rv-path__stage::before, html.rv-live .rv-path__stage::after { transition: transform var(--rv-dur-4) var(--rv-ease) 200ms; }
+.rv-path__title { font: 600 19px/1.2 var(--font); letter-spacing: -0.02em; color: var(--rv-fg); text-wrap: balance; }
+.rv-path__stage.is-lead .rv-path__title { font-size: 23px; }
+.rv-path__chip { display: inline-flex; align-items: flex-start; gap: 8px; font: 400 14.5px/1.4 var(--font); color: var(--rv-fg-3); text-wrap: pretty; }
+.rv-path__chip .icon { flex: none; width: 17px; height: 17px; margin-top: 2px; color: var(--hue-ink); }
+.rv-path__stage .rv-mini { align-self: stretch; justify-self: stretch; }
+@media (max-width: 767px) {
+  /* phones: the same path, standing up: the track runs down the nodes' column */
+  .rv-path { --pad: 18px; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .rv-path__stage { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 16px; row-gap: 10px; }
+  .rv-path__stage > :not(.rv-path__node):not(.rv-path__title) { grid-column: 1 / -1; }
+  .rv-path__stage:not(.is-lead) > :not(.rv-path__node):not(.rv-path__title) { grid-column: 2; }
+  .rv-path__stage:not(.is-lead) .rv-path__node { margin-top: 0; }
+  .rv-path__stage.is-lead .rv-path__title { font-size: 21px; }
+  .rv-path__title { font-size: 18px; }
+  .rv-path__stage:not(:last-child)::before, .rv-path__stage:not(:first-child)::after {
+    width: 4px; height: auto; left: calc(var(--pad) + 22px); right: auto; transform-origin: center top;
+    background: linear-gradient(180deg, rgba(var(--hue-rgb), .45), var(--hue));
+  }
+  .rv-path__stage:not(:last-child)::before { top: calc(var(--pad) + 30px); bottom: -4px; }
+  .rv-path__stage:not(:first-child)::after { top: 0; height: var(--pad); }
+  .rv-path__stage.is-lead:not(:last-child)::before { left: calc(var(--pad) + 26px); }
+  html.rv-live .rv-path:not(.is-live) .rv-path__stage::before, html.rv-live .rv-path:not(.is-live) .rv-path__stage::after { transform: scaleY(0); }
+}
+
+/* ---------------------------------------------------------------- §26b TONE A — colour restraint (client 19/11/2026)
+   The client found the first lively pass "màu mè" and chose A · Hạ màu. Colour is allowed only in: app icons (≤ 64 px),
+   data marks inside previews (risk red, money/score green, the stacked fee bar, flags) and key numbers. Surfaces stay
+   navy / white / neutral grey; the only saturated surface on a page is the one ink card (cobalt glow allowed inside it).
+   On the dark band, app icons are monochrome (white glyph on a quiet tile). */
+:root { --rv-stage-neutral: #F1F2F5; }
+/* the --hue-*-tint tokens (rv.css §26) were lowered to ~5 % hue on grey for tone A, so every tinted chip, nav state
+   or stage across the pages calms down from this one place */
+/* (an icon inside a white window floating on the band, .rv-mini, keeps its hue: it sits on white, not on the navy) */
+.rv .rv-hero .rv-appicon:not(.rv-mini *), .rv .rv-hero .rv-appicon--inverse:not(.rv-mini *) {
+  color: #fff; background: rgba(255, 255, 255, .07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), 0 10px 24px -14px rgba(0, 0, 0, .6);
+}

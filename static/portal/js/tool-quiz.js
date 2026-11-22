@@ -17,11 +17,6 @@
 
   /* tools come from the page (json_script "vr-tools"); fallback keeps the page useful */
   let TOOLS = {};
-  /* each tool's app icon (colour, glyph), the same identity as templates/portal/tools/_app.html */
-  const APP_LOOK = {
-    "kiem-tra-lua-dao": ["red", "g-warn"], "cham-cv": ["blue", "g-tl-cv"], "tinh-gia": ["purple", "g-tl-calc"],
-    "san-sang-remote": ["orange", "g-tl-compass"], "mau-proposal-email": ["green", "g-tl-mail"], "tao-invoice": ["sun", "g-tl-receipt"],
-  };
   let COMMUNITY = "";
 
   const DIMS = [
@@ -103,7 +98,7 @@
       q: "Ai có thể giới thiệu việc hoặc góp ý hồ sơ cho bạn?",
       hint: "Nhiều việc remote tốt nhất được giới thiệu qua người quen trước khi lên bảng tin.",
       options: ["Chưa có ai trong ngành", "Vài người bạn, ít khi nói chuyện nghề", "Có tham gia nhóm, cộng đồng, thỉnh thoảng hỏi đáp", "Có mentor, đồng nghiệp hay giới thiệu việc cho nhau"],
-      gap: { title: "Có người cùng đi", tasks: ["Vào cộng đồng Việt Remote, giới thiệu bản thân và ngách bạn chọn", "Đăng ký nhóm đồng hành 5–8 người cùng ngành"] },
+      gap: { title: "Có người cùng đi", tasks: ["Vào cộng đồng Việt Remote, giới thiệu bản thân và ngách bạn chọn", "Hỏi một câu về ngách của bạn trong nhóm"] },
       polish: { title: "Cho đi trước", tasks: ["Mỗi tuần trả lời 2 câu hỏi của người mới trong cộng đồng", "Hẹn 20 phút trò chuyện với một người đi trước trong ngành"] },
       guide: "", tool: "", community: true,
     },
@@ -251,13 +246,14 @@
   const e = (s) => VR.escape(s);
   const icon = (name, cls) => `<svg class="icon${cls ? " " + cls : ""}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 
-  function linkFor(week) {
+  function linkFor(week, seen) {
     if (week.community) {
       const url = COMMUNITY || "/cong-dong/";
       return `<a class="qz-week__link" href="${e(url)}"${/^https?:/.test(url) ? ' target="_blank" rel="noopener"' : ""}>${icon("users", "icon--sm")}Vào cộng đồng</a>`;
     }
-    if (week.tool && TOOLS[week.tool]) {
-      return `<a class="qz-week__link" href="${e(TOOLS[week.tool].url)}">${icon("arrow", "icon--sm")}Dùng công cụ: ${e(TOOLS[week.tool].title)}</a>`;
+    if (week.tool && TOOLS[week.tool] && !(seen && seen.has(week.tool))) {
+      if (seen) seen.add(week.tool);
+      return `<a class="qz-week__link" href="${e(TOOLS[week.tool].url)}">${icon("layers", "icon--sm")}Dùng công cụ: ${e(TOOLS[week.tool].title)}</a>`;
     }
     if (week.guide && GUIDES[week.guide]) {
       return `<a class="qz-week__link" href="/huong-dan/${e(week.guide)}/">${icon("book", "icon--sm")}Đọc: ${e(GUIDES[week.guide].title)}</a>`;
@@ -291,6 +287,7 @@
       back: root.querySelector("[data-quiz-back]"),
       next: root.querySelector("[data-quiz-next]"),
       live: root.querySelector("[data-quiz-live]"),
+      done: root.querySelector("[data-quiz-done]"),
     };
     let state = load();
     let shared = null;
@@ -308,7 +305,6 @@
       els.form.innerHTML = `<fieldset class="qz-q${dir ? " is-enter" + (dir < 0 ? " is-back" : "") : ""}">
         <legend class="qz-q__legend"><span class="qz-q__dim">${String(i + 1).padStart(2, "0")} · ${e(d.label)}</span>
           <span class="qz-q__title" tabindex="-1" data-qtitle>${e(d.q)}</span></legend>
-        <p class="qz-q__hint">${e(d.hint)}</p>
         <div class="qz-opts">${d.options.map((text, v) => `<label class="qz-opt">
           <input type="radio" name="${name}" value="${v}"${state.answers[i] === v ? " checked" : ""}>
           <span class="qz-opt__key" aria-hidden="true">${v + 1}</span><span class="qz-opt__text">${e(text)}</span>
@@ -321,6 +317,7 @@
         bar.classList.toggle("is-on", k === i);
       });
       els.bar.setAttribute("aria-valuenow", String(answered));
+      if (els.done) VR.liveCount(els.done, answered);
       els.rail.querySelectorAll("[data-goto]").forEach((btn, k) => {
         btn.classList.toggle("is-done", state.answers[k] != null);
         btn.classList.toggle("is-on", k === i);
@@ -396,7 +393,9 @@
         btn.classList.toggle("is-done", state.answers[k] != null);
         btn.disabled = !(state.answers[k] != null || k === state.step || k === firstOpen());
       });
-      els.bar.setAttribute("aria-valuenow", String(state.answers.filter((v) => v != null).length));
+      const answered = state.answers.filter((v) => v != null).length;
+      els.bar.setAttribute("aria-valuenow", String(answered));
+      if (els.done) VR.liveCount(els.done, answered);
     }
     els.next.addEventListener("click", () => { clearTimeout(advanceTimer); next(); });
     els.back.addEventListener("click", () => { clearTimeout(advanceTimer); if (state.step > 0) go(state.step - 1, -1); });
@@ -445,21 +444,24 @@
         const v = answers[i] || 0;
         const p = plan.priorities.indexOf(d.key);
         return `<li class="qz-dim${v === 3 ? " is-strong" : ""}${p > -1 ? " is-priority" : ""}" style="--v:${v / 3}">
+          <span class="qz-dim__n ed-num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
           <span class="qz-dim__label">${e(d.label)}</span>
           <span class="qz-dim__track" aria-hidden="true"><i></i></span>
           <span class="qz-dim__val"><b class="num">${v}</b>/3</span>
-          <span class="qz-dim__status">${p > -1 ? `<span class="badge badge--info">Tuần ${p + 1}</span>` : v === 3 ? `<span class="qz-dim__ok">${icon("check")}${STATUS[v]}</span>` : STATUS[v]}</span>
+          <span class="qz-dim__status">${p > -1 ? `<span class="qz-dim__week">Tuần ${p + 1}</span>` : v === 3 ? `<span class="qz-dim__ok">${icon("check")}${STATUS[v]}</span>` : STATUS[v]}</span>
         </li>`;
       }).join("");
 
       const ranges = ["Ngày 1–7", "Ngày 8–14", "Ngày 15–21", "Ngày 22–30"];
+      const linked = new Set();
+      const now = plan.weeks.findIndex((w, k) => w.tasks.some((t, j) => !ticks[`w${k}t${j}`]));
       const weeks = plan.weeks.map((w, k) => {
         const tasks = w.tasks.map((t, j) => {
           const id = `w${k}t${j}`;
           return `<li><label class="qz-task"><input type="checkbox" data-tick="${id}"${ticks[id] ? " checked" : ""}${isShared ? " disabled" : ""}><span>${e(t)}</span></label></li>`;
         }).join("");
-        return `<li class="qz-week${w.final ? " is-final" : ""}">
-          <p class="qz-week__when"><span class="qz-week__n">Tuần ${k + 1}</span><span class="qz-week__days">${ranges[k]}</span></p>
+        return `<li class="qz-week${w.final ? " is-final" : ""}${k === now ? " is-now" : ""}">
+          <p class="qz-week__when"><span class="qz-week__n ed-num" aria-hidden="true">0${k + 1}</span><span class="qz-week__days">Tuần ${k + 1} · ${ranges[k]}</span></p>
           <div class="qz-week__body">
           <h4 class="qz-week__title">${e(w.title)}</h4>
           <p class="qz-week__why">${w.follow ? `Bước tiếp theo sau tuần ${w.follow}, để lên mức sẵn sàng`
@@ -467,7 +469,7 @@
             : w.final ? `Mục tiêu cho mức ${e(level.name.toLowerCase())}`
             : capped ? "Làm song song trong lúc hoàn thiện nền" : "Nâng cấp khi nền đã vững"}</p>
           <ul class="qz-tasks">${tasks}</ul>
-          ${linkFor(w)}
+          ${linkFor(w, linked)}
           </div>
         </li>`;
       }).join("");
@@ -475,28 +477,27 @@
       const guides = recs.guides.map((slug) => {
         const g = GUIDES[slug];
         return `<li><a class="qz-guide" href="/huong-dan/${e(slug)}/">
-          <span class="qz-guide__img"><img src="${e(photoBase)}guide-${e(slug)}.webp" alt="" width="1200" height="796" loading="lazy"></span>
+          <span class="qz-guide__img"><img src="${e(photoBase)}guide-${e(slug)}-640.webp" alt="" width="640" height="${slug === "bat-dau-lam-remote" ? 800 : 425}" loading="lazy" decoding="async"></span>
           <span class="qz-guide__meta">${e(g.topic)} · ${g.minutes} phút đọc</span>
           <span class="qz-guide__title">${e(g.title)}</span></a></li>`;
       }).join("");
       const tools = recs.tools.map((slug) => {
         const t = TOOLS[slug];
-        const look = APP_LOOK[slug] || ["blue", "g-tl-cv"];
-        return `<li><a class="qz-tool" href="${e(t.url)}"><span class="app app--sm app--${look[0]} qz-tool__app" aria-hidden="true"><svg class="glyph"><use href="#${look[1]}"/></svg></span><span class="qz-tool__title">${e(t.title)}</span><span class="qz-tool__text">${e(t.summary)}</span>${icon("arrow", "qz-tool__arrow")}</a></li>`;
+        return `<li><a class="qz-tool" href="${e(t.url)}"><span class="qz-tool__title">${e(t.title)}</span><span class="qz-tool__text">${e(t.summary)}</span>${icon("chevron", "qz-tool__arrow")}</a></li>`;
       }).join("");
 
       const when = !isShared && state.at ? new Date(state.at) : null;
       els.result.innerHTML = `
-        <section class="tool-card card qz-res" aria-labelledby="qz-res-title">
+        <section class="ed-frame ta-qres qz-res" aria-labelledby="qz-res-title">
           <div class="qz-res__summary">
             <p class="qz-res__kicker">${isShared ? "Kết quả được chia sẻ" : when ? `Kết quả của bạn · ${when.toLocaleDateString("vi-VN")}` : "Kết quả của bạn"}</p>
-            <h2 class="h2 qz-res__title" id="qz-res-title" tabindex="-1" data-res-title>${e(level.head[0])} <span class="mark">${e(level.head[1])}</span></h2>
+            <h2 class="qz-res__title" id="qz-res-title" tabindex="-1" data-res-title>${e(level.head[0])} <span class="qz-res__level">${e(level.head[1])}</span></h2>
             <p class="qz-res__text">${e(level.text)}</p>
             <div class="qz-res__actions">
-              ${isShared ? `<button class="btn btn--primary" type="button" data-act="retake">Làm bài của bạn ${icon("arrow")}</button>` : `
-              <button class="btn btn--primary" type="button" data-act="copy">${icon("copy")}Sao chép kết quả</button>
-              <button class="btn btn--ghost" type="button" data-act="share">${icon("send")}Chia sẻ</button>
-              <button class="btn btn--ghost" type="button" data-act="retake">Làm lại</button>`}
+              ${isShared ? `<button class="rv-pill rv-pill--primary" type="button" data-act="retake">Làm bài của bạn</button>` : `
+              <button class="rv-pill rv-pill--primary rv-copy" type="button" data-act="copy">${icon("copy", "rv-copy__i")}${icon("check", "rv-copy__ok")}<span data-copy-label>Sao chép kết quả</span></button>
+              <button class="rv-pill rv-pill--line" type="button" data-act="share">${icon("send")}Chia sẻ</button>
+              <button class="ta-textbtn qz-res__again" type="button" data-act="retake">Làm lại từ đầu</button>`}
             </div>
           </div>
           <div class="qz-res__score">
@@ -510,20 +511,20 @@
           </div>
         </section>
 
-        <section class="tool-card card qz-dims-card" aria-labelledby="qz-dims-title">
-          <div class="qz-block-head"><h3 class="qz-block-title" id="qz-dims-title">Điểm theo từng mặt</h3><p class="qz-block-note">Tối đa 3 điểm mỗi mặt${plan.priorities.length ? " · nhãn xanh là tuần bạn xử lý mặt đó" : ""}</p></div>
+        <section class="ta-qblock qz-dims-card" aria-labelledby="qz-dims-title">
+          <div class="qz-block-head"><h3 class="qz-block-title" id="qz-dims-title">Điểm theo từng mặt</h3><p class="qz-block-note">Tối đa 3 điểm mỗi mặt${plan.priorities.length ? "; “Tuần 1” là tuần bạn xử lý mặt đó" : ""}.</p></div>
           <ul class="qz-dims">${dims}</ul>
         </section>
 
-        <section class="tool-card card qz-plan" aria-labelledby="qz-plan-title">
+        <section class="ta-qblock qz-plan" aria-labelledby="qz-plan-title">
           <div class="qz-block-head">
             <h3 class="qz-block-title" id="qz-plan-title">Lộ trình 30 ngày${isShared ? "" : " của bạn"}</h3>
-            <p class="qz-block-note">${plan.priorities.length ? "Ba tuần đầu lấp điểm yếu nhất, tuần cuối bắt tay vào việc." : "Nền đã vững: ba tuần nâng cấp, tuần cuối tăng tốc."}${isShared ? "" : " Đánh dấu việc đã xong, trang tự nhớ trên máy này."}</p>
+            <p class="qz-block-note">${plan.priorities.length ? "Ba tuần đầu lấp điểm yếu nhất, tuần cuối bắt tay vào việc." : "Nền đã vững: ba tuần nâng cấp, tuần cuối tăng tốc."}</p>
           </div>
           <ol class="qz-weeks">${weeks}</ol>
         </section>
 
-        <section class="qz-recs" aria-labelledby="qz-recs-title">
+        <section class="ta-qblock qz-recs" aria-labelledby="qz-recs-title">
           <h3 class="qz-block-title" id="qz-recs-title">Nên đọc tiếp</h3>
           <ul class="qz-guides">${guides}</ul>
           <h3 class="qz-block-title qz-recs__tools-title">Công cụ cho bước tiếp theo</h3>
@@ -539,10 +540,10 @@
         const title = els.result.querySelector("[data-res-title]");
         if (title) title.focus({ preventScroll: true });
       }
-      /* bars grow once, the score rolls up */
+      /* the bars grow once (transform only); the score counts up once (not with reduced motion or html.hm-lite) */
       requestAnimationFrame(() => requestAnimationFrame(() => els.result.classList.add("is-in")));
-      const num = els.result.querySelector("[data-score]");
-      if (num && !VR.reducedMotion) VR.countTo(num, total, { from: 0, duration: 800 });
+      const scoreEl = els.result.querySelector("[data-score]");
+      if (scoreEl && document.documentElement.classList.contains("rv-live") && !VR.reducedMotion) VR.countTo(scoreEl, total, { from: 0, duration: 900 });
 
       els.result.dataset.code = code(answers);
       els.result.dataset.level = level.name;
@@ -583,7 +584,7 @@
       if (!btn) return;
       const act = btn.dataset.act;
       if (act === "copy") {
-        VR.copy(summaryText(state.answers), "Đã sao chép kết quả và lộ trình");
+        VR.copy(summaryText(state.answers), "Đã sao chép kết quả và lộ trình", btn);
       } else if (act === "share") {
         const url = shareUrl(state.answers);
         const { level, total } = levelFor(state.answers);
@@ -591,7 +592,7 @@
         if (navigator.share) {
           navigator.share({ title: "Bạn đã sẵn sàng làm remote?", text, url }).catch(() => { /* cancelled */ });
         } else {
-          VR.copy(url, "Đã sao chép link kết quả");
+          VR.copy(url, "Đã sao chép link kết quả", btn);
         }
       } else if (act === "retake" && shared) {
         try { history.replaceState(null, "", window.location.pathname + window.location.search); } catch (_) { /* ignore */ }
@@ -609,6 +610,7 @@
         const top = root.getBoundingClientRect().top + window.scrollY - 96;
         if (top < window.scrollY) window.scrollTo({ top: Math.max(0, top), behavior: VR.reducedMotion ? "auto" : "smooth" });
         go(0, 0);
+        VR.toast("Đã xóa câu trả lời cũ. Làm lại từ câu 1.", { tone: "info" });
       }
     });
     els.result.addEventListener("change", (ev) => {
@@ -617,7 +619,20 @@
       state.ticks = state.ticks || {};
       if (box.checked) state.ticks[box.dataset.tick] = 1; else delete state.ticks[box.dataset.tick];
       save(state);
+      const weeks = Array.from(els.result.querySelectorAll(".qz-week"));
+      const now = weeks.findIndex((w) => Array.from(w.querySelectorAll("[data-tick]")).some((c) => !c.checked));
+      weeks.forEach((w, k) => w.classList.toggle("is-now", k === now));
     });
+
+    document.querySelectorAll("[data-tool-start]").forEach((a) => a.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (!els.quiz.hidden) {
+        els.quiz.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+        focusStep();
+      } else {
+        els.result.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+      }
+    }));
 
     /* ---------------- start */
     const fromLink = fromHash();

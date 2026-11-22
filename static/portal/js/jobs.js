@@ -12,8 +12,9 @@
       Sort: "Đề xuất" is the order of /data/jobs.json (catalog.rank_jobs on the server, the same order
       as the server-rendered rows); "Mới nhất" by posting time; "Lương cao nhất" by job.pay_rank.
       On a field page an empty ?nganh= means "every field" and shows a "Tất cả ngành" pill.
-   2. Job detail [data-jd-body] readable description, copy link, mobile apply bar.
-   3. Salary     [data-sl-chart] hourly / monthly toggle, chart reveal (every figure is in the server HTML).
+   2. Job detail [data-jd-body] readable description, the long-description fold (copy link and the phone
+      action bar are the kit's: [data-copy-text], [data-actionbar]).
+   3. Salary     [data-sl-chart] hourly / monthly toggle kept in the URL (every figure is in the server HTML).
 */
 (function () {
   "use strict";
@@ -109,6 +110,8 @@
     const activeBox = $("[data-active]", root);
     const countLine = $("[data-count-line]", root);
     const fab = $("[data-open]", root);
+    const openBtns = $$("[data-open-panel]", root);   // the inline "Bộ lọc" beside the quick filters (tablets, phones)
+    const sortNote = $("[data-sort-note]", root);
     const scrim = $("[data-scrim]", root);
     const rail = $("[data-rail]", root);
     const searchForm = $("[data-search]");
@@ -320,9 +323,8 @@
       const panelCount = items.filter((x) => x.kind !== "q" && x.kind !== "skill").length;
       // both "Xóa lọc" buttons (panel head on desktop, sheet footer on phones) only show with a filter on
       $$("[data-clear]", panel).forEach((b) => { b.hidden = panelCount === 0; });
-      const fabN = fab ? $("[data-filter-n]", fab) : null;
-      if (fabN) { fabN.textContent = String(panelCount); fabN.hidden = panelCount === 0; }
-      if (fab) fab.setAttribute("aria-label", panelCount ? `Bộ lọc, ${panelCount} đang bật` : "Bộ lọc");
+      $$("[data-filter-n]", root).forEach((n) => { n.textContent = String(panelCount); n.hidden = panelCount === 0; });
+      [fab, ...openBtns].forEach((b) => { if (b) b.setAttribute("aria-label", panelCount ? `Bộ lọc, ${panelCount} đang bật` : "Bộ lọc"); });
       // the "Tuyển ở Việt Nam" rail belongs to the untouched board only
       if (rail) rail.hidden = items.length > 0 || Boolean(state.sort);
       activeBox._items = items;
@@ -337,8 +339,10 @@
       const n = list.length;
       const filtered = activeFilters(state).length > 0;
       const scope = filtered ? "việc phù hợp" : presetField ? "việc trong ngành này" : "việc đang mở";
-      countLine.innerHTML = `<strong class="num">${fmtInt(n)}</strong> ${scope}` +
-        (state.sort === "luong" ? ` <span class="muted">· theo mức thấp của khoảng lương, dự án trọn gói xếp sau</span>` : "");
+      countLine.innerHTML = `<strong class="num">${fmtInt(n)}</strong> ${scope}`;
+      // the figures line keeps the board's own counts only while nothing narrows it
+      root.classList.toggle("is-filtered", filtered);
+      if (sortNote) sortNote.hidden = state.sort !== "luong";
       $$("[data-total-btn]", panel).forEach((el) => { el.textContent = fmtInt(n); });
     }
 
@@ -357,27 +361,27 @@
         return { x, idx, n: countFor(st) };
       }).filter((s) => s.n > 0).sort((a, b) => b.n - a.n).slice(0, 3);
       const tipButtons = tips.map((s) =>
-        `<button class="chip chip--sm" type="button" data-drop="${s.idx}">Bỏ ${VR.escape(s.x.tip || s.x.label)} <span class="chip__count">${fmtInt(s.n)}</span></button>`
+        `<button class="rv-filter" type="button" data-drop="${s.idx}">Bỏ ${VR.escape(s.x.tip || s.x.label)} <span class="rv-filter__count">${fmtInt(s.n)}</span></button>`
       ).join("");
       // other searches, only ones that find something under the filters still on; a field page
       // offers its own frequent skills ("Kỹ năng hay gặp") rather than the site-wide list
       let popular = "";
       if (compileQuery(state.q).active) {
         // field page: the skill chips filter on the exact tag, so the counts match the chips above
-        const own = $$("[data-skill]").map((chip) => chip.dataset.skill);
+        const own = Array.from(new Set($$("[data-skill]").map((chip) => chip.dataset.skill)));   // the row and the phone row share them
         const asSkill = own.length > 0;
         const pool = (asSkill ? own : POPULAR).filter((p) => VR.fold(p) !== VR.fold(state.q) && VR.fold(p) !== VR.fold(state.skill));
         popular = pool.map((p) => ({ p, n: countFor(Object.assign(cloneState(state), asSkill ? { q: "", skill: p } : { q: p })) }))
           .filter((s) => s.n > 0).sort((a, b) => b.n - a.n).slice(0, 4)
-          .map((s) => `<button class="chip chip--sm" type="button" ${asSkill ? "data-try-skill" : "data-try"}="${VR.escape(s.p)}">${VR.escape(s.p)} <span class="chip__count">${fmtInt(s.n)}</span></button>`).join("");
+          .map((s) => `<button class="rv-filter" type="button" ${asSkill ? "data-try-skill" : "data-try"}="${VR.escape(s.p)}">${VR.escape(s.p)} <span class="rv-filter__count">${fmtInt(s.n)}</span></button>`).join("");
       }
-      return `<div class="empty">
-        <span class="empty__icon">${icon("search")}</span>
-        <p class="empty__title">Chưa có việc khớp ${state.q ? `“${VR.escape(state.q)}”` : "bộ lọc này"}</p>
-        <p class="empty__text">${tips.length ? "Thử bỏ bớt một điều kiện, số việc hiện ngay bên cạnh:" : "Thử từ khóa ngắn hơn hoặc xóa bộ lọc. Tìm kiếm không cần gõ dấu."}</p>
+      return `<div class="rv-empty jl-empty">
+        <span class="rv-ico rv-ico--lg" aria-hidden="true">${icon("search")}</span>
+        <p class="rv-empty__title">Chưa có việc khớp ${state.q ? `“${VR.escape(state.q)}”` : "bộ lọc này"}</p>
+        <p class="rv-empty__text">${tips.length ? "Thử bỏ bớt một điều kiện, số việc hiện ngay bên cạnh:" : "Thử từ khóa ngắn hơn hoặc xóa bộ lọc. Tìm kiếm không cần gõ dấu."}</p>
         ${tipButtons ? `<div class="jl-suggest">${tipButtons}</div>` : ""}
         ${popular ? `<div class="jl-suggest"><span class="jl-suggest__label">Hoặc thử tìm</span>${popular}</div>` : ""}
-        <button class="btn btn--dark btn--sm" type="button" data-clear-all>Xóa tất cả bộ lọc</button>
+        <button class="rv-pill rv-pill--primary rv-pill--sm jl-empty__clear" type="button" data-clear-all>Xóa tất cả bộ lọc</button>
       </div>`;
     }
 
@@ -561,10 +565,11 @@
         render({ animate: true });
         return;
       }
-      // the rail's "Xem cả …" is a plain ?vn=1 link; once the data is in it filters in place
-      if (event.target.closest("[data-rail-all]") && loaded) {
+      // the figures line's links (?luong=1, ?vn=1) are plain links; once the data is in they filter in place
+      const fig = event.target.closest("[data-fig]");
+      if (fig && loaded) {
         event.preventDefault();
-        state.vn = true;
+        state[fig.dataset.fig] = true;
         changed();
         return;
       }
@@ -587,8 +592,16 @@
       });
     });
 
+    /* "Xem thêm" before /data/jobs.json is in: the pill shows its pending state (the kit's spinner, the width kept)
+       and the rows come the moment the data does */
+    let morePending = false;
     if (moreBtn) moreBtn.addEventListener("click", () => {
-      if (!loaded) return;
+      if (!loaded) {
+        if (loadFailed) return;
+        morePending = true;
+        if (VR.busy) VR.busy(moreBtn, true);
+        return;
+      }
       const from = shown;
       shown = Math.min(list.length, shown + PAGE);
       const html = list.slice(from, shown).map((job) => VR.jobRow(job)).join("");
@@ -663,6 +676,7 @@
       if (scrim) { scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add("is-on")); }
       document.documentElement.classList.add("jl-lock");
       if (fab) { fab.setAttribute("aria-expanded", "true"); fab.classList.add("is-hidden"); }
+      openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
       const close = $(".jl-panel__close", panel);
       setTimeout(() => { (close || panel).focus(); updateFade(); }, 60);
     }
@@ -674,10 +688,12 @@
       if (scrim) { scrim.classList.remove("is-on"); setTimeout(() => { if (!panel.classList.contains("is-open")) scrim.hidden = true; }, 260); }
       document.documentElement.classList.remove("jl-lock");
       if (fab) { fab.setAttribute("aria-expanded", "false"); updateFab(); }
+      openBtns.forEach((b) => b.setAttribute("aria-expanded", "false"));
       if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
       keepInView();
     }
     if (fab) fab.addEventListener("click", openPanel);
+    openBtns.forEach((b) => b.addEventListener("click", openPanel));
     if (scrim) scrim.addEventListener("click", closePanel);
     document.addEventListener("keydown", (event) => {
       if (!panel.classList.contains("is-open")) return;
@@ -728,10 +744,11 @@
     // first row's title at load (it starts hidden in the markup)
     let listVisible = true;
     let footerVisible = false;
+    let toolsVisible = false;   // the inline "Bộ lọc" on screen: the floating one would only repeat it
     let scrolled = window.scrollY > 40;
     function updateFab() {
       if (!fab) return;
-      fab.classList.toggle("is-hidden", !scrolled || !listVisible || footerVisible || panel.classList.contains("is-open"));
+      fab.classList.toggle("is-hidden", !scrolled || !listVisible || footerVisible || toolsVisible || panel.classList.contains("is-open"));
     }
     if (fab && !scrolled) {
       const onScroll = () => {
@@ -749,6 +766,13 @@
         updateFab();
       }, { rootMargin: "-80px 0px -40px 0px" });
       io.observe(results);
+      const tools = openBtns[0];
+      if (tools) {
+        new IntersectionObserver((entries) => {
+          entries.forEach((entry) => { toolsVisible = entry.isIntersecting && entry.boundingClientRect.width > 0; });
+          updateFab();
+        }).observe(tools);
+      }
       const footer = document.querySelector(".site-footer");
       if (footer) {
         new IntersectionObserver((entries) => {
@@ -776,18 +800,20 @@
       jobs = prepare(data);
       loaded = true;
       render({ keepRows: startsDefault && !restoreShown, write: false, shown: restoreShown });
+      if (morePending && moreBtn) { morePending = false; if (VR.busy) VR.busy(moreBtn, false); moreBtn.click(); }
       if (restoreShown && Number.isFinite(back.jlY) && Math.abs(window.scrollY - back.jlY) > 40) {
         // the browser clamped its scroll restore to the 30-row page; go back to the row
         window.scrollTo({ top: back.jlY, behavior: "auto" });
       }
     }).catch(() => {
       loadFailed = true;
+      if (moreBtn && VR.busy) VR.busy(moreBtn, false);
+      if (morePending && VR.toast) VR.toast("Chưa tải được thêm việc. Tải lại trang để thử lại.", { tone: "error" });
       results.classList.remove("is-loading");
       results.removeAttribute("aria-busy");
       if (countLine) countLine.innerHTML = countLineHtml;
       const note = document.createElement("p");
-      note.className = "notice notice--sun";
-      note.style.marginBottom = "14px";
+      note.className = "rv-note rv-note--warn jl-error";
       note.innerHTML = `${icon("alert")}<span>Chưa tải được dữ liệu để lọc. Đang hiện 30 việc đầu danh sách, tải lại trang để thử lại.</span>`;
       results.parentNode.insertBefore(note, results);
     });
@@ -838,96 +864,95 @@
 
   function initDetail(body) {
     try { enhanceDescription(body); } catch (_) { /* keep the plain text */ }
+    // a long description folds at 560 px (480 on phones) behind one outlined pill (the description sits below the
+    // first screen at every width, so the fold never moves what the reader is looking at)
     const expand = $("[data-jd-expand]");
-    if (expand && body.scrollHeight > 820) {
+    const label = expand && $("[data-jd-expand-label]", expand);
+    if (expand && body.scrollHeight > 760) {
       body.classList.add("is-clamped");
       expand.hidden = false;
       expand.addEventListener("click", () => {
         const open = body.classList.toggle("is-clamped") === false;
         expand.setAttribute("aria-expanded", open ? "true" : "false");
-        expand.firstChild.textContent = open ? "Thu gọn mô tả " : "Đọc toàn bộ mô tả ";
-        if (!open) {
+        if (label) label.textContent = open ? "Thu gọn mô tả" : "Đọc toàn bộ mô tả";
+        if (!open && body.getBoundingClientRect().top < 0) {
+          // folding back from far below: return to the description's top, not to an empty stretch of sheet
           const header = document.querySelector("[data-header]");
-          const y = window.scrollY + body.getBoundingClientRect().top - (header ? header.offsetHeight : 64) - 80;
-          if (body.getBoundingClientRect().top < 0) window.scrollTo({ top: y, behavior: VR.reducedMotion ? "auto" : "smooth" });
+          const y = window.scrollY + body.getBoundingClientRect().top - (header ? header.offsetHeight : 64) - 96;
+          window.scrollTo({ top: y, behavior: VR.reducedMotion ? "auto" : "smooth" });
         }
       });
     }
-
-    $$("[data-copy-link]").forEach((btn) => btn.addEventListener("click", () => {
-      VR.copy(window.location.origin + window.location.pathname, "Đã sao chép link việc này");
-    }));
-
-    // the mobile bar steps aside while the apply card itself is on screen
-    const bar = $("[data-jd-bar]");
-    const card = $("[data-apply-card]");
-    if (bar && card && "IntersectionObserver" in window) {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => bar.classList.toggle("is-hidden", entry.isIntersecting));
-      }, { threshold: 0.15 });
-      io.observe(card);
-    }
+    // copy link ([data-copy-text]) and the phone action bar ([data-actionbar]) are the kit's (common.js); the link
+    // copied is the page the reader is on (the server writes the canonical one for no-JS and crawlers)
+    $$("[data-copy-text].jd-copy").forEach((btn) => { btn.dataset.copyText = window.location.origin + window.location.pathname; });
   }
 
   /* ================================================================ 3 salary */
   function initSalary() {
-    // "Cách tính" 05's Upwork share is rendered on the server (jobs_tags.hourly_sources): no jobs.json download here
-    const dist = $(".sl-dist");
-    if (dist) {
-      dist.classList.add("is-armed");
-      VR.inView(dist, (el) => el.classList.add("is-in"), { threshold: 0.3 });
-    }
+    // "Cách tính" 05's Upwork share is rendered on the server (jobs_tags.hourly_sources): no jobs.json download here.
+    // Every figure is in the server HTML; "Theo tháng" swaps the figures (× 160 working hours) and keeps every
+    // position on the shared axis, so nothing moves but the numbers. The choice is kept in the URL (?don-vi=thang)
+    // with replaceState, so a shared link or Back opens the same view.
     const card = $("[data-sl-chart]");
     if (!card) return;
-    card.classList.add("is-armed");
-    VR.inView(card, (el) => el.classList.add("is-in"), { threshold: 0.15 });
-
     const rows = $$(".sl-row[data-h]", card);
     const ticks = $$(".sl-ticks [data-v]", card);
     const sub = $("[data-sl-sub]", card);
     const axisUnit = $("[data-sl-axis-unit]", card);
     const colHead = $("[data-sl-colhead]", card);
     const monthNote = $("[data-sl-monthnote]", card);
+    const radios = $$("[data-sl-unit]", card);
     const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
     const dec = (n) => n.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
     const kilo = (n) => (n >= 1000 ? (n / 1000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + "k" : String(n));
     rows.forEach((row) => {
-      const v = $("[data-sl-v]", row);
-      const r = $("[data-sl-r]", row);
-      row._hourly = { v: v.textContent, r: r.textContent };
+      row._hourly = { v: $("[data-sl-v]", row).textContent, r: $("[data-sl-r]", row).textContent };
     });
 
-    function setUnit(unit) {
-      card.dataset.unit = unit;
-      $$("[data-sl-unit]", card).forEach((b) => b.setAttribute("aria-checked", b.dataset.slUnit === unit ? "true" : "false"));
+    function setUnit(unit, opts) {
       const monthly = unit === "monthly";
+      card.dataset.unit = unit;
+      radios.forEach((b) => {
+        const on = b.dataset.slUnit === unit;
+        b.setAttribute("aria-checked", on ? "true" : "false");
+        b.tabIndex = on ? 0 : -1;
+      });
       rows.forEach((row) => {
         const v = $("[data-sl-v]", row);
         const r = $("[data-sl-r]", row);
         const h = num(row.dataset.h);
         if (!monthly || h === null) { v.textContent = row._hourly.v; r.textContent = row._hourly.r; return; }
+        const a = num(row.dataset.p25);
+        const b = num(row.dataset.p75);
         v.textContent = fmtInt(h * 160);
-        r.textContent = "≈ " + VR.fmt.vnd(h * 160 * 26000);
+        r.textContent = a !== null && b !== null && b > a ? `${fmtInt(a * 160)}–${fmtInt(b * 160)}` : row._hourly.r;
       });
       ticks.forEach((t) => { const n = Number(t.dataset.v); t.textContent = monthly ? kilo(n * 160) : dec(n); });
       if (sub) sub.textContent = monthly
-        ? "USD/tháng nếu làm toàn thời gian 160 giờ. Dòng nhỏ là tiền đồng quy đổi."
-        : "USD/giờ. Thanh nhạt là khoảng của 50% số tin ở giữa.";
+        ? "USD/tháng nếu làm 160 giờ. Dải màu là 50% số tin ở giữa."
+        : "USD/giờ. Dải màu là 50% số tin ở giữa.";
       if (axisUnit) axisUnit.textContent = monthly ? "USD/tháng" : "USD/giờ";
       if (colHead) colHead.textContent = monthly ? "Trung vị/tháng" : "Trung vị";
       if (monthNote) monthNote.hidden = !monthly;
+      if (opts && opts.write) {
+        const url = new URL(window.location.href);
+        if (monthly) url.searchParams.set("don-vi", "thang"); else url.searchParams.delete("don-vi");
+        history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+      }
     }
-    $$("[data-sl-unit]", card).forEach((b, i, all) => {
-      b.addEventListener("click", () => setUnit(b.dataset.slUnit));
+    radios.forEach((b, i, all) => {
+      b.addEventListener("click", () => setUnit(b.dataset.slUnit, { write: true }));
       b.addEventListener("keydown", (event) => {
-        const dir = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+        const dir = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
         if (!dir) return;
         event.preventDefault();
         const next = all[(i + dir + all.length) % all.length];
         next.focus();
-        setUnit(next.dataset.slUnit);
+        setUnit(next.dataset.slUnit, { write: true });
       });
     });
+    if (new URLSearchParams(window.location.search).get("don-vi") === "thang") setUnit("monthly");
   }
 
   VR.onReady(() => {
@@ -935,6 +960,6 @@
     if (board) initBoard(board);
     const body = document.querySelector("[data-jd-body]");
     if (body) initDetail(body);
-    if (document.querySelector("[data-sl-chart], .sl-dist")) initSalary();
+    if (document.querySelector("[data-sl-chart]")) initSalary();
   });
 })();

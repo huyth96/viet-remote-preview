@@ -4,6 +4,11 @@
    {all: [p25, p50, p75, n], by: {field: [p25, p50, p75, n]}}, fields with 5+ hourly rates only), so no job
    index is downloaded; without them it falls back to the public job index (/data/jobs.json via VR.loadJobs).
    Inputs are remembered in this browser only (VR.store "vr.rate"), as a convenience.
+   Direction A (tinh_gia.html, tools-a.css §R): ONE white window [data-rate] — the inputs left, the answer right (the
+   minimum big in cobalt, what to quote on a range bar with ticks, the month in the order the money flows: a bar + the
+   cuts in USD + the net). Under it, outside the window: the comparison with the board's real hourly pay (a histogram
+   with your marker; #so-voi-bang-viec) and the formula filled with your numbers (#cong-thuc). On phones the kit's action bar ([data-actionbar], VR.actionbar) carries the figure while the
+   inputs are on screen.
 
      hours/month = hours/week × (52 − weeks off) ÷ 12
      client pays = target VND ÷ fx ÷ (1 − platform) ÷ (1 − withdrawal) ÷ (1 − tax)
@@ -91,9 +96,10 @@
     if (!root) return;
     const form = root.querySelector("[data-form]");
     const $ = (sel) => root.querySelector(sel);
+    const $$ = (sel) => document.querySelector(sel);       // the comparison, the formula and the action bar sit outside the window
     const targetInput = $("[data-target]");
     const fxInput = $("[data-fx]");
-    const fieldSelect = $("[data-field]");
+    const fieldSelect = $$("select[data-field]");
     const customWrap = $("[data-custom]");
     const saved = VR.store.get(KEY, {}) || {};
     if (saved.v !== DEFAULTS.v) delete saved.fx;   // v1 saved the old 25.000 default
@@ -182,6 +188,10 @@
     }
 
     /* ---------- output ---------- */
+    const setText = (sel, text) => { const el = $$(sel); if (el && el.textContent !== text) el.textContent = text; };
+    const setAll = (sel, text) => document.querySelectorAll(sel).forEach((el) => { if (el.textContent !== text) el.textContent = text; });
+    /* a display figure's decimal comma set small (.nsep), like portal_tags |num_seps */
+    const seps = (text) => VR.escape(text).replace(",", '<span class="nsep">,</span>');
     /* the big number tweens frame by frame, so screen readers get the settled result from a separate live region */
     let announceTimer = 0;
     let announced = false;
@@ -191,47 +201,97 @@
       announceTimer = setTimeout(() => { const el = $("[data-announce]"); if (el.textContent !== text) el.textContent = text; }, 700);
     }
 
-    /* the big number rolls to its new value (260ms); null shows a dash */
+    /* the big number rolls to its new value (260 ms). The first time it counts up from zero over 900 ms, the window
+       coming alive — only under html.rv-live (never with reduced motion, lite or without the lively layer). Null
+       shows a dash. */
     let tween = 0;
+    let firstRoll = document.documentElement.classList.contains("rv-live") && !VR.reducedMotion;
     function tweenMin(target) {
       const el = $("[data-min]");
       cancelAnimationFrame(tween);
+      (el.closest(".ta-fig") || el.parentElement).classList.toggle("is-empty", target === null);
       if (target === null) { el.textContent = "–"; lastMin = 0; return; }
-      const from = lastMin;
+      let from = lastMin;
+      let dur = 260;
+      if (firstRoll) { firstRoll = false; from = 0.1; dur = 900; el.innerHTML = seps(f1(from)); }
       lastMin = target;
-      if (VR.reducedMotion || !from) { el.textContent = f1(target); return; }
+      if (VR.reducedMotion || !from) { el.innerHTML = seps(f1(target)); return; }
       const start = performance.now();
       const step = (t) => {
-        const p = Math.min(1, (t - start) / 260);
-        el.textContent = f1(Math.round((from + (target - from) * (1 - Math.pow(1 - p, 3))) * 10) / 10);
+        const p = Math.min(1, (t - start) / dur);
+        el.innerHTML = seps(f1(Math.round((from + (target - from) * (1 - Math.pow(1 - p, 3))) * 10) / 10));
         if (p < 1) tween = requestAnimationFrame(step);
       };
       tween = requestAnimationFrame(step);
+    }
+
+    /* the range bar: the minimum (the dot) and what to quote (the band) on a scale from 2 under the minimum to 2 over
+       the top of the quote, as portal_tags rate_breakdown draws the first paint; each with its tick label */
+    function renderRange(r, valid) {
+      const bar = $("[data-range-bar]");
+      if (!bar) return;
+      bar.hidden = !valid;
+      if (!valid) return;
+      const lo = Math.floor(r.min) - 2;
+      const hi = Math.ceil(r.high) + 2;
+      const pos = (v) => (100 * (v - lo) / (hi - lo)).toFixed(2) + "%";
+      const at = { m: pos(r.min), a: pos(r.low), b: pos(r.high) };
+      bar.style.setProperty("--a", at.a);
+      bar.style.setProperty("--b", at.b);
+      bar.style.setProperty("--m", at.m);
+      const label = { m: f1(r.min), a: f1(r.low), b: f1(r.high) };
+      bar.querySelectorAll("[data-tick]").forEach((tick) => {
+        const k = tick.dataset.tick;
+        tick.style.setProperty("--at", at[k]);
+        if (tick.textContent !== label[k]) tick.textContent = label[k];
+      });
     }
 
     function render() {
       const r = compute(state);
       const valid = targetOk && r.min > 0 && Number.isFinite(r.min);
       tweenMin(valid ? Math.round(r.min * 10) / 10 : null);
-      $("[data-live]").textContent = valid ? f1(r.min) + " USD/giờ" : "–";
-      $("[data-target-label]").textContent = targetOk ? vndShort(state.target) : "số tiền bạn chọn";
-      $("[data-gross]").textContent = valid ? usd(r.gross) : "–";
-      $("[data-hours-month]").textContent = f0(r.hoursMonth) + " giờ";
-      $("[data-range]").textContent = valid ? `${f1(r.low)}–${f1(r.high)} USD/giờ` : "–";
+      setText("[data-bar-value]", valid ? f1(r.min) + " USD/giờ" : "–");
+      setText("[data-target-label]", targetOk ? vndShort(state.target) : "số tiền bạn chọn");
+      setText("[data-range]", valid ? `${f1(r.low)}–${f1(r.high)} USD/giờ` : "–");
+      renderRange(r, valid);
       announce(valid ? `Giá tối thiểu ${f1(r.min)} USD/giờ. Nên báo giá ${f1(r.low)} đến ${f1(r.high)} USD/giờ.` : "Chưa tính được giá. Kiểm tra số tiền muốn nhận và số giờ.");
 
       const feePct = f1(r.fee * 100) + "%";
+      /* the month in the order the money flows, ONE unit in the value column (USD: the tax reserve the tool books on
+         what reaches the account is the same amount at your exchange rate), the net's đồng as its second line; the
+         stacked bar shows each cut's share of what the client pays */
+      const taxUsd = state.fx > 0 ? r.taxVnd / state.fx : 0;
+      const netUsd = Math.max(0, r.gross - r.platform - r.withdrawal - taxUsd);
       const rows = [
-        ["Khách trả", usd(r.gross), `${f1(r.min)} USD × ${f0(r.hoursMonth)} giờ`, ""],
-        [`Phí nền tảng (${feePct})`, minus(r.platform, usd), "", r.platform ? "is-minus" : "is-zero"],
-        [`Phí rút tiền (${f1(state.withdraw)}%)`, minus(r.withdrawal, usd), "", r.withdrawal ? "is-minus" : "is-zero"],
-        [`Về tài khoản, tỷ giá ${f0(state.fx)}`, vnd(r.vndBeforeTax), usd(r.afterWithdraw), ""],
-        [`Dự phòng thuế (${f1(state.tax)}%)`, minus(r.taxVnd, vnd), "", r.taxVnd ? "is-minus" : "is-zero"],
-        ["Bạn nhận về", vnd(r.net), "", "is-total"],
-        ["Phí và thuế chiếm", f1(r.lossPct * 100) + "% tiền khách trả", "", "is-sub"],
+        ["coral", `Phí nền tảng ${feePct}`, minus(r.platform, usd), r.platform ? "" : "is-zero"],
+        ["sky", `Phí rút tiền ${f1(state.withdraw)}%`, minus(r.withdrawal, usd), r.withdrawal ? "" : "is-zero"],
+        ["amber", `Dự phòng thuế ${f1(state.tax)}%`, minus(taxUsd, usd), taxUsd ? "" : "is-zero"],
       ];
-      $("[data-table]").innerHTML = rows.map(([label, value, note, cls]) =>
-        `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${VR.escape(label)}</th><td>${VR.escape(valid ? value : "–")}${note && valid ? `<small>${VR.escape(note)}</small>` : ""}</td></tr>`).join("");
+      const dot = '<i class="rv-dot" aria-hidden="true"></i>';
+      $("[data-table]").innerHTML = rows.map(([, label, value, cls]) =>
+        `<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${dot}${VR.escape(label)}</th><td>${VR.escape(valid ? value : "–")}</td></tr>`).join("") +
+        `<tr class="is-total"><th scope="row">${dot}Bạn nhận về</th><td>${valid ? `${VR.escape(usd(netUsd))}<small>${VR.escape(vnd(r.net))}</small>` : "–"}</td></tr>`;
+      const gross = $("[data-gross]");
+      if (gross && gross.textContent !== (valid ? usd(r.gross) : "–")) gross.textContent = valid ? usd(r.gross) : "–";
+      const split = $("[data-split]");
+      if (split) split.classList.toggle("is-off", !(valid && r.gross > 0));
+      if (split && valid && r.gross > 0) {
+        const share = [r.platform, r.withdrawal, taxUsd, netUsd].map((v) => ((100 * v) / r.gross).toFixed(2));
+        split.querySelectorAll("i").forEach((seg, i) => { seg.style.setProperty("--w", share[i]); seg.hidden = i < 3 && Number(share[i]) === 0; });
+      }
+
+      /* the formula below the tool, filled with these numbers (#cong-thuc) */
+      setAll('[data-f="hours"]', f0(state.hours));
+      setAll('[data-f="off"]', f0(state.off));
+      setAll('[data-f="hm"], [data-f="hm2"]', f0(r.hoursMonth));
+      setAll('[data-f="target"]', targetOk ? vnd(state.target) : "–");
+      setAll('[data-f="fx"]', f0(state.fx));
+      setAll('[data-f="fee"]', feePct);
+      setAll('[data-f="wd"]', f1(state.withdraw) + "%");
+      setAll('[data-f="tax"]', f1(state.tax) + "%");
+      setAll('[data-f="gross"], [data-f="gross2"]', valid ? (r.gross >= 100 ? f0(r.gross) : f1(r.gross)) : "–");
+      setAll('[data-f="min"]', valid ? f1(r.min) : "–");
 
       root.querySelectorAll("[data-preset]").forEach((b) => b.setAttribute("aria-pressed", Number(b.dataset.preset) === state.target ? "true" : "false"));
       renderCompare(r, valid);
@@ -239,10 +299,13 @@
 
     function renderCompare(r, valid) {
       if (!hourly && !pre) return;
+      const status = $$("[data-compare-status]");
+      const box = $$("[data-compare]");
+      if (!status || !box) return;
       if (!valid) {
-        $("[data-compare-status]").hidden = false;
-        $("[data-compare-status]").textContent = "Nhập số tiền muốn nhận về mỗi tháng để so với lương thật.";
-        $("[data-compare]").hidden = true;
+        status.hidden = false;
+        status.textContent = "Nhập số tiền muốn nhận về mỗi tháng để so với lương thật.";
+        box.hidden = true;
         return;
       }
       const slug = state.field;
@@ -260,46 +323,53 @@
         if (values.length >= 5) q = quartiles(values);
       }
       if (!q) {
-        $("[data-compare-status]").hidden = false;
-        $("[data-compare-status]").textContent = "Chưa đủ tin có ghi lương theo giờ để so sánh.";
-        $("[data-compare]").hidden = true;
+        status.hidden = false;
+        status.textContent = "Chưa đủ tin có ghi lương theo giờ để so sánh.";
+        box.hidden = true;
         return;
       }
       const you = r.min;
-      const maxRaw = Math.max(q.p75 * 1.35, you * 1.15, r.high * 1.1, 10);
-      const step = maxRaw > 80 ? 20 : maxRaw > 40 ? 10 : 5;
-      const max = Math.ceil(maxRaw / step) * step;
-      const pct = (v) => clamp((v / max) * 100, 0, 100);
+      /* the chart's scale is the histogram's (portal_tags hourly_overview: 5 USD bins, the last one 100+: 0 … 105) */
+      const bins = Array.from(box.querySelectorAll("[data-bins] > i"));
+      const top = bins.length ? Number(bins[bins.length - 1].dataset.end) : 105;
+      const pct = (v) => clamp((v / top) * 100, 0, 100);
+      bins.forEach((bin) => bin.classList.toggle("is-below", Number(bin.dataset.end) <= you && !("last" in bin.dataset)));
+      const youEl = box.querySelector("[data-you]");
+      youEl.style.setProperty("--at", pct(you).toFixed(2));
+      youEl.classList.toggle("is-edge-l", pct(you) < 8);
+      youEl.classList.toggle("is-edge-r", pct(you) > 92);
+      const youN = youEl.querySelector("[data-you-n]");
+      if (youN.textContent !== f1(you)) youN.textContent = f1(you);
+      const band = box.querySelector("[data-band]");
+      band.style.left = pct(q.p25) + "%";
+      band.style.width = Math.max(1, pct(q.p75) - pct(q.p25)) + "%";
+      box.querySelector("[data-median]").style.left = pct(q.p50) + "%";
 
-      $("[data-band]").style.left = pct(q.p25) + "%";
-      $("[data-band]").style.width = (pct(q.p75) - pct(q.p25)) + "%";
-      $("[data-median]").style.left = pct(q.p50) + "%";
-      const youEl = $("[data-you]");
-      youEl.style.left = pct(you) + "%";
-      youEl.classList.toggle("is-edge-l", pct(you) < 6);
-      youEl.classList.toggle("is-edge-r", pct(you) > 94);
-      youEl.querySelector("span").textContent = "Bạn " + f1(you);
-      const ticks = [];
-      for (let v = 0; v <= max; v += step) ticks.push(`<span style="left:${pct(v)}%">${v}</span>`);
-      $("[data-axis]").innerHTML = ticks.join("");
+      box.querySelector("[data-p25]").textContent = f1(q.p25);
+      box.querySelector("[data-p50]").textContent = f1(q.p50);
+      box.querySelector("[data-p75]").textContent = f1(q.p75);
+      const fieldName = fallback || !slug ? "mọi ngành" : label;
+      box.querySelector("[data-med-label]").textContent = `Trung vị, ${fieldName}`;
+      /* the bars are every field's: with a field picked they step back, its band and median lead */
+      box.classList.toggle("is-field", Boolean(slug) && !fallback);
+      const cap = box.querySelector("[data-chart-cap]");
+      if (cap) cap.textContent = `Số tin theo mức lương theo giờ, mọi ngành. Dải xám: 50% số tin ở giữa, ${fieldName}.`;
+      const sub = $$("[data-compare-sub]");
+      if (sub) sub.textContent = `Lương theo giờ của ${f0(q.n)} tin đang mở${fallback || !slug ? "" : `, ngành ${label}`}, quy về USD.`;
 
-      $("[data-p25]").textContent = f1(q.p25);
-      $("[data-p50]").textContent = f1(q.p50);
-      $("[data-p75]").textContent = f1(q.p75);
-
-      const where = fallback ? "mọi ngành" : label;
+      /* ONE sentence: where your minimum sits, what to do about it */
+      const where = VR.escape(fallback ? "mọi ngành" : label);
       const minTxt = `<strong>${f1(you)} USD/giờ</strong>`;
       let text;
-      if (you < q.p25) text = `Giá tối thiểu của bạn, ${minTxt}, thấp hơn 75% tin có ghi lương theo giờ trong ${VR.escape(where)}. Bạn có dư địa báo cao hơn, nhất là khi đã có portfolio và vài đánh giá tốt.`;
-      else if (you < q.p50) text = `Giá tối thiểu của bạn, ${minTxt}, nằm ở nửa dưới của ${VR.escape(where)}; trung vị là <strong>${f1(q.p50)} USD/giờ</strong>. Báo quanh khoảng nên báo, rồi tăng dần về trung vị.`;
-      else if (you <= q.p75) text = `Giá tối thiểu của bạn, ${minTxt}, đã cao hơn trung vị của ${VR.escape(where)} (${f1(q.p50)} USD/giờ). Cần portfolio và đánh giá tốt để khách chấp nhận ngay từ đầu.`;
-      else text = `Giá tối thiểu của bạn, ${minTxt}, cao hơn 75% tin trong ${VR.escape(where)}. Hãy nhắm khách lớn, việc chuyên sâu, hoặc tăng số giờ tính tiền để hạ mức tối thiểu.`;
-      $("[data-compare-text]").innerHTML = text;
-      /* no "updated on" date: a static export is rebuilt rarely, and the page carries no dated details */
-      $("[data-compare-note]").textContent = (fallback ? `Ngành này có dưới 5 tin ghi lương theo giờ nên đang so với mọi ngành. ` : "") +
-        `Tính từ ${f0(q.n)} tin đang mở có ghi lương theo giờ${fallback || !slug ? "" : " trong ngành này"}, quy về USD.`;
-      $("[data-compare-status]").hidden = true;
-      $("[data-compare]").hidden = false;
+      if (you < q.p25) text = `${minTxt} thấp hơn 75% số tin của ${where}: bạn còn dư địa báo cao hơn.`;
+      else if (you < q.p50) text = `${minTxt} ở nửa dưới của ${where}: báo trong khoảng nên báo, rồi tăng dần về trung vị.`;
+      else if (you <= q.p75) text = `${minTxt} đã cao hơn trung vị của ${where}: cần portfolio và đánh giá tốt ngay từ đầu.`;
+      else text = `${minTxt} cao hơn 75% số tin của ${where}: nhắm khách lớn, hoặc tăng số giờ tính tiền.`;
+      box.querySelector("[data-compare-text]").innerHTML = text;
+      /* only when it matters: a field with too few hourly rates is compared with every field */
+      box.querySelector("[data-compare-note]").textContent = fallback ? "Ngành này có dưới 5 tin ghi lương theo giờ nên đang so với mọi ngành." : "";
+      status.hidden = true;
+      box.hidden = false;
     }
 
     /* ---------- events ---------- */
@@ -330,10 +400,10 @@
       fill();
       clearErrors();
       update();
-      VR.toast("Đã đặt lại thông số mặc định");
+      VR.toast("Đã đặt lại thông số mặc định", { tone: "info" });
     });
-    root.querySelector("[data-copy]").addEventListener("click", () => {
-      if (!targetOk) { VR.toast("Sửa ô số tiền muốn nhận trước khi sao chép"); targetInput.focus(); return; }
+    root.querySelector("[data-copy]").addEventListener("click", (event) => {
+      if (!targetOk) { VR.toast("Sửa ô số tiền muốn nhận trước khi sao chép", { tone: "error" }); targetInput.focus(); return; }
       const r = compute(state);
       const lines = [
         `Muốn nhận về: ${vnd(state.target)}/tháng`,
@@ -343,11 +413,15 @@
         `Nên báo giá: ${f1(r.low)}–${f1(r.high)} USD/giờ`,
         `Tính bằng công cụ của Việt Remote: ${location.origin}/cong-cu/tinh-gia/`,
       ];
-      VR.copy(lines.join("\n"), "Đã sao chép kết quả");
+      VR.copy(lines.join("\n"), "Đã sao chép kết quả", event.currentTarget);
     });
 
     fill();
     update();
+    root.classList.add("is-on");   // the figure shows from here (tools-a.css hides it until its first roll starts)
+
+    /* phones: the result's action bar ([data-actionbar], rv.css §23) is the kit's: common.js VR.actionbar shows it
+       while the inputs are on screen and the result card is not; this file only writes its figure ([data-live]) */
 
     /* real hourly pay by field: the page's precomputed quartiles; the job index only as a fallback */
     try {
@@ -369,7 +443,8 @@
       hourly = { all, byField };
       render();
     }).catch(() => {
-      $("[data-compare-status]").textContent = "Không tải được dữ liệu lương lúc này. Phần tính giá vẫn dùng bình thường.";
+      const status = $$("[data-compare-status]");
+      if (status) { status.hidden = false; status.textContent = "Không tải được dữ liệu lương lúc này. Phần tính giá vẫn dùng bình thường."; }
     });
   });
 

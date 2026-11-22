@@ -1,0 +1,867 @@
+/* =====================================================================
+   Việt Remote — ed.css: THE A KIT ("Ảnh thật, chữ biên tập", chosen by the client 19/11/2026)
+   Binding: portal/INNER_A_SPEC.md; concepts static/portal/concepts/gen-v8/a-editorial-photo-tools.png and
+   a-editorial-photo-community.png; the reference pages /cong-cu/ and /cong-dong/ (the pilot, finished at the rollout).
+
+   A real company's website that is also alive, never an app dashboard: a candid photograph opens every page; content
+   is typography and hairline rules (never a bento, app-icon tiles, cards in cards, rows of same-size widgets, tinted
+   blocks, icon clusters, chips everywhere); ONE large real product view per section; big confident numbers and dates;
+   white and warm off-white sections that alternate; one full-bleed photo band on longer pages; motion that explains
+   (once, transform/opacity only). Navy, white and neutral greys; cobalt only for links, the selected state, key
+   numbers and dates; the photographs bring the colour (semantic red/green only inside a product view). Every section:
+   a title, at most one short line, then the content.
+
+   USE IT ON A PAGE
+     extra_head   <link rel="stylesheet" href="{% asset 'portal/css/ed.css' %}">  after rv.css, before the page's CSS
+     body_class   add "ed"
+     extra_js     only with a switcher (§12) or twins: <script src="{% asset 'portal/js/ed.js' %}" defer></script>
+     Motion needs nothing else: common.js VR.live() wakes each [data-live] block ONCE as it enters (adds .is-live,
+     gives [data-stagger] children --i, counts [data-to] up). Every entrance here is keyed on html.rv-live, which
+     base.html never sets under reduced motion or html.hm-lite: there, and without JS, every final state shows.
+
+   PAGE RHYTHM   photo hero (§2/§3) → .ed-sec (white) → .ed-sec--warm → photo band (§10, longer pages) → white/warm …
+                 → the join band (includes/cta_band.html, the page's one dark band). Neighbours never share a surface.
+
+   KIT REFERENCE (markup → result)                                                         † = added at the rollout
+     §1  type       .ed-h1 · .ed-h2 · .ed-l (one line of a set headline) · .ed-lead · .ed-eyebrow · a.ed-link
+         section    section.rv-sec.rv-sec--paper.ed-sec[data-field="paper"] (white) · .ed-sec--tight · .ed-sec--rule
+         head       .ed-head > div > h2.ed-head__t + p.ed-head__sub (ONE line) [+ a.ed-link at the right]
+     §2  photo hero section.rv-hero.ed-hero > .ed-hero__media > img.ed-hero__img[fetchpriority=high]
+                    + .ed-hero__copy > .wrap > nav.breadcrumb + h1.ed-h1.ed-hero__title + p.ed-hero__lead
+                    knobs --ed-zoom --ed-focus --ed-focus-m (phones: the photo 4:3 on top, the copy on white)
+     §3  split hero section.rv-hero.ed-split > .ed-split__grid > .ed-split__copy (nav.breadcrumb.ed-crumb, h1.ed-h1
+                    .ed-split__title, p.ed-lead.ed-split__lead, .ed-split__go, p.ed-big) + figure.ed-split__media > img
+                    † .ed-split--flush: the photo flush to the header and the window's right edge (the concept)
+     §4  rows       ol.ed-rows > li > a.ed-row > span.ed-row__n + span.ed-row__main (> .ed-row__t + .ed-row__d)
+                    + svg.icon.ed-row__go · .is-lit = the selected/key row · .ed-rows--compact (no number)
+                    † the numerals are light grey display figures (was ink 600); the selected/key one is cobalt
+     §5  frame      .ed-frame (ONE white product window) · .ed-frame--link + a.rv-pill.ed-frame__go (the whole frame
+                    opens the pill's link)
+     §6  figures    p.ed-big > b.ed-big__n + span.ed-big__u · time.ed-date > span.ed-date__d + span.ed-date__m
+                    † count-up (CLS 0) in a [data-live]: <b class="ed-big__n rv-num"><span class="ed-count"><span
+                      data-to="2100">2.100</span><span class="ed-count__ghost" aria-hidden="true">2.100</span></span>+</b>
+                      (the whole figure, its "+" too, waits until the block wakes: put data-live on a block whose top
+                      is well inside the first screen when the figure is, e.g. the hero's copy, so it wakes on load)
+                    † .ed-big__side (faces over the unit) · span.ed-faces > img × n (round member portraits)
+     §7  steps      ol.ed-steps > li.ed-step > span.ed-step__n + h3.ed-step__t + p.ed-step__d
+                    † ol.ed-steps.ed-steps--line[data-live][data-stagger]: light numerals joined by a line that draws
+         FAQ        .ed-faq > h2.ed-head__t + .ed-faq__list > details.ed-faq__item > summary.ed-faq__q + .ed-faq__a
+     §8  motion     the hero photo settles 1.04 → 1 once; rows rise in with a small stagger
+     §9  †surfaces  .ed-sec (white) · .ed-sec--warm (#F7F5F1, its own hairline and hover tones) · --ed-surface
+     §10 †band      div.ed-band[data-field="night"][data-live] > img.ed-band__img[loading=lazy]
+                    + .ed-band__copy > .wrap > p.ed-band__line (ONE short strong line)
+                    modifiers .ed-band--end (the line at the right) · .ed-band--top · .ed-band--bottom
+                    knobs --ed-focus --ed-focus-m --ed-band-h --ed-zoom --ed-x (phones: 4:5, the line at the foot)
+     §11 †numerals  .ed-num (a light grey display numeral) · .ed-num.is-key / .is-lit = cobalt
+     §12 †switcher  .ed-switch[data-ed-switch] > .ed-switch__list > ol.ed-rows > li > a.ed-row#T[data-ed-tab="P"]
+                    + .ed-switch__stage > .ed-frame.ed-frame--link.ed-stage > .ed-panel#P (+ .is-on: shown)
+                    > .ed-panel__bar (span.ed-num + span.ed-panel__title) + .ed-panel__body + .ed-panel__foot (pill)
+                    ed.js: rows drive the stage from 1024 px (tabs, keyboard, hover intent, cross-fade 220 ms)
+     §13 †journey   ol.ed-journey[data-live][data-stagger] > li.ed-stop.rv-in > figure.ed-stop__photo > img
+                    + p.ed-stop__n[data-live] (its line draws to the next stop as it comes into view)
+                    + h3.ed-stop__t + [p.ed-stop__d] + content
+                    (phones: a vertical rail, the portrait a round node)
+     §14 †reveal    [data-live] > .rv-in (+ [data-stagger]) rise once (rv.css §26.7) · .rv-in[data-live]: one block
+                    · .ed-seq: one by one, slower (a conversation's replies)
+     §15 †line-draw .ed-line (a hairline that draws when its [data-live] block wakes) · .ed-line--v (vertical)
+     §16 †off       reduced motion, html.hm-lite, print
+     §17 ‡top       section.rv-hero.ed-top (a text-only page header: the header's navy strip, then white; the job page,
+                    a post, a story) > .wrap > nav.breadcrumb.ed-crumb + h1.ed-h1.ed-h1--long …
+     §18 ‡pieces    .ed-none (one honest line where content will come) · .ed-face (an initial on a grey disc where the
+                    site has no photo of the person)
+   ‡ = added at the integration (one piece where several groups had built their own):
+     type     .ed-h1--long: the one size for a long title (a guide, a post, a story, a job)
+     crumb    phones: every crumb link is a 44 px target (the line does not move)
+     heroes   .ed-hero--lift (the page's product window rises into the photo's foot; phones: a compact 16:9 photo)
+              + .ed-lift on that window · .ed-hero--foot (the copy at the photo's foot, faces kept high: a taller band)
+              · .ed-hero--flip / .ed-band--flip (the photo mirrored round its centre) · .ed-split--compact (a short
+              split hero: a tracker, a utility page). Every split hero is .ed-split--flush.
+     frame    a white .ed-frame on the warm surface keeps the white surface's hairline, hover and press tones
+     steps    .ed-steps--line: the cobalt numeral follows .is-lit (the first step when none is lit) · .ed-step__v (a
+              big value under the numeral) · phones: every line after the numeral stays in the text column
+     band     .ed-band--bottom has its own shade rising from the foot · .ed-band--deep (a deeper shade for a light
+              photo) · .ed-band--wide (the line keeps the two lines its .ed-l spans set)
+     twins    ed.js [data-ed-twins] (+ data-ed-hold) and [data-ed-k]: a row lights its twin (a phrase, a tick, an
+              agenda segment) with .is-lit; the switcher's lighter mode (one behaviour for the scam sample, the about
+              checks and the events agenda)
+     count-up every key figure that counts uses .ed-count + .ed-count__ghost (§6), so nothing beside it moves
+   fixed at the pilot review (19/11), for every page on the kit:
+     heroes   768-899 px: the stacked photo spans the full width (was 747 px wide, a white strip at its right)
+              · the stacked copy keeps 44 px of white above a warm section, a band or the join band
+              · the focus ring is cobalt wherever the hero's copy is on white (it was the night ring, 2.4:1)
+     figures  a counting big figure waits whole (its "+" too) until its block wakes
+     lines    the joined steps' and the journey's line ends at the last numeral (no line running on to nothing)
+     FAQ      the question's focus ring is inset with 12 px of air (the text stays on the column's edge)
+   fixed at the final verification (19/11), for every page on the kit:
+     crumb    the "/" stays with the crumb before it, so a wrapped crumb line never starts with a separator
+     header   over a photo band the scrolled header keeps the band navy (it went pure black: html.vr-band is set only
+              for .rv-hero / .rv-cta)
+     count-up the counting digits keep the figure's own alignment (left-aligned figures count from their left edge);
+              a figure with a suffix element after the count ("+") right-aligns, so the suffix hugs the digits
+     numerals on the warm surface the light numeral is one step darker (#9AA0AB, 2.4:1 like on white)
+     knobs    --ed-focus-t (heroes, 900-1199 px: a group photo's own crop for the narrow desktop) · --ed-line-w /
+              --ed-line-w-m (a band line's measure)
+     states   a toast shows above an open sheet · a locked page keeps its scrollbar gutter (no sideways jump) · a busy
+              ink pill stays ink (its spinner white), not the disabled grey · html.hm-lite: the join band does not fade
+   USAGE RULES (from the reviews)
+     numerals  .ed-num / .ed-row__n / .ed-step__n only for a rank or a sequence; method notes, facts and FAQs stay
+               un-numbered (four 01-lists in a row read as a form)
+     band line at most two lines and about seven words, never across a face; set it line by line with .ed-l (an
+               --end line then hugs the right edge) and bind compounds with &nbsp; ("khoản&nbsp;tiền")
+     long H1   .ed-h1--long only for a title over about 40 characters (it is 32-38 px on phones); bind compounds with
+               &nbsp; where balance would split them
+     switcher  the panels share the tallest one's height: keep them within about 60 px of each other (the pill is
+               pinned to the foot, the slack sits above it)
+     band img  on phones the band is 4:5, so a WIDE photo renders 125vw x W/H wide: sizes="(max-width: 767px) 222vw,
+               100vw" for 16:9, 188vw for 3:2 (guides.py _band_sizes computes it). A 4:5 portrait of the same scene can
+               serve phones instead: <picture><source media="(max-width: 767px)" srcset="…-640.webp 640w, ….webp 1100w"
+               sizes="100vw" width="1100" height="1375"><img class="ed-band__img" … sizes="100vw"></picture> (the tools)
+   COUNT-UP WARNING: VR.live wraps a counting figure's digits in spans (.ed-count > [data-to] + .ed-count__ghost), so a
+   page rule that styles every span inside a big figure (".x b span") breaks the ghost; style the figure, not its spans.
+   Timings only from --rv-dur-* / --ed-dur-* and --rv-ease; only transform and opacity move. Weights <= 600.
+   Breakpoints: 1100 · 1024 (the switcher's two columns) · 900 (the heroes stack) · 767 (phones) · 380.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- §1 tokens, body, type */
+.ed {
+  --ed-line: #E6E8EC;              /* the hairline between rows, steps, FAQ items */
+  --ed-hover: #F6F7F9;             /* a row under the pointer */
+  --ed-press: #EEF0F3;             /* a row pressed */
+  --ed-ink: var(--rv-text);        /* 17.9:1 on white */
+  --ed-ink-2: #3A3E46;             /* body copy: 10.9:1 */
+  --ed-grey: var(--rv-grey-l);     /* meta and the one line under a title: 6.1:1 */
+  --ed-chev: #9097A3;
+  --ed-h1: clamp(46px, 5.1vw, 74px);
+  --ed-h2: clamp(32px, 2.9vw, 44px);
+  --ed-sec: clamp(72px, 7.4vw, 112px);
+  --ed-frame-sh: 0 1px 2px rgba(16, 24, 40, .04), 0 14px 28px -14px rgba(16, 24, 40, .12), 0 44px 88px -40px rgba(16, 24, 40, .24);
+  /* † the rollout's tokens */
+  --ed-surface: #fff;              /* the section's own background (a numeral or a face ring cuts a line with it) */
+  --ed-warm: #F7F5F1;              /* the alternate surface: a very light warm off-white */
+  --ed-num: #A3A9B3;               /* a light display numeral (decorative, aria-hidden: 2.5:1 is its job) */
+  --ed-num-h: #7C838F;             /* … under the pointer */
+  --ed-rule: #C3C8D0;              /* a connecting line (journey, steps): one step stronger than the hairline */
+  --ed-dur-photo: 1400ms;          /* a photograph settling (1.04 → 1), once */
+  --ed-dur-line: 900ms;            /* a connecting line drawing, once */
+  --ed-seq-step: 360ms;            /* .ed-seq: the gap between two items arriving one by one */
+  /* ‡ the integration's tokens */
+  --ed-h1-long: clamp(40px, 4.4vw, 62px);   /* a long title: a guide, a post, a story, a job */
+  --ed-top-pad: clamp(32px, 3vw, 48px);     /* a text-only header (§17): the air between the navy strip and the crumb */
+  --ed-lift: clamp(64px, 6.4vw, 96px);      /* .ed-hero--lift: how far the page's window rises into the photo */
+}
+@media (max-width: 767px) {
+  .ed { --ed-h1: clamp(40px, 11vw, 44px); --ed-h2: clamp(28px, 8vw, 32px); --ed-sec: 64px; --ed-h1-long: clamp(32px, 8.8vw, 38px); --ed-top-pad: 24px; }
+}
+
+/* a white section: the page body (no grey sheet, no rounded sheet edges on these pages) */
+.ed-sec { padding-block: var(--ed-sec); background: #fff; color: var(--ed-ink-2); }
+.ed-sec--tight { padding-block: clamp(40px, 4vw, 64px); }
+.ed-sec--rule > .wrap { border-top: 1px solid var(--ed-line); padding-top: var(--ed-sec); }
+.ed-sec--rule { padding-top: 0; }
+/* the band's sheet (rv.css §3) and the sheet's rounded end over the join band (rv.css §16) are retired here */
+.rv .rv-hero:is(.ed-hero, .ed-split, .ed-top) + .rv-sec { margin-top: 0; border-radius: 0; }
+.ed .rv-sec.ed-sec:has(+ .rv-cta) { border-radius: 0; }
+.ed .rv-sec[id] { scroll-margin-top: calc(var(--header-h) - 1px); }
+
+/* type: H1 600, tight tracking, line-height that keeps stacked marks (ể, ẫ, ộ, ữ, ờ) clear */
+.ed-h1 {
+  font: 600 var(--ed-h1)/1.04 var(--font); letter-spacing: -0.034em; color: var(--ed-ink);
+  text-wrap: balance; padding-block: .05em;
+}
+.ed-h2, .ed-head__t {
+  font: 600 var(--ed-h2)/1.1 var(--font); letter-spacing: -0.032em; color: var(--ed-ink);
+  text-wrap: balance; padding-block: .04em;
+}
+/* ‡ a long title (a guide's outcome, a post, a story, a job): one size everywhere, a step under the page H1 */
+.ed-h1--long, .ed .ed-h1.ed-h1--long { font-size: var(--ed-h1-long); line-height: 1.06; letter-spacing: -0.034em; }
+/* a headline set on its own lines ("Soi tin, báo giá, / thu tiền."): each .ed-l is one line where it fits */
+.ed-l { display: block; }
+.ed-lead { font: 400 clamp(18px, 1.4vw, 21px)/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.ed-eyebrow { font: 600 13px/1.3 var(--font); letter-spacing: .1em; text-transform: uppercase; color: var(--ed-grey); }
+
+/* a section head: the title, at most one short line; a quiet link at the right when the section has one */
+.ed-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 40px; margin-bottom: clamp(32px, 3.4vw, 52px); }
+.ed-head > :first-child { max-width: 46rem; }
+.ed-head__sub { margin-top: 14px; font: 400 clamp(17px, 1.3vw, 19px)/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.ed-head--eyebrow { margin-bottom: 20px; align-items: center; }
+.ed-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  font: 500 16px/1.3 var(--font); color: var(--rv-cobalt); text-decoration: underline;
+  text-decoration-color: rgba(44, 79, 230, .32); text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: text-decoration-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease);
+}
+.ed-link:hover { color: var(--rv-cobalt-600); text-decoration-color: currentColor; }
+.ed-link:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 2px; border-radius: 4px; }
+
+/* the breadcrumb on white (the split hero, the stacked photo hero) */
+.ed .ed-crumb { margin-bottom: 18px; }
+.ed .ed-crumb ol, .ed .ed-crumb :is(a, li + li::before) { color: var(--ed-grey); }
+.ed .ed-crumb a:hover { color: var(--ed-ink); }
+.ed .ed-crumb [aria-current] { color: var(--ed-ink-2); }
+/* ‡ the separator belongs to the crumb BEFORE it (rv.css draws it before the next one), so a crumb line that wraps
+   ends on "/" and the next line starts with a crumb, never with the separator. One line looks exactly as before. */
+.ed .breadcrumb li + li::before { content: none; }
+.ed .breadcrumb li:not(:last-child)::after { content: "/"; opacity: .6; }
+/* ‡ phones: each crumb link is a 44 px target; the padding is taken back by a negative margin, so the line stays */
+@media (max-width: 767px) {
+  .ed .breadcrumb a { display: inline-flex; align-items: center; min-height: 44px; margin-block: -12px; }
+}
+
+/* ---------------------------------------------------------------- §2 photo hero */
+/* A full-width band under the header (the header's navy strip is the band's top: the section runs up under the bar,
+   as every rv band does): a candid photograph 440-500 px tall, the H1 in white over its calm left side with a soft
+   dark gradient on that side only (AA for the white type), the breadcrumb and one line with it. No chip, no icons.
+   --ed-zoom > 100% widens the photo past the right edge so its subject moves right, clear of the type;
+   --ed-focus places it. Under 900 px the photo is 4:3 on top and the copy sits below it on white. */
+.rv .rv-hero.ed-hero {
+  margin-top: calc(-1 * var(--header-h));
+  padding: var(--header-h) 0 0;
+  background: var(--rv-band); color: #fff; overflow: clip;
+}
+.rv .rv-hero.ed-hero::before, .rv .rv-hero.ed-hero::after { content: none; }
+.ed-hero__media { position: relative; isolation: isolate; height: clamp(440px, 34.5vw, 500px); overflow: hidden; background: #1B2030; }
+.ed-hero__img {
+  position: absolute; top: 0; left: 0; z-index: -2; display: block;
+  width: var(--ed-zoom, 100%); max-width: none; height: 100%;
+  object-fit: cover; object-position: var(--ed-focus, 50% 30%);
+  transform-origin: 62% 40%;
+}
+.ed-hero__media::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 9, 20, .82) 0%, rgba(6, 9, 20, .7) 24%, rgba(6, 9, 20, .38) 44%, rgba(6, 9, 20, .08) 60%, rgba(6, 9, 20, 0) 70%),
+    linear-gradient(0deg, rgba(6, 9, 20, .32) 0%, rgba(6, 9, 20, 0) 34%);
+}
+.ed-hero__copy { position: absolute; inset: 0; display: flex; align-items: center; }
+.ed-hero__copy > .wrap { padding-bottom: 8px; }
+.ed-hero .breadcrumb { margin-bottom: 18px; }
+.ed-hero .breadcrumb ol, .ed-hero .breadcrumb :is(a, li + li::before) { color: rgba(255, 255, 255, .82); }
+.ed-hero .breadcrumb a:hover { color: #fff; }
+.ed-hero .breadcrumb [aria-current] { color: #fff; }
+.ed-hero__title { max-width: 10.5em; color: #fff; text-shadow: 0 2px 28px rgba(0, 0, 0, .22); }
+.ed-hero__lead { margin-top: 20px; max-width: 30em; font: 400 clamp(18px, 1.45vw, 21px)/1.45 var(--font); color: #fff; text-wrap: balance; text-shadow: 0 1px 18px rgba(0, 0, 0, .3); }
+@media (max-width: 899px) {
+  .rv .rv-hero.ed-hero { background: linear-gradient(180deg, var(--rv-band) 0, var(--rv-band) var(--header-h), #fff var(--header-h)); color: var(--ed-ink-2); }
+  /* width: 100% — with aspect-ratio and max-height alone the box's auto width shrinks to 560 × 4/3 = 747 px and leaves
+     a white strip at its right from 768 to 899 px; now the photo always spans and its height stops at 560 (cover) */
+  .ed-hero__media { width: 100%; height: auto; aspect-ratio: 4 / 3; max-height: 560px; }
+  .ed-hero__img { width: 100%; object-position: var(--ed-focus-m, 64% 36%); }
+  .ed-hero__media::after { content: none; }
+  .ed-hero__copy { position: static; display: block; padding-top: 26px; }
+  .ed-hero__copy > .wrap { padding-bottom: 0; }
+  .ed-hero .breadcrumb { margin-bottom: 14px; }
+  .ed-hero .breadcrumb ol, .ed-hero .breadcrumb :is(a, li + li::before) { color: var(--ed-grey); }
+  .ed-hero .breadcrumb a:hover { color: var(--ed-ink); }
+  .ed-hero .breadcrumb [aria-current] { color: var(--ed-ink-2); }
+  .ed-hero__title { max-width: none; color: var(--ed-ink); text-shadow: none; }
+  .ed-hero__lead { margin-top: 14px; color: var(--ed-grey); text-shadow: none; }
+}
+/* ‡ LIFT: the page's one product window (.ed-lift, the first thing in the next section) rises into the photo's foot by
+   --ed-lift, so the photo is a little shorter and the copy centres in what stays visible. Phones: a compact 16:9
+   photo, the copy on white, then the window (no overlap). The tool pages. */
+.ed-hero--lift .ed-hero__media { height: clamp(420px, 33vw, 480px); }
+.ed-hero--lift .ed-hero__copy > .wrap { padding-bottom: calc(var(--ed-lift) + 8px); }
+/* the next section starts at the photo's foot (flow-root: the window's negative margin must not pull the section and its
+   background up over the photo) */
+.rv .rv-hero.ed-hero--lift + .ed-sec { padding-top: 0; display: flow-root; }
+.ed-lift { position: relative; z-index: 2; margin-top: calc(-1 * var(--ed-lift)); }
+@media (max-width: 899px) {
+  .ed-hero--lift .ed-hero__media { width: 100%; height: auto; aspect-ratio: 16 / 9; max-height: 420px; }
+  .ed-hero--lift .ed-hero__copy > .wrap { padding-bottom: 0; }
+  .ed-hero--lift .ed-hero__copy { padding-top: 22px; padding-bottom: 26px; }
+  .ed-hero--lift .ed-hero__lead { margin-top: 10px; font-size: 17px; }
+  .ed-lift { margin-top: 0; padding-top: 16px; }
+}
+@media (max-width: 767px) {
+  .ed-hero--lift .ed-hero__title { font-size: clamp(34px, 9.4vw, 44px); }
+}
+/* ‡ FOOT: a group photo whose faces fill the top: a taller band, the copy at its foot over a shade that rises from the
+   bottom (and a soft one from the left). /gioi-thieu/. */
+@media (min-width: 900px) {
+  .ed-hero--foot .ed-hero__media { height: clamp(500px, 40vw, 580px); }
+  .ed-hero--foot .ed-hero__copy { align-items: flex-end; }
+  .ed-hero--foot .ed-hero__copy > .wrap { padding-bottom: clamp(40px, 3.6vw, 56px); }
+  .ed-hero--foot .ed-hero__media::after {
+    background:
+      linear-gradient(0deg, rgba(6, 9, 20, .86) 0%, rgba(6, 9, 20, .6) 30%, rgba(6, 9, 20, .12) 56%, rgba(6, 9, 20, 0) 66%),
+      linear-gradient(90deg, rgba(6, 9, 20, .5) 0%, rgba(6, 9, 20, .2) 40%, rgba(6, 9, 20, 0) 62%);
+  }
+  .ed-hero--foot .ed-hero__title { max-width: 16em; }
+}
+/* ‡ the narrow desktop (900-1199 px): a wide photo is cropped hardest here; --ed-focus-t gives it its own framing
+   (a split hero's group photo keeps its edge faces whole). Falls back to --ed-focus. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  .ed-hero__img { object-position: var(--ed-focus-t, var(--ed-focus, 50% 30%)); }
+  .ed-split__media img { object-position: var(--ed-focus-t, var(--ed-focus, 40% 50%)); }
+}
+/* ‡ FLIP: the photograph mirrored round its centre, so the people sit on the side away from the type (a band too:
+   .ed-band--flip, §10). The settle (§8) scales round the centre. */
+.ed-hero--flip .ed-hero__img { scale: -1 1; transform-origin: 50% 45%; }
+
+/* ---------------------------------------------------------------- §3 split hero */
+/* The H1, one line, ONE black pill and the big cobalt figure on white at the left (aligned to the page's column);
+   a large photograph at the right, running to the window's edge, its left corners rounded. The header's navy strip is
+   the section's top. Under 900 px: the photo full width on top (4:3), the copy below on white. */
+.rv .rv-hero.ed-split {
+  margin-top: calc(-1 * var(--header-h));
+  padding: var(--header-h) 0 0;
+  background: linear-gradient(180deg, var(--rv-band) 0, var(--rv-band) var(--header-h), #fff var(--header-h));
+  color: var(--ed-ink-2); overflow: clip;
+}
+.rv .rv-hero.ed-split::before, .rv .rv-hero.ed-split::after { content: none; }
+.ed-split__grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr); align-items: center;
+  column-gap: clamp(40px, 4.6vw, 80px);
+  padding: clamp(28px, 2.4vw, 36px) 0 0 max(var(--gutter), calc((100% - var(--wrap)) / 2));
+}
+.ed-split__copy { min-width: 0; padding-block: 24px; }
+.ed-split__title { max-width: 9.6em; }
+.ed-split__lead { margin-top: 20px; max-width: 26em; }
+.ed-split__go { margin-top: 36px; }
+.ed-split__copy .ed-big { margin-top: clamp(40px, 4vw, 56px); }
+.ed-split__media {
+  position: relative; margin: 0; height: clamp(500px, 42vw, 620px); overflow: hidden;
+  border-radius: 28px 0 0 28px; background: #E9EBEF;
+}
+.ed-split__media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--ed-focus, 40% 50%); transform-origin: 40% 50%; }
+/* † flush: the photograph meets the header and the window's right edge, square (the concept); the copy centres on it */
+.ed-split--flush .ed-split__grid { padding-top: 0; }
+.ed-split--flush .ed-split__media { height: clamp(520px, 43vw, 640px); border-radius: 0; }
+.ed-split--flush .ed-split__copy { padding-block: 40px; }
+/* ‡ compact: a short split hero for a utility page (the tracker): the photo about 340-430 px tall, 16:10 on phones */
+.ed-split--compact .ed-split__media { height: clamp(340px, 29vw, 430px); }
+.ed-split--compact .ed-split__copy { padding-block: 28px; }
+@media (max-width: 899px) {
+  .ed-split--compact .ed-split__media { height: auto; aspect-ratio: 16 / 10; }
+}
+@media (max-width: 899px) {
+  .ed-split__grid { grid-template-columns: minmax(0, 1fr); padding: 0; }
+  .ed-split--flush .ed-split__media { height: auto; }
+  .ed-split--flush .ed-split__copy { padding-block: 26px 4px; }
+  .ed-split__media { order: -1; width: 100%; height: auto; aspect-ratio: 4 / 3; max-height: 560px; border-radius: 0; }   /* width: see §2 */
+  .ed-split__media img { object-position: var(--ed-focus-m, 40% 50%); }
+  .ed-split__copy { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; padding-block: 26px 4px; }
+  .ed-split__title { max-width: none; }
+  .ed-split__lead { margin-top: 14px; }
+  .ed-split__go { margin-top: 26px; }
+  .ed-split__copy .ed-big { margin-top: 30px; }
+}
+/* † the stacked copy (phones, tablets) keeps 44 px of white under its last line when the next section is on another
+   surface (the warm one, a photo band, the dark join band), so the line never sits on that edge; above a white section
+   the section's own padding is the air. The lift hero has its own foot (the window rises after it). */
+@media (max-width: 899px) {
+  .rv .rv-hero:is(.ed-split, .ed-hero:not(.ed-hero--lift)):has(+ :is(.ed-sec--warm, .ed-band, .rv-cta)) :is(.ed-split__copy, .ed-hero__copy) { padding-bottom: 44px; }
+}
+/* † the focus ring on a white hero: the hero carries data-field="night" (it turns the header dark), whose light ring
+   (rv.css: --rv-cobalt-l, 2.4:1 on white) would fail 3:1 on the white copy. The cobalt ring wherever the copy is on
+   white: the split hero and the text-only header always, the photo hero once its copy drops under the photo. */
+.rv .rv-hero:is(.ed-split, .ed-top) { --focus: var(--rv-cobalt); }
+@media (max-width: 899px) {
+  .rv .rv-hero.ed-hero { --focus: var(--rv-cobalt); }
+}
+
+/* ---------------------------------------------------------------- §4 editorial rows */
+/* A list as rows on hairlines: a large number (or a date) at the left, the title (600) with one grey line under it,
+   a small chevron at the right. The whole row is the link: hover = a very light grey row, the title in cobalt, the
+   chevron slides 4 px; focus = an inset cobalt ring; pressed = a shade deeper. 44 px+ targets everywhere. */
+.ed-rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.ed-rows > li { border-bottom: 1px solid var(--ed-line); }
+.ed-row {
+  display: grid; grid-template-columns: var(--ed-row-n, 84px) minmax(0, 1fr) 22px; align-items: center; column-gap: 12px;
+  min-height: 88px; padding: 18px 18px 18px 16px; color: var(--ed-ink); text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease);
+}
+/* the numeral: a light grey display figure (400, the font's lightest), darker under the pointer, cobalt when its row
+   is the selected/key one (.is-lit, or [aria-selected="true"] in a switcher) */
+.ed-row__n { font: 400 clamp(32px, 2.7vw, 40px)/1 var(--font); letter-spacing: -0.045em; color: var(--ed-num); font-variant-numeric: tabular-nums; transition: color var(--rv-dur-2) var(--rv-ease); }
+.ed-row:hover .ed-row__n { color: var(--ed-num-h); }
+.ed-row__main { display: grid; gap: 5px; min-width: 0; }
+.ed-row__t { font: 600 clamp(19px, 1.45vw, 22px)/1.25 var(--font); letter-spacing: -0.018em; color: var(--ed-ink); text-wrap: balance; transition: color var(--rv-dur-2) var(--rv-ease); }
+.ed-row__d { font: 400 16px/1.45 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.ed-row__go { width: 20px; height: 20px; justify-self: end; color: var(--ed-chev); stroke-width: 1.8; transition: translate var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+.ed-row:hover { background: var(--ed-hover); }
+.ed-row:hover .ed-row__t, .ed-row:focus-visible .ed-row__t { color: var(--rv-cobalt); }
+.ed-row:hover .ed-row__go, .ed-row:focus-visible .ed-row__go { translate: 4px 0; color: var(--rv-cobalt); }
+.ed-row:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: -2px; background: var(--ed-hover); }
+.ed-row:active { background: var(--ed-press); }
+/* the row that the section's product view shows: its number in cobalt (the selected state) */
+.ed-row.is-lit .ed-row__n, .ed-row[aria-selected="true"] .ed-row__n { color: var(--rv-cobalt); }
+/* a compact row: a title (+ at most one grey line), no number. Its highlight reaches 12 px past the column on both
+   sides, softly rounded, so the text stays on the column's edge */
+.ed-rows--compact .ed-row { grid-template-columns: minmax(0, 1fr) 22px; min-height: 64px; margin-inline: -12px; padding: 14px 12px; border-radius: 10px; }
+.ed-rows--compact .ed-row__t { font-size: 18px; }
+.ed-rows--compact .ed-row__d { font-size: 15px; }
+@media (max-width: 767px) {
+  .ed-rows--compact .ed-row { min-height: 60px; padding: 14px 12px; align-items: center; }
+  .ed-rows--compact .ed-row__t { font-size: 17.5px; }
+}
+@media (max-width: 767px) {
+  .ed-row { --ed-row-n: 52px; min-height: 76px; padding: 16px 6px 16px 2px; column-gap: 10px; align-items: start; }
+  .ed-row__n { font-size: 26px; padding-top: 1px; }
+  .ed-row__t { font-size: 18.5px; }
+  .ed-row__d { font-size: 15.5px; }
+  .ed-row__go { align-self: center; }
+}
+
+/* ---------------------------------------------------------------- §5 product frame */
+/* ONE real product view per section, shown large: a white window with a hairline edge and a soft shadow, a real
+   result on real defaults or real content (never a mini widget, never a stack of them). */
+.ed-frame {
+  position: relative; background: #fff; border: 1px solid var(--ed-line); border-radius: 18px;
+  box-shadow: var(--ed-frame-sh); color: var(--ed-ink-2);
+}
+/* a frame that is one link: its pill is the link and the pill's ::after covers the frame, so a click anywhere opens
+   it. The pill itself never moves inside the frame (a transform or translate on it would make it the ::after's
+   containing block, the cover would shrink under the pointer and the click be lost); the frame lifts instead, and
+   the pill takes its hover colour from the frame's hover. */
+.ed-frame--link { transition: translate var(--rv-dur-3) var(--rv-ease), box-shadow var(--rv-dur-3) var(--rv-ease); }
+.rv .ed-frame--link .rv-pill.ed-frame__go { position: static; }
+.rv .ed-frame--link .rv-pill.ed-frame__go:is(:hover, :focus-visible, :active) { translate: none; transform: none; }
+.ed-frame--link .ed-frame__go::after { content: ""; position: absolute; inset: -1px; z-index: 1; border-radius: 18px; }
+.rv .ed-frame--link:hover .rv-pill--ink.ed-frame__go { background: #000; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .45); }
+.ed-frame--link:active { translate: 0 -1px; }
+@media (hover: hover) and (pointer: fine) {
+  .ed-frame--link:hover { translate: 0 -3px; box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 18px 34px -16px rgba(16, 24, 40, .16), 0 56px 100px -44px rgba(16, 24, 40, .3); }
+  .ed-frame--link:active { translate: 0 -1px; }
+}
+/* ‡ a white window keeps the white surface's tones wherever it sits (on the warm surface too): its rows, hovers and
+   lines are drawn on white */
+.ed-frame { --ed-surface: #fff; --ed-line: #E6E8EC; --ed-hover: #F6F7F9; --ed-press: #EEF0F3; --ed-rule: #C3C8D0; }
+.ed-frame--link:has(.ed-frame__go:focus-visible) { outline: 2px solid var(--rv-cobalt); outline-offset: 4px; }
+.rv .ed-frame--link .ed-frame__go:focus-visible { outline: none; }
+
+/* ---------------------------------------------------------------- §6 big number, date block */
+.ed-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.ed-big__n { font: 600 clamp(64px, 6.4vw, 96px)/.9 var(--font); letter-spacing: -0.045em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; padding-block: .04em; }
+.ed-big__u { font: 400 clamp(19px, 1.5vw, 23px)/1.2 var(--font); color: var(--ed-ink-2); }
+/* † a count-up that never moves its neighbours: the counting figure sits over an invisible copy of its final text,
+   which holds the width from the first paint (CLS 0). common.js counts [data-to] once its [data-live] block wakes.
+     <b class="ed-big__n rv-num"><span class="ed-count"><span data-to="2100">2.100</span><span class="ed-count__ghost"
+        aria-hidden="true">2.100</span></span>+</b> */
+.ed-count { display: inline-grid; }
+.ed-count > * { grid-area: 1 / 1; }          /* each a block as wide as the final text: nothing moves */
+/* the digits keep the figure's alignment (a left-aligned figure counts from its left edge); with a suffix element after
+   the count (.ab-fig__plus, a unit) they right-align so the suffix hugs them (a bare text "+": the page's rule) */
+.ed-count:has(+ *) > * { text-align: right; }
+.ed-count__ghost { visibility: hidden; }
+/* † a big figure that counts waits WHOLE until its block wakes: rv.css hides only the counting digits, so a suffix
+   beside them ("+") would show alone (a figure in the bottom 12 % of the first screen waits for the first scroll).
+   Put the block's data-live high enough that it wakes on load when the figure is on the first screen (on /cong-dong/
+   it is the hero's copy, not the figure). */
+html.rv-live [data-live]:not(.is-live) .ed-big__n:has([data-to]) { opacity: 0; }
+html.rv-live .ed-big__n:has([data-to]) { transition: opacity var(--rv-dur-3) var(--rv-ease); }
+/* † the side of a big figure: member portraits over the unit ("2.100+ [faces] thành viên") */
+.ed-big:has(> .ed-big__side) { align-items: flex-end; column-gap: 20px; }
+.ed-big__side { display: grid; justify-items: start; gap: 10px; padding-bottom: .3em; }
+@media (max-width: 767px) {
+  .ed-big:has(> .ed-big__side) { display: grid; justify-items: start; row-gap: 14px; }
+  .ed-big__side { display: flex; align-items: center; gap: 12px; padding-bottom: 0; }
+}
+/* † round member portraits, overlapping, each ringed with the section's surface */
+.ed-faces { display: inline-flex; align-items: center; }
+.ed-faces > img { flex: none; width: var(--ed-face, 40px); height: var(--ed-face, 40px); border-radius: 50%; object-fit: cover; background: #E9EBEF; box-shadow: 0 0 0 3px var(--ed-surface); }
+.ed-faces > img + img { margin-left: calc(var(--ed-face, 40px) * -.24); }
+html.rv-live [data-live]:not(.is-live) .ed-faces > img { opacity: 0; transform: translateX(-8px); }
+html.rv-live .ed-faces > img { transition: opacity var(--rv-dur-4) var(--rv-ease), transform var(--rv-dur-4) var(--rv-ease); }
+.ed-faces > img:nth-child(2) { transition-delay: 70ms; }
+.ed-faces > img:nth-child(3) { transition-delay: 140ms; }
+.ed-faces > img:nth-child(4) { transition-delay: 210ms; }
+.ed-faces > img:nth-child(5) { transition-delay: 280ms; }
+.ed-faces > img:nth-child(n + 6) { transition-delay: 350ms; }
+/* a date as a tall block: the day huge, the month in small caps */
+.ed-date { display: grid; justify-items: start; align-content: center; gap: 8px; }
+.ed-date__d { font: 600 clamp(58px, 5vw, 76px)/.82 var(--font); letter-spacing: -0.045em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; padding-block: .04em; }
+.ed-date__m { font: 600 13px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--ed-ink); white-space: nowrap; }
+@media (max-width: 767px) {
+  .ed-big__n { font-size: clamp(56px, 16vw, 64px); }
+  .ed-date__d { font-size: 52px; }
+  .ed-date__m { font-size: 12px; }
+}
+
+/* ---------------------------------------------------------------- §7 steps, FAQ */
+/* three numbered steps in ONE row on hairlines (phones: stacked, the number at the left) */
+.ed-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); border-bottom: 1px solid var(--ed-line); }
+.ed-step { min-width: 0; padding: 30px clamp(20px, 2.6vw, 40px) 34px; }
+.ed-step:first-child { padding-left: 0; }
+.ed-step + .ed-step { border-left: 1px solid var(--ed-line); }
+.ed-step__n { display: block; font: 600 15px/1 var(--font); letter-spacing: .02em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; }
+.ed-step__t { margin-top: 18px; font: 600 clamp(20px, 1.6vw, 23px)/1.25 var(--font); letter-spacing: -0.02em; color: var(--ed-ink); text-wrap: balance; }
+.ed-step__d { margin-top: 8px; font: 400 16px/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+@media (max-width: 767px) {
+  .ed-steps { grid-template-columns: minmax(0, 1fr); border-bottom: 0; }
+  .ed-step { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 8px; padding: 20px 0; border-bottom: 1px solid var(--ed-line); }
+  .ed-step + .ed-step { border-left: 0; }
+  .ed-step__n { grid-row: span 2; padding-top: 5px; }
+  .ed-step__t { margin-top: 0; font-size: 19px; }
+  .ed-step__d { margin-top: 4px; font-size: 15.5px; }
+}
+/* † the steps JOINED: no rules round them; each step's light numeral carries a line that runs on to the next one and
+   draws, step after step, when the list wakes (put data-live data-stagger on the <ol>). The first numeral is the key
+   one (cobalt): where you start. Phones: the numerals stack in a left column joined by a vertical line. */
+.ed-steps--line { --ed-sgap: clamp(28px, 3.4vw, 56px); column-gap: var(--ed-sgap); border: 0; }
+.ed-steps--line .ed-step, .ed-steps--line .ed-step:first-child { padding: 0; border: 0; }
+.ed-steps--line .ed-step__n {
+  display: flex; align-items: center; gap: 18px;
+  font: 400 clamp(44px, 3.6vw, 56px)/1 var(--font); letter-spacing: -0.045em; color: var(--ed-num);
+}
+/* ‡ the cobalt follows the meaningful step: .is-lit on an .ed-step; with none lit, the first (where you start) */
+.ed-steps--line:not(:has(> .is-lit)) > .ed-step:first-child .ed-step__n, .ed-steps--line > .ed-step.is-lit .ed-step__n { color: var(--rv-cobalt); }
+/* ‡ a big value under the numeral (the step's figure: "20.000.000 đ", "8,1"), cobalt on the lit step */
+.ed-step__v { display: block; margin-top: 22px; font: 600 clamp(40px, 3.6vw, 56px)/1 var(--font); letter-spacing: -0.045em; color: var(--ed-ink); font-variant-numeric: tabular-nums; padding-block: .04em; }
+.ed-step__v b { font-weight: 600; }
+.ed-step.is-lit .ed-step__v { color: var(--rv-cobalt); }
+.ed-step__v + .ed-step__t { margin-top: 14px; }
+.ed-steps--line .ed-step__n::after {
+  content: ""; flex: 1 1 auto; height: 1px; margin-right: calc(16px - var(--ed-sgap)); background: var(--ed-rule);
+  transform-origin: left center;
+}
+.ed-steps--line .ed-step:last-child .ed-step__n::after { content: none; }   /* † the line ends at the last numeral */
+.ed-steps--line .ed-step__t { margin-top: 22px; }
+html.rv-live .ed-steps--line[data-live]:not(.is-live) .ed-step__n::after { transform: scaleX(0); }
+html.rv-live .ed-steps--line .ed-step__n::after { transition: transform var(--ed-dur-line) var(--rv-ease); transition-delay: calc(200ms + var(--i, 0) * 320ms); }
+@media (max-width: 767px) {
+  .ed-steps--line { row-gap: 0; }
+  .ed-steps--line .ed-step, .ed-steps--line .ed-step:first-child { position: relative; grid-template-columns: 56px minmax(0, 1fr); column-gap: 10px; padding: 0 0 30px; border: 0; }
+  .ed-steps--line .ed-step:last-child { padding-bottom: 0; }
+  .ed-steps--line .ed-step__n { display: block; grid-row: 1 / span 9; padding-top: 0; font-size: 40px; }
+  .ed-steps--line .ed-step > :not(.ed-step__n) { grid-column: 2; }   /* ‡ a third or fourth line stays in the text column */
+  .ed-step__v { margin-top: 0; font-size: 34px; }
+  .ed-step__v + .ed-step__t { margin-top: 8px; }
+  .ed-steps--line .ed-step__n::after { position: absolute; left: 19px; top: 52px; bottom: 6px; width: 1px; height: auto; margin: 0; transform-origin: center top; }
+  .ed-steps--line .ed-step:last-child .ed-step__n::after { content: none; }
+  .ed-steps--line .ed-step__t { margin-top: 6px; }
+  html.rv-live .ed-steps--line[data-live]:not(.is-live) .ed-step__n::after { transform: scaleY(0); }
+}
+
+/* the FAQ: the title at the left, a clean accordion on hairlines at the right (native <details>: keyboard and screen
+   readers for free); the chevron turns; where the browser can animate to auto height, the answer opens smoothly */
+.ed-faq { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px clamp(40px, 6vw, 96px); align-items: start; }
+.ed-faq__list { border-top: 1px solid var(--ed-line); }
+.ed-faq__item { border-bottom: 1px solid var(--ed-line); }
+/* † the question reaches 12 px past the column on both sides (its text stays on the column's edge), so the focus ring
+   is drawn inside it with air round the words, like the rows' inset ring */
+.ed-faq__q {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  min-height: 76px; margin-inline: -12px; padding: 20px 12px; border-radius: 10px; cursor: pointer; list-style: none;
+  font: 600 clamp(18px, 1.35vw, 20px)/1.35 var(--font); letter-spacing: -0.014em; color: var(--ed-ink);
+  transition: color var(--rv-dur-2) var(--rv-ease);
+}
+.ed-faq__q::-webkit-details-marker { display: none; }
+.ed-faq__q::marker { content: ""; }
+.ed-faq__q:hover { color: var(--rv-cobalt); }
+.ed-faq__q:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: -2px; }
+.ed-faq__q .icon { flex: none; width: 22px; height: 22px; color: var(--ed-grey); stroke-width: 1.8; transition: transform var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+.ed-faq__q:hover .icon { color: var(--rv-cobalt); }
+.ed-faq__item[open] .ed-faq__q .icon { transform: rotate(180deg); }
+.ed-faq__a { max-width: 62ch; padding: 0 56px 26px 0; font: 400 17px/1.65 var(--font); color: var(--ed-ink-2); }
+.ed-faq__a p + p { margin-top: 10px; }
+.ed-faq__a a { color: var(--rv-cobalt); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@supports (interpolate-size: allow-keywords) {
+  .ed-faq__list { interpolate-size: allow-keywords; }
+  .ed-faq__item::details-content { block-size: 0; overflow: clip; transition: block-size var(--rv-dur-3) var(--rv-ease), content-visibility var(--rv-dur-3) allow-discrete; }
+  .ed-faq__item[open]::details-content { block-size: auto; }
+}
+@media (max-width: 1023px) {
+  .ed-faq { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .ed-faq__q { min-height: 64px; padding: 16px 12px; font-size: 17px; }
+  .ed-faq__a { padding-right: 0; font-size: 16px; }
+}
+
+/* ---------------------------------------------------------------- §8 motion */
+/* Restrained: the hero photo eases from 1.04 to 1 once on load; rows rise in with a small stagger (rv.css §26.7:
+   [data-live] + .rv-in, only blocks that start off screen); hover states as above. Off under reduced motion, under
+   html.hm-lite and without html.rv-live (base.html's head sets it only where motion can play well). */
+@keyframes ed-settle { from { transform: scale(1.04); } to { transform: none; } }
+html.rv-live .ed-hero__img, html.rv-live .ed-split__media img { animation: ed-settle 1400ms var(--rv-ease) both; }
+html.rv-live .ed-rows > .rv-in { transition-duration: var(--rv-dur-4), var(--rv-dur-4), var(--rv-dur-3), var(--rv-dur-3), var(--rv-dur-2); }
+@media (prefers-reduced-motion: reduce) {
+  .ed-hero__img, .ed-split__media img { animation: none !important; }
+  .ed-row__go, .ed-frame--link, .ed-faq__q .icon { transition: none; }
+  .ed-row:hover .ed-row__go, .ed-row:focus-visible .ed-row__go { translate: none; }
+  .ed-frame--link:hover { translate: none; }
+  .ed-faq__item::details-content { transition: none; }
+}
+html.hm-lite .ed-hero__img, html.hm-lite .ed-split__media img { animation: none; }
+html.hm-lite .ed-frame--link:hover { translate: none; }
+@media print {
+  .rv .rv-hero:is(.ed-hero, .ed-split, .ed-top) { background: #fff !important; }
+  .ed-hero__media::after { content: none; }
+  .ed-hero__copy { position: static; }
+  .ed-hero__title, .ed-hero__lead { color: #000; text-shadow: none; }
+  .ed-frame { box-shadow: none; }
+}
+
+/* ---------------------------------------------------------------- §9 surfaces (†) */
+/* Two body surfaces that ALTERNATE so neighbouring sections never blur together: white (.ed-sec) and a very light warm
+   off-white (.ed-sec--warm). Each sets its own hairline, hover and press tones and --ed-surface (what a numeral or a
+   face ring that cuts a line is painted with). Two neighbours on one surface: join them with .ed-sec--rule. */
+.ed-sec { --ed-surface: #fff; }
+.rv .ed-sec--warm {
+  background: var(--ed-warm);
+  --ed-surface: var(--ed-warm); --ed-line: #E3DFD7; --ed-hover: #EFECE6; --ed-press: #E8E4DC; --ed-rule: #C8C3B9;
+  --ed-num: #9AA0AB;               /* the light numeral one step darker on warm (2.4:1, as #A3A9B3 is on white) */
+}
+.ed-sec--warm .ed-frame { border-color: #E1DDD5; }   /* its edge meets the warm surface; inside, white tones (§5) */
+
+/* ---------------------------------------------------------------- §10 photo band (†) */
+/* A longer page breathes once: a candid photograph across the whole window and ONE short strong line in white over its
+   calm side (a soft shade on that side only, so the type passes AA). Nothing else: no button, no chip, no second line.
+   It sits between two sections; data-field="night" turns the header dark while it is under the bar.
+     <div class="ed-band ed-band--end ed-band--top" data-field="night" data-live style="--ed-focus: 24% 50%">
+       <img class="ed-band__img" src="…-1200.webp" srcset="…" sizes="100vw" width="2048" height="1152" alt=""
+            loading="lazy" decoding="async">
+       <div class="ed-band__copy"><div class="wrap"><p class="ed-band__line">Báo giá đúng, thu tiền&nbsp;đủ.</p></div></div>
+     </div>
+   --ed-focus frames the subject (also the photo's settling origin), --ed-focus-m on phones, --ed-band-h the height;
+   --ed-zoom (> 100%) widens the photo and --ed-x shifts it (e.g. 120% and -20%: the people move left, clear of a
+   line at the right) where the photo is too wide for the band to crop sideways.
+   Once, as it enters: the photo settles from 1.04 to 1, the line rises in. Phones: 4:5, the line at the foot on a
+   shade that rises from the bottom. */
+.ed-band {
+  position: relative; isolation: isolate; overflow: hidden; height: var(--ed-band-h, clamp(440px, 38vw, 580px));
+  background: #141823; color: #fff;
+}
+.ed-band__img {
+  position: absolute; top: 0; left: var(--ed-x, 0); z-index: -2; display: block; width: var(--ed-zoom, 100%); max-width: none; height: 100%;
+  object-fit: cover; object-position: var(--ed-focus, 50% 50%); transform-origin: var(--ed-focus, 50% 50%);
+}
+.ed-band::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(6, 9, 20, .7) 0%, rgba(6, 9, 20, .46) 30%, rgba(6, 9, 20, .1) 54%, rgba(6, 9, 20, 0) 66%);
+}
+.ed-band--end::after { background: linear-gradient(270deg, rgba(6, 9, 20, .62) 0%, rgba(6, 9, 20, .4) 30%, rgba(6, 9, 20, .08) 54%, rgba(6, 9, 20, 0) 66%); }
+/* ‡ the line at the foot: its own shade rising from the bottom (+ a soft one from the line's side) */
+.ed-band--bottom::after {
+  background: linear-gradient(0deg, rgba(6, 9, 20, .78) 0%, rgba(6, 9, 20, .5) 30%, rgba(6, 9, 20, .12) 56%, rgba(6, 9, 20, 0) 70%),
+    linear-gradient(90deg, rgba(6, 9, 20, .55) 0%, rgba(6, 9, 20, .3) 34%, rgba(6, 9, 20, 0) 56%);
+}
+.ed-band--bottom.ed-band--end::after {
+  background: linear-gradient(0deg, rgba(6, 9, 20, .78) 0%, rgba(6, 9, 20, .5) 30%, rgba(6, 9, 20, .12) 56%, rgba(6, 9, 20, 0) 70%),
+    linear-gradient(270deg, rgba(6, 9, 20, .55) 0%, rgba(6, 9, 20, .3) 34%, rgba(6, 9, 20, 0) 56%);
+}
+/* ‡ a light photograph (a grey wall, a bright window): a deeper shade on the line's side, so it keeps 3:1 at its worst
+   pixel */
+.ed-band--deep::after { background: linear-gradient(90deg, rgba(6, 9, 20, .84) 0%, rgba(6, 9, 20, .7) 30%, rgba(6, 9, 20, .34) 50%, rgba(6, 9, 20, .06) 64%, rgba(6, 9, 20, 0) 72%); }
+.ed-band--deep.ed-band--end::after { background: linear-gradient(270deg, rgba(6, 9, 20, .84) 0%, rgba(6, 9, 20, .7) 30%, rgba(6, 9, 20, .34) 50%, rgba(6, 9, 20, .06) 64%, rgba(6, 9, 20, 0) 72%); }
+/* ‡ the photograph mirrored round its centre (the people on the side away from the line); it settles round the centre */
+.ed-band--flip .ed-band__img { scale: -1 1; transform-origin: 50% 50%; }
+/* ‡ the line keeps the two lines its .ed-l spans set (no width cap) */
+.ed-band--wide .ed-band__line { max-width: none; }
+.ed-band__copy { position: absolute; inset: 0; display: flex; align-items: center; padding-block: clamp(56px, 6vw, 96px); }
+.ed-band--top .ed-band__copy { align-items: flex-start; }
+.ed-band--bottom .ed-band__copy { align-items: flex-end; }
+.ed-band__copy > .wrap { display: flex; }
+.ed-band--end .ed-band__copy > .wrap { justify-content: flex-end; }
+.ed-band__line {
+  max-width: var(--ed-line-w, 10.5em); font: 600 clamp(44px, 4.6vw, 68px)/1.04 var(--font); letter-spacing: -0.036em; color: #fff;
+  text-wrap: balance; text-shadow: 0 2px 30px rgba(0, 0, 0, .28); padding-block: .05em;
+}
+html.rv-live .ed-band__img { transition: transform var(--ed-dur-photo) var(--rv-ease); }
+html.rv-live .ed-band[data-live]:not(.is-live) .ed-band__img { transform: scale(1.04); }
+html.rv-live .ed-band__line { transition: opacity var(--rv-dur-4) var(--rv-ease), transform var(--rv-dur-4) var(--rv-ease); transition-delay: 260ms; }
+html.rv-live .ed-band[data-live].rv-pre:not(.is-live) .ed-band__line { opacity: 0; transform: translateY(16px); transition: none; }
+@media (max-width: 767px) {
+  .ed-band { height: auto; aspect-ratio: 4 / 5; max-height: 620px; }
+  .ed-band__img { left: 0; width: 100%; object-position: var(--ed-focus-m, var(--ed-focus, 50% 50%)); transform-origin: var(--ed-focus-m, var(--ed-focus, 50% 50%)); }
+  .ed-band::after, .ed-band--end::after, .ed-band--bottom::after, .ed-band--bottom.ed-band--end::after { background: linear-gradient(0deg, rgba(6, 9, 20, .82) 0%, rgba(6, 9, 20, .55) 28%, rgba(6, 9, 20, .12) 50%, rgba(6, 9, 20, 0) 62%); }
+  .ed-band--deep::after, .ed-band--deep.ed-band--end::after { background: linear-gradient(0deg, rgba(6, 9, 20, .86) 0%, rgba(6, 9, 20, .6) 30%, rgba(6, 9, 20, .14) 52%, rgba(6, 9, 20, 0) 64%); }
+  .ed-band__copy, .ed-band--top .ed-band__copy { align-items: flex-end; padding-block: 32px; }
+  .ed-band--end .ed-band__copy > .wrap { justify-content: flex-start; }
+  .ed-band__line { max-width: var(--ed-line-w-m, 11em); font-size: clamp(32px, 9.4vw, 40px); }
+}
+
+/* ‡ the header over a band: html.vr-band (common.js) is set only under an .rv-hero or the join band, so over a photo
+   band the scrolled bar went pure black (base.css §17 night); it keeps the bands' navy, as over the hero */
+html[data-field="night"] body.rv.ed .site-header.is-scrolled:not(.is-open) { --hdr-bg: var(--rv-band); }
+
+/* ---------------------------------------------------------------- §11 numerals (†) */
+/* Lists number themselves with LIGHT figures: grey, 400 (the font's lightest), tight; the selected or key one is cobalt.
+   .ed-row__n (§4), .ed-step__n in .ed-steps--line (§7) and .ed-stop__n (§13) already are; .ed-num is the same figure
+   anywhere else (a panel's bar, a stage). Decorative: the number stays in the text, or the figure is aria-hidden. */
+.ed-num { font: 400 clamp(32px, 2.7vw, 40px)/1 var(--font); letter-spacing: -0.045em; color: var(--ed-num); font-variant-numeric: tabular-nums; }
+.ed-num--sm { font-size: 22px; letter-spacing: -0.02em; }
+.ed-num:is(.is-key, .is-lit), .is-lit > .ed-num { color: var(--rv-cobalt); }   /* ‡ also the numeral of a lit row */
+
+/* ---------------------------------------------------------------- §12 switcher (†) */
+/* A list that DRIVES one large preview: the numbered rows at the left, ONE frame at the right (sticky on desktop) whose
+   panels are the real views of what the rows name; resting on, focusing or tapping a row cross-fades the frame to it.
+   No JS, or under 1024 px: the rows are plain links and the frame shows the row marked .is-lit (its panel .is-on).
+   static/portal/js/ed.js makes it a vertical tablist from 1024 px (keyboard, hover intent, touch: first tap selects).
+     <div class="ed-switch" data-ed-switch>
+       <div class="ed-switch__list"><ol class="ed-rows" role="list">
+         <li><a class="ed-row" id="tab-a" href="/a/" data-ed-tab="view-a">…</a></li>
+         <li><a class="ed-row is-lit" id="tab-b" href="/b/" data-ed-tab="view-b">…</a></li> …
+       </ol></div>
+       <div class="ed-switch__stage"><div class="ed-frame ed-frame--link ed-stage">
+         <div class="ed-panel" id="view-a"><p class="ed-panel__bar"><span class="ed-num ed-num--sm">01</span>
+           <span class="ed-panel__title">A</span></p><div class="ed-panel__body">…</div>
+           <div class="ed-panel__foot"><a class="rv-pill rv-pill--ink ed-frame__go" href="/a/">Mở …</a></div></div>
+         <div class="ed-panel is-on" id="view-b">…</div> …
+       </div></div>
+     </div>
+   The panels stack in ONE cell, so the frame is as tall as the tallest (nothing below moves when the view changes):
+   design them to about one height, the pill pinned to the foot. */
+.ed-switch { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(40px, 4.6vw, 72px); align-items: start; }
+.ed-switch__list, .ed-switch__stage { min-width: 0; }
+.ed-switch__stage { position: sticky; top: calc(var(--header-h) + 28px); }
+/* the selected row: its numeral cobalt (§4) and a cobalt rule at its left edge (‡ any row that is a tab, an .ed-row or a
+   page's own row) */
+[data-ed-switch] [data-ed-tab] { position: relative; }
+[data-ed-switch] [data-ed-tab]::before {
+  content: ""; position: absolute; left: 0; top: -1px; bottom: -1px; width: 2px; background: var(--rv-cobalt);
+  transform: scaleY(0); transition: transform var(--rv-dur-3) var(--rv-ease);
+}
+[data-ed-switch] [data-ed-tab].is-lit::before { transform: none; }
+/* the stage: one frame, the panels in one cell, cross-fading (220 ms; instant without html.rv-live) */
+.ed-stage { display: grid; overflow: hidden; }
+.ed-stage > .ed-panel { grid-area: 1 / 1; }
+.ed-panel { display: flex; flex-direction: column; min-width: 0; }
+.ed-panel:not(.is-on) { visibility: hidden; opacity: 0; pointer-events: none; transform: translateY(6px); }
+html.rv-live .ed-panel { transition: opacity var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-3) var(--rv-ease), visibility var(--rv-dur-3) step-end; }
+html.rv-live .ed-panel.is-on { transition: opacity var(--rv-dur-3) var(--rv-ease), transform var(--rv-dur-3) var(--rv-ease), visibility var(--rv-dur-3) step-start; }
+/* a panel's anatomy: the bar (a light numeral + the title [+ a quiet meta at the right]), the body, the foot (the pill) */
+.ed-panel__bar { display: flex; align-items: baseline; gap: 14px; padding: 22px 30px 18px; border-bottom: 1px solid var(--ed-line); }
+.ed-panel__title { font: 600 clamp(20px, 1.6vw, 23px)/1.25 var(--font); letter-spacing: -0.022em; color: var(--ed-ink); }
+.ed-panel__meta { margin-left: auto; font: 400 14px/1.3 var(--font); color: var(--ed-grey); white-space: nowrap; }
+.ed-panel__body { flex: 1 1 auto; min-width: 0; }
+.ed-panel__foot { padding: 20px 30px 28px; }
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .ed-switch { grid-template-columns: minmax(0, 4.4fr) minmax(0, 7.6fr); column-gap: 36px; }   /* the view keeps its room */
+}
+@media (max-width: 1023px) {
+  .ed-switch { grid-template-columns: minmax(0, 1fr); }
+  .ed-switch__stage { position: static; max-width: 720px; }
+  [data-ed-switch] [data-ed-tab]::before { content: none; }
+  .ed-stage > .ed-panel:not(.is-on) { display: none; }      /* one view, sized to itself */
+}
+@media (max-width: 767px) {
+  .ed-panel__bar { padding: 18px 20px 14px; }
+  .ed-panel__foot { padding: 16px 20px 22px; }
+  .ed-panel__foot .rv-pill { width: 100%; }
+}
+
+/* ---------------------------------------------------------------- §13 journey (†) */
+/* Stages a reader moves through, told with people: three columns, each a candid portrait (3:4 photos framed 4:5), a
+   light numeral whose line runs on to the next stage and DRAWS when the numeral itself comes into view (data-live on
+   it, so the drawing is seen, not spent below the fold while the portraits pass), the stage's title (+ one grey line)
+   and its links as compact rows. Phones: a vertical rail, each portrait a round node, the line runs down.
+     <ol class="ed-journey" role="list" data-live data-stagger>
+       <li class="ed-stop rv-in" id="giai-doan-1">
+         <figure class="ed-stop__photo"><img src="…-560.webp" srcset="…-560.webp 560w, ….webp 960w"
+           sizes="(min-width: 768px) 30vw, 64px" width="960" height="1280" alt="" loading="lazy" decoding="async"></figure>
+         <p class="ed-stop__n" aria-hidden="true" data-live>01</p>
+         <h3 class="ed-stop__t">Mới bắt đầu</h3>
+         <ul class="ed-rows ed-rows--compact" role="list">…</ul>
+       </li> …
+     </ol> */
+.ed-journey {
+  --ed-jgap: clamp(28px, 3.4vw, 56px);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--ed-jgap); margin: 0; padding: 0; list-style: none;
+}
+.ed-stop { min-width: 0; scroll-margin-top: calc(var(--header-h) + 24px); }
+.ed-stop__photo { margin: 0 0 30px; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: #E6E2DA; }
+.ed-stop__photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--ed-focus, 50% 35%); }
+.ed-stop__n {
+  display: flex; align-items: center; gap: 18px;
+  font: 400 clamp(40px, 3.4vw, 52px)/1 var(--font); letter-spacing: -0.045em; color: var(--ed-num); font-variant-numeric: tabular-nums;
+}
+.ed-stop__n::after { content: ""; flex: 1 1 auto; height: 1px; margin-right: calc(16px - var(--ed-jgap)); background: var(--ed-rule); transform-origin: left center; }
+.ed-stop:last-child .ed-stop__n::after { content: none; }   /* † the line ends at the last stop's numeral */
+.ed-stop__t { margin-top: 16px; font: 600 clamp(22px, 1.8vw, 26px)/1.2 var(--font); letter-spacing: -0.024em; color: var(--ed-ink); text-wrap: balance; }
+.ed-stop__d { margin-top: 6px; font: 400 16px/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.ed-stop > .ed-rows { margin-top: 18px; }
+html.rv-live .ed-stop__n[data-live]:not(.is-live)::after { transform: scaleX(0); }
+html.rv-live .ed-stop__n::after { transition: transform var(--ed-dur-line) var(--rv-ease); transition-delay: calc(320ms + var(--i, 0) * 320ms); }
+@media (max-width: 767px) {
+  .ed-journey { grid-template-columns: minmax(0, 1fr); }
+  .ed-stop { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 18px; align-content: start; padding-bottom: 40px; }
+  .ed-stop:last-child { padding-bottom: 0; }
+  .ed-stop > * { grid-column: 2; }
+  .ed-stop__photo { grid-column: 1; grid-row: 1 / span 3; width: 64px; height: 64px; aspect-ratio: auto; margin: 0; border-radius: 50%; }
+  .ed-stop__photo img { object-position: var(--ed-focus-m, 50% 22%); }
+  .ed-stop__n { display: block; font-size: 30px; }
+  .ed-stop__n::after { content: none; }
+  .ed-stop__t { margin-top: 6px; font-size: 21px; }
+  .ed-stop > .ed-rows { margin-top: 12px; }
+  .ed-stop:not(:last-child)::before { content: ""; position: absolute; left: 32px; top: 78px; bottom: 12px; width: 1px; background: var(--ed-rule); transform-origin: center top; }
+  html.rv-live .ed-stop:has(> .ed-stop__n[data-live]:not(.is-live))::before { transform: scaleY(0); }
+  html.rv-live .ed-stop::before { transition: transform var(--ed-dur-line) var(--rv-ease); transition-delay: calc(320ms + var(--i, 0) * 320ms); }
+}
+
+/* ---------------------------------------------------------------- §14 reveal (†) */
+/* Entrances are rv.css §26.7's: a [data-live] block's .rv-in children rise once (14 px, fade), [data-stagger] spaces
+   them 50 ms; a lone block can be .rv-in[data-live] itself. Only blocks that start off screen move (VR.live marks them
+   .rv-pre): the first screen is never hidden. .ed-seq slows the stagger so items arrive ONE BY ONE (a conversation's
+   replies): <ol class="ed-seq" data-live data-stagger><li class="rv-in">…</li>…</ol> */
+.ed-seq > .rv-in { --rv-in-delay: calc(var(--live-i, 0) * 60ms + 180ms + var(--i, 0) * var(--ed-seq-step)); }
+/* the long delays are for arriving only: going into the waiting state (VR.live, just after load) is instant */
+html.rv-live .ed-seq.rv-pre:not(.is-live) > .rv-in { transition: none; }
+
+/* ---------------------------------------------------------------- §15 line-draw (†) */
+/* A connecting hairline that draws once when its [data-live] block wakes (the journey and the joined steps draw their
+   own). <span class="ed-line" aria-hidden="true"></span> (horizontal, from the left) · .ed-line--v (vertical, from
+   the top; give it a height). --ed-line-delay sequences it after something. */
+.ed-line { display: block; height: 1px; background: var(--ed-rule); transform-origin: left center; }
+.ed-line--v { width: 1px; height: auto; transform-origin: center top; }
+html.rv-live [data-live]:not(.is-live) .ed-line { transform: scaleX(0); }
+html.rv-live [data-live]:not(.is-live) .ed-line--v { transform: scaleY(0); }
+html.rv-live .ed-line { transition: transform var(--ed-dur-line) var(--rv-ease); transition-delay: var(--ed-line-delay, 200ms); }
+
+/* ---------------------------------------------------------------- §16 off: reduced motion, lite, print (†) */
+/* Every entrance above is keyed on html.rv-live, which base.html never sets under reduced motion or html.hm-lite:
+   there, final states show and views swap instantly. What is not keyed on it is switched off here. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ed-switch] [data-ed-tab]::before, .ed-row__n { transition: none; }
+  .ed-panel:not(.is-on) { transform: none; }
+}
+html.hm-lite .ed-panel:not(.is-on) { transform: none; }
+@media print {
+  .ed-band { height: auto; aspect-ratio: auto; background: none; color: #000; }
+  .ed-band__img, .ed-band::after { display: none; }
+  .ed-band__copy { position: static; padding: 24px 0; }
+  .ed-band__line { color: #000; text-shadow: none; }
+  .ed-stage > .ed-panel:not(.is-on) { display: none; }
+  .rv .ed-sec--warm { background: #fff; }
+  html.rv-live .ed-big__n:has([data-to]) { opacity: 1 !important; transition: none !important; }   /* a figure not yet woken */
+}
+
+/* ‡ shared states on the kit's pages: a toast fired from a sheet shows above it (sheet z 90, toast 80) · a page locked
+   by a sheet keeps its scrollbar's gutter (classic scrollbars: no 17 px sideways jump) · a busy ink pill (VR.busy also
+   sets aria-disabled) keeps its ink with the white spinner instead of the disabled grey · html.hm-lite: the join band
+   (rv.css .reveal) shows at once, as every other block does there */
+.rv.ed .toast { z-index: 95; }
+html.rv-lock:has(> body.ed) { scrollbar-gutter: stable; }
+.rv.ed .rv-pill--ink[aria-busy="true"] { opacity: .86; }
+.js.hm-lite .rv.ed .reveal { opacity: 1; transform: none; transition: none; }
+
+/* ---------------------------------------------------------------- §17 text-only page header (‡) */
+/* A page whose subject has no photograph (a job, a post, a story): white under the header's navy strip (the strip is
+   the section's top, as on the split hero), the crumb --ed-top-pad below it, then the page's own header (a long title:
+   .ed-h1.ed-h1--long). One base for the three; each page composes what follows the crumb.
+     <section class="rv-hero ed-top" id="dau-trang" data-field="night" aria-labelledby="…">
+       <div class="wrap"><nav class="breadcrumb ed-crumb" aria-label="Đường dẫn">…</nav> <h1 class="ed-h1 ed-h1--long">…</h1> …</div>
+     </section> */
+.rv .rv-hero.ed-top {
+  margin-top: calc(-1 * var(--header-h));
+  padding: calc(var(--header-h) + var(--ed-top-pad)) 0 0;
+  background: linear-gradient(180deg, var(--rv-band) 0, var(--rv-band) var(--header-h), #fff var(--header-h));
+  color: var(--ed-ink-2); overflow: clip;
+}
+.rv .rv-hero.ed-top::before, .rv .rv-hero.ed-top::after { content: none; }
+
+/* ---------------------------------------------------------------- §18 pieces (‡) */
+/* one honest line where content will come (no card, no icon): the line [+ one grey line], then one quiet link or one
+   pill at the right (phones: under it)
+     <div class="ed-none"><div><p class="ed-none__t">Chưa có …</p>[<p class="ed-none__d">…</p>]</div> <a class="ed-link">…</a></div> */
+.ed-none { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 40px; padding-block: 30px; border-block: 1px solid var(--ed-line); }
+.ed-none__t { font: 500 clamp(22px, 1.9vw, 28px)/1.3 var(--font); letter-spacing: -0.02em; color: var(--ed-ink); text-wrap: balance; }
+.ed-none__d { margin-top: 6px; font: 400 17px/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+/* a portrait where the site has no photo of the person: their initial on a quiet grey disc (never a stock face);
+   --face sets the size */
+.ed-face {
+  display: inline-grid; place-items: center; flex: none; width: var(--face, 56px); height: var(--face, 56px); border-radius: 50%;
+  background: #ECEEF2; color: var(--ed-ink); font: 500 calc(var(--face, 56px) * .42)/1 var(--font); letter-spacing: -0.02em;
+}
+

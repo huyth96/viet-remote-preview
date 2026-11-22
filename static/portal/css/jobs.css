@@ -1,1243 +1,1158 @@
 /* =====================================================================
    Việt Remote — jobs.css  (jobs group: /viec-lam/, /nganh/<slug>/, job detail, /da-luu/, /luong-remote/)
-   Binding: portal/DESIGN_SYSTEM_SUPERAPP.md (the approved home's language). The shared pieces come from
-   superapp.css (bands, page hero, phones, .njc, .sa-card, .sa-chips, CTA band) and base.css (.btn, .search,
-   .tabs, .chip, .badge, .logo, .save-btn, .job-row); this file only composes the pages and restyles the board's
-   rows (job_row.html / VR.jobRow) to the home job card's recipe (.njc): crisp white, hairline + soft two-layer
-   shadow, 22 px corners, 52 px logo, 740 title, pay in green. Every other job card on these pages IS the home's
-   card (njc.html): the rail, "Việc tương tự", "Gợi ý để bắt đầu". Page prefixes: .jl- (board),
-   .fd- (field), .jd- (detail), .sv- (saved), .sl- (salary). Matte only: no gloss, glass or glow behind text.
+   Binding: portal/DESIGN_SYSTEM_REVOLUT.md (§26 the lively layer, §26b tone A). Loaded after rv.css (block extra_head):
+   every component (hero, heads, pills, cards, the hue map, app icons, stages, mini windows, bars, rings, ticks, the
+   join band) is rv.css, used as it is; this file only composes the pages with their prefixes and draws the board's own
+   controls (the filter card, the rows of job_row.html / VR.jobRow, the tracker, the salary charts). The board
+   /viec-lam/ (§1-3) is approved and unchanged. Every other page names ONE centre of gravity (its template comment):
+   the job page's pay card, the salary page's median, the field page's list, the tracker. Colour per tone A: surfaces
+   navy / white / neutral grey, colour only in app icons, data marks and key numbers (a salary in mint ink).
+   Page prefixes: .jl- board · .fd- field · .jd- detail · .sv- saved · .sl- salary.
 
    Sections
-     0  Initials tiles       logo-less employers as the app's solid tiles (rows, cards, tracker, job page, phones)
-     1  Filter controls      fopt (checkbox row) · fswitch · fseg
-     2  Board hero           .jl-hero (compact cobalt band, search, counts, the whole app phone)
-     3  Board list           grid · filter card (sticky / bottom sheet) · rail · bar · rows · more · fab
-     4  Field page           /nganh/<slug>/ (hero note, skills row, guides)
-     5  Job detail           cobalt head · pay card (sticky) · facts · checks · description · similar · bar
-     6  Saved tracker        centred hero · app-like board (desktop) · status tabs (mobile) · empty state
-     7  Salary               cobalt hero + distribution card · median table card · skills · method · navy band
+     0  Shared              rules for the five pages (job cards' pay fallback, the meta line), local tokens
+     1  Board band          the band is rv.css §3; the search docked on the sheet's edge (.rv-dock)
+     2  Filter card         .jl-panel (sticky white card / bottom sheet) · fopt · fswitch · .rv-filters (kit radio pills) · fab · scrim
+     3  Results             figures line · Bộ lọc + quick filters (phones) · sort pills · active pills · rows ·
+                            empty · more · notes
+     4  Field page          the pay window on the band · the median in mint · skills · the guides (one lead + rows)
+     5–7 Direction A (19/11, on ed.css: portal/INNER_A_SPEC.md) for the three pages below; the board and the field
+            page keep §1–4 as approved
+     5  Job detail          one white section: crumb · header (tile, company · field · posted, the title huge) ·
+                            THE apply box (ed-frame, sticky: the pay big in cobalt, the field comparison, the black
+                            pill) · facts as label/value rows · the five checks as numbered rows · description ·
+                            next jobs (the board's rows on the warm section) · the phone apply bar
+     6  Saved tracker       compact split hero · the numbers row (thin grey counts, the chosen one cobalt) driving
+                            the list · saved jobs as the board's rows with status menu, note, remove · empty line ·
+                            suggestions (the board's rows)
+     7  Salary              photo hero · the median huge (count-up) | the histogram window (readout) · fields as
+                            editorial rows with a slim bar · a full-bleed photo with one line · the rate flow (a rule
+                            that draws on entry) · skills + method as numbered rows
+     8  Motion              reduced motion and the lite tier for this file's own movement
    ===================================================================== */
 
-/* ---------------------------------------------------------------- 0 initials tiles */
-/* An employer without a logo that reads at this size gets the app's solid tile (superapp.css .va-job__tile: one
-   matte colour, soft top light, darker foot, white initials), never a grey monogram. The colour is fixed per
-   company: picked from the first initial (data-initials, printed by job_row.html, njc.html, VR.jobRow, saved.js, the
-   job page and the phone rows), so one employer reads the same in the hero phone, the list, the cards, the tracker
-   and its job page. Blue / violet / orange: the phone's three job colours. An anonymous Upwork client (empty
-   initials) is the blue tile with the app's white briefcase glyph. Real logos (an <img>) are left as they are. */
-:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile) {
-  --c: #2F6BFF;
-  color: #fff;
-  background:
-    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
-    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 6px 12px -8px rgba(10, 18, 48, .45);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, .16);
-  font-weight: 760;
+/* ---------------------------------------------------------------- 0 shared */
+:is(.jl-page, .jd-page, .sv-page, .sl-page) {
+  --jl-rule: rgba(20, 30, 60, .1);           /* a hairline that reads on the sheet (rv's light hairline is for white) */
+  --jl-ring: 0 0 0 1px rgba(20, 30, 60, .06);
 }
-:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile):is(
-  [data-initials^="B"], [data-initials^="C"], [data-initials^="F"], [data-initials^="J"],
-  [data-initials^="O"], [data-initials^="P"], [data-initials^="Q"], [data-initials^="Z"]) { --c: #7E5BF2; }
-:is(.page-jobs, .page-job, .page-saved) :is(.logo:not(:has(img)), .va-job__tile):is(
-  [data-initials^="D"], [data-initials^="E"], [data-initials^="G"], [data-initials^="K"],
-  [data-initials^="M"], [data-initials^="T"], [data-initials^="U"], [data-initials^="X"]) { --c: #EC6A14; }
-:is(.page-jobs, .page-job, .page-saved) .logo:empty::before {
-  width: 52%; height: 52%;
-  background: #fff;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9.3 3.4h5.4c1 0 1.8.8 1.8 1.8v1.4h2.6a2.4 2.4 0 0 1 2.4 2.4v9.7a2.4 2.4 0 0 1-2.4 2.4H4.9a2.4 2.4 0 0 1-2.4-2.4V9a2.4 2.4 0 0 1 2.4-2.4h2.6V5.2c0-1 .8-1.8 1.8-1.8Zm.1 1.8v1.4h5.2V5.2ZM2.5 12.6v1.5h8.3v.4c0 .4.3.7.7.7h1c.4 0 .7-.3.7-.7v-.4h8.3v-1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M9.3 3.4h5.4c1 0 1.8.8 1.8 1.8v1.4h2.6a2.4 2.4 0 0 1 2.4 2.4v9.7a2.4 2.4 0 0 1-2.4 2.4H4.9a2.4 2.4 0 0 1-2.4-2.4V9a2.4 2.4 0 0 1 2.4-2.4h2.6V5.2c0-1 .8-1.8 1.8-1.8Zm.1 1.8v1.4h5.2V5.2ZM2.5 12.6v1.5h8.3v.4c0 .4.3.7.7.7h1c.4 0 .7-.3.7-.7v-.4h8.3v-1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+/* the job cards on these pages ("Việc tương tự", "Gợi ý để bắt đầu") never cut an employer's name: the meta line
+   wraps, the name takes up to two lines, the place follows it */
+:is(.jl-page, .jd-page, .sv-page) .njc__meta { flex-wrap: wrap; row-gap: 4px; white-space: normal; }
+:is(.jl-page, .jd-page, .sv-page) .njc__co > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+:is(.jl-page, .jd-page, .sv-page) .njc__co .glyph { align-self: flex-start; margin-top: 1px; }
+/* njc.html prints the pay as the listing states it; a listing without one says so (the board's own words) */
+:is(.jl-page, .jd-page, .sv-page) .njc__pay:empty::before { content: "Lương thỏa thuận"; font-size: .84em; font-weight: 400; letter-spacing: 0; color: var(--rv-fg-3); }
+/* one logo system (the concept: real marks in rounded tiles). An anonymous client's tile is empty (no initials): every
+   one of them hires on Upwork, so it carries the platform's own mark, white "up" on its green, instead of a field glyph.
+   Named employers keep their real mark or the tinted monogram (rv.css §18). */
+:is(.jl-page, .jd-page, .sv-page) .logo:empty {
+  background: #14A800; color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 0 0 1px rgba(0, 0, 0, .06);
+}
+:is(.jl-page, .jd-page, .sv-page) .logo:empty::before {
+  content: "up"; width: auto; height: auto; background: none; -webkit-mask: none; mask: none;
+  font: 700 1.3em/1 var(--font); letter-spacing: -0.05em; transform: translateY(-.06em);
 }
 
-/* ---------------------------------------------------------------- 1 filter controls */
-/* visually hidden native input; the row shows its focus ring instead */
-.fopt input, .fswitch input, .fseg__opt input {
-  position: absolute; width: 1px; height: 1px; margin: 0; padding: 0;
-  opacity: 0; pointer-events: none;
+/* ---------------------------------------------------------------- 1 board band and the docked search */
+/* the band is rv.css §3 (short, navy); the search is the sheet's first child, docked on its edge (.rv-dock) */
+.jl-search { margin-inline: auto; }
+.jl-search__clear {
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%;
+  color: var(--rv-fg-3); transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease);
 }
+.jl-search__clear .icon { width: 18px; height: 18px; }
+.jl-search__clear:hover { background: var(--rv-chip-bg); color: var(--rv-fg); }
+.jl-hero .rv-hero__lead { max-width: 52em; }
 
-/* checkbox row: [box] label ........ count */
-.fopt {
-  position: relative;
-  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 10px;
-  min-height: 38px; padding: 0 10px; margin: 0 -10px;
-  border-radius: 12px;
-  font: 500 14.5px/1.3 var(--font); color: var(--ink-2);
-  cursor: pointer;
-  transition: background-color var(--d-micro) var(--ease), opacity var(--d-micro) var(--ease);
-}
-.fopt:hover { background: var(--sa-tag); }
-.fopt:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 0; }
-.fopt__box {
-  width: 20px; height: 20px; border-radius: 6px;
-  border: 1.5px solid #C3CBDA; background: #fff;
-  transition: background-color var(--d-micro) var(--ease), border-color var(--d-micro) var(--ease);
-}
-.fopt input:checked ~ .fopt__box {
-  border-color: var(--blue);
-  background: var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 12.5 4 4 9-9'/%3E%3C/svg%3E") center / 14px no-repeat;
-}
-.fopt input:checked ~ .fopt__label { color: var(--ink); font-weight: 640; }
-.fopt__label { min-width: 0; padding-block: 8px; }
-.fopt__n { min-width: 24px; text-align: right; font: 500 13px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
-.fopt.is-zero:not(:has(input:checked)) { opacity: .45; }
+/* ---------------------------------------------------------------- 2 filter card */
+.jl { padding-bottom: clamp(72px, 7vw, 104px); }
+/* the board's sheet is a little wider than the band's copy (the concept: the filter card stands out to the left) */
+.jl > .wrap { width: min(100% - 2 * var(--gutter), 1320px); }
+.jl:not(:has(.rv-dock)) { padding-top: clamp(36px, 3.4vw, 48px); }
+.jl__grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 36px; align-items: start; margin-top: clamp(32px, 2.8vw, 40px); }
+.jl:not(:has(.rv-dock)) .jl__grid { margin-top: 0; }
 
-/* switch row: label ... count [track] */
-.fswitch {
-  position: relative;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto 38px; align-items: center; gap: 10px;
-  min-height: 44px; cursor: pointer;
-  font: 600 14.5px/1.3 var(--font); color: var(--ink);
-}
-.fswitch__n { font: 500 13px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
-.fswitch__track {
-  position: relative; width: 38px; height: 22px; border-radius: 999px;
-  background: #D3D9E4;
-  transition: background-color var(--d-micro) var(--ease);
-}
-.fswitch__track::after {
-  content: ""; position: absolute; top: 2px; left: 2px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: #fff; box-shadow: 0 1px 3px rgba(11, 21, 48, .24);
-  transition: transform var(--d-ui) var(--ease-expo);
-}
-.fswitch input:checked ~ .fswitch__track { background: var(--blue); }
-.fswitch input:checked ~ .fswitch__track::after { transform: translateX(16px); }
-.fswitch:has(input:focus-visible) .fswitch__track { outline: 2px solid var(--blue); outline-offset: 2px; }
-
-/* segmented radio pills: the app's chips (grey, the chosen one solid blue) */
-.fseg { display: flex; flex-wrap: wrap; gap: 6px; }
-.fseg__opt { position: relative; cursor: pointer; }
-.fseg__opt span {
-  display: inline-flex; align-items: center; height: 34px; padding: 0 13px;
-  border-radius: 999px; background: var(--sa-tag);
-  font: 600 13.5px/1 var(--font); color: var(--ink-2);
-  transition: background-color var(--d-micro), color var(--d-micro);
-}
-.fseg__opt:hover span { background: #E7EBF3; }
-.fseg__opt input:checked + span { background: var(--blue); color: #fff; }
-.fseg__opt input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
-
-/* ---------------------------------------------------------------- 2 board hero */
-/* The compact cobalt hero (.sa-hero--compact, the kit's default art): copy left (crumb, h1 with one sunflower mark,
-   a one-line lead, the search pill, three real counts), the WHOLE app phone on the right on its "Việc làm" tab
-   (header, list, the 5-tab bar with "Việc làm" lit, as the home's phones), the caption under it. */
-/* The phone is the kit's one hero phone (--hero-k .66, 279 px wide at 1440), centred in a wide art column that
-   starts close to the copy; one white card with a real fact (.jl-float: every listing's 5-layer check) leans on
-   the phone's frame at its top left and bridges copy and phone, as /cong-dong/'s member card does (it covers only
-   the frame, never the screen); the glow follows the phone. */
-.jl-hero { --glow-at: 76% 60%; }
-.jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 560px); gap: 40px; }
-.jl-hero .sa-hero__art { gap: 22px; }
-.jl-float { position: absolute; z-index: 2; top: 52px; right: calc(50% + 423px * var(--hero-k) / 2 - 8px); }
-.jl-hero .sa-hero__copy { max-width: 640px; }
-.jl-hero .sa-hero__lead { max-width: 30em; }
-.jl-search {
-  margin-top: 26px; height: 62px; max-width: 600px; padding: 7px 7px 7px 22px;
-  border: 0; box-shadow: var(--sa-sh-float);
-}
-.jl-search:focus-within { border: 0; box-shadow: 0 0 0 3px var(--sun), var(--sa-sh-float); }   /* the kit's sunflower focus on colour (>= 3:1) */
-.jl-search input { font-size: 16.5px; }
-.jl-search .btn { padding: 0 24px; font-size: 15.5px; }
-.jl-search__clear { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); flex: none; }
-.jl-search__clear:hover { background: var(--sa-tag); color: var(--ink); }
-/* three real counts under the search: a figure in the wide display voice over a short label */
-.jl-stats { margin: 26px 0 0; display: flex; flex-wrap: wrap; row-gap: 12px; }
-/* column-reverse puts the figure above its label; flex-end packs to the top in a reversed column, so every figure
-   sits on one line even when a label wraps to two (phones) */
-.jl-stats > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 6px; padding-right: 28px; }
-.jl-stats > div + div { padding-left: 28px; box-shadow: inset 1px 0 0 rgba(255, 255, 255, .26); }
-.jl-stats dd { font: 740 28px/1 var(--font-wide); font-stretch: 110%; letter-spacing: -0.024em; color: #fff; }
-.jl-stats dt { font-size: 14.5px; line-height: 1.2; color: #fff; }
-.jl-hero .sa-phone .va-job__pay { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-
-@media (max-width: 1240px) {
-  .jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: 40px; }
-  .jl-float { display: none; }
-}
-/* tablets and phones: the phone goes (the list is the page), the hero closes under the counts */
-@media (max-width: 900px) {
-  .jl-hero, .jl-hero:has(.sa-hero__art) { --glow-at: 100% 0%; --glow-size: 52% 46%; padding-bottom: 40px; }
-  .jl-hero .sa-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr); }
-  .jl-hero .sa-hero__art { display: none; }
-  .jl-search { max-width: 640px; }
-}
-@media (max-width: 767px) {
-  .jl-hero, .jl-hero:has(.sa-hero__art) { padding-bottom: 32px; }
-  .jl-hero .sa-hero__lead { font-size: 16px; }
-  .jl-search { margin-top: 20px; height: 56px; padding: 6px 6px 6px 16px; }
-  .jl-search input { font-size: 16px; }
-  .jl-search .btn { padding: 0 16px; }
-  .jl-stats { margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .jl-stats > div { padding-right: 12px; min-width: 0; }
-  .jl-stats > div + div { padding-left: 12px; }
-  .jl-stats dd { font-size: 23px; }
-  .jl-stats dt { font-size: 13px; line-height: 1.3; }
-}
-@media (max-width: 400px) {
-  .jl-search .btn { padding: 0 14px; font-size: 14.5px; }
-  .jl-stats dd { font-size: 21px; }
-  .jl-stats dt { font-size: 12.5px; }
-}
-
-/* ---------------------------------------------------------------- 3 board list */
-.jl { position: relative; padding: 48px 0 88px; background: #fff; }
-.jl__grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
-
-/* filter card — sticky white card on desktop (the kit's white card) */
+/* the white card on the sheet, sticky on desktop */
 .jl-panel {
-  position: sticky; top: calc(var(--header-h) + 16px);
-  max-height: calc(100vh - var(--header-h) - 32px);
+  position: sticky; top: calc(var(--header-h) + 20px);
+  max-height: calc(100vh - var(--header-h) - 40px);
   display: flex; flex-direction: column;
-  background: #fff;
-  border-radius: var(--sa-r-card);
-  box-shadow: var(--sa-sh-card);
+  border-radius: 20px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .03), 0 2px 4px rgba(20, 30, 60, .04), 0 12px 32px -10px rgba(20, 30, 60, .1), 0 30px 60px -30px rgba(20, 30, 60, .14);
 }
-.jl-panel__head { display: flex; align-items: center; gap: 12px; padding: 20px 22px 6px; }
-.jl-panel__title { flex: 1; font: 740 17px/1.3 var(--font); letter-spacing: -0.014em; color: var(--ink); }
-.jl-panel__reset { font: 640 14px/1 var(--font); color: var(--ultra-ink); padding: 6px 0; }
-.jl-panel__reset:hover { color: var(--blue-600); }
+.jl-panel__head { display: flex; align-items: center; gap: 12px; padding: 28px 28px 10px; }
+.jl-panel__title { flex: 1; font: 600 27px/1.2 var(--font); letter-spacing: -0.028em; color: var(--rv-fg); }
+.jl-panel__reset { padding: 6px 0; font: 500 14.5px/1 var(--font); color: var(--rv-accent); }
+.jl-panel__reset:hover { text-decoration: underline; text-underline-offset: 4px; }
 .jl-panel__close { display: none; }
-.jl-panel__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 22px 10px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+.jl-panel__body {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 28px 18px; scrollbar-width: thin; scrollbar-color: var(--rv-line-2) transparent;
+  /* a focused option never ends under the bottom fade or the "Còn bộ lọc bên dưới" pill (jobs.js scrolls the row
+     into view on focus; scrollIntoView keeps this padding) */
+  scroll-padding-block: 12px 92px;
+}
 /* scroll cue: a fade pinned to the bottom of the scrollport, shown only while groups remain below */
 .jl-panel__body::after {
   content: ""; display: block; position: sticky; bottom: 0; z-index: 1;
-  height: 72px; margin: -72px -22px 0;
+  height: 72px; margin: -72px -28px 0;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff 58%);
-  pointer-events: none; opacity: 0; transition: opacity var(--d-ui) var(--ease);
+  pointer-events: none; opacity: 0; transition: opacity var(--rv-dur-3) var(--rv-ease);
+  border-radius: 0 0 20px 20px;
 }
 .jl-panel.has-more .jl-panel__body::after { opacity: 1; }
 .jl-panel__hint {
-  position: absolute; left: 50%; bottom: 12px; z-index: 2; transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 4px; padding: 6px 11px 6px 13px;
-  border-radius: 999px; background: #fff; box-shadow: var(--sa-sh-card);
-  font: 600 12.5px/1 var(--font); color: var(--ink-2); white-space: nowrap;
-  opacity: 0; pointer-events: none; transition: opacity var(--d-ui) var(--ease);
+  position: absolute; left: 50%; bottom: 14px; z-index: 2; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 13px 8px 15px;
+  border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(20, 30, 60, .07), 0 8px 18px -10px rgba(20, 30, 60, .3);
+  font: 500 13.5px/1 var(--font); color: var(--rv-fg-2); white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity var(--rv-dur-3) var(--rv-ease);
 }
 .jl-panel__hint .icon { width: 14px; height: 14px; }
 .jl-panel.has-more .jl-panel__hint { opacity: 1; pointer-events: auto; }
-.jl-panel__hint:hover { color: var(--ink); }
+.jl-panel__hint:hover { color: var(--rv-fg); }
 .jl-panel__foot { display: none; }
-.jl-switches { padding: 4px 0 12px; }
-.fgroup { margin: 0; padding: 16px 0 14px; border: 0; border-top: 1px solid var(--line); min-width: 0; }
-.fgroup__title { float: left; width: 100%; padding: 0; margin-bottom: 8px; font: 700 14px/1.3 var(--font); letter-spacing: -0.006em; color: var(--ink); }
-.fgroup__list { clear: both; display: grid; }
-.fgroup .fseg { clear: both; padding-top: 2px; }
-.fgroup__more {
-  margin-top: 6px; display: inline-flex; align-items: center; gap: 4px;
-  font: 640 14px/1 var(--font); color: var(--ultra-ink); padding: 6px 0;
+.jl-switches { padding: 6px 0 16px; }
+
+/* visually hidden native inputs; the row shows its focus ring instead */
+.fopt input, .fswitch input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; pointer-events: none; }
+/* checkbox row: [box] label ........ count */
+.fopt {
+  position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  min-height: 40px; padding: 0 10px; margin: 0 -10px; border-radius: 10px;
+  font: 400 16.5px/1.3 var(--font); color: var(--rv-fg); cursor: pointer;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), opacity var(--rv-dur-2) var(--rv-ease);
 }
-.fgroup__more .icon { transition: transform var(--d-ui) var(--ease); }
+.fopt:hover { background: var(--rv-chip-bg); }
+.fopt:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 0; }
+.fopt__box {
+  width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--rv-box-line); background: #fff;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), border-color var(--rv-dur-2) var(--rv-ease);
+}
+.fopt:hover .fopt__box { border-color: #A9AFBA; }
+.fopt input:checked ~ .fopt__box {
+  border-color: var(--rv-cobalt);
+  background: var(--rv-cobalt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+.fopt input:checked ~ .fopt__label { font-weight: 500; }
+.fopt__label { min-width: 0; padding-block: 9px; }
+.fopt__n { min-width: 24px; text-align: right; font: 400 13.5px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--rv-fg-3); }   /* meta at AA: 6.1:1 on white */
+.fopt.is-zero:not(:has(input:checked)) { opacity: .45; }
+/* switch row: label ... count [track] (grey when off, cobalt when on) */
+.fswitch {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; align-items: center; gap: 10px;
+  min-height: 46px; cursor: pointer; font: 400 16.5px/1.3 var(--font); color: var(--rv-fg);
+}
+.fswitch__n { font: 400 13.5px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--rv-fg-3); }
+.fswitch__track { position: relative; width: 44px; height: 26px; border-radius: 999px; background: var(--rv-tog-off); transition: background-color var(--rv-dur-3) var(--rv-ease); }
+.fswitch__track::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 1px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .16);
+  transition: transform var(--rv-dur-3) var(--rv-ease);
+}
+.fswitch input:checked ~ .fswitch__track { background: var(--rv-cobalt); }
+.fswitch input:checked ~ .fswitch__track::after { transform: translateX(18px); }
+.fswitch:has(input:focus-visible) .fswitch__track { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* one choice among four ("Đăng trong"): the kit's radio pills, rv.css .rv-filters > label.rv-filter.rv-filter--sm */
+.fgroup { margin: 0; padding: 20px 0 14px; border: 0; border-top: 1px solid var(--rv-line); min-width: 0; }
+.fgroup__title { float: left; width: 100%; padding: 0; margin-bottom: 8px; font: 600 21px/1.3 var(--font); letter-spacing: -0.02em; color: var(--rv-fg); }
+.fgroup__list { clear: both; display: grid; }
+.fgroup .rv-filters { clear: both; padding-top: 4px; }
+.fgroup__more { margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 6px 0; font: 500 14.5px/1 var(--font); color: var(--rv-accent); }
+.fgroup__more .icon { width: 16px; height: 16px; transition: transform var(--rv-dur-3) var(--rv-ease); }
 .fgroup.is-open .fgroup__more .icon { transform: rotate(180deg); }
 .js .fgroup:not(.is-open) .fopt--more:not(:has(input:checked)) { display: none; }
 html:not(.js) .fgroup__more { display: none; }
 
-/* results column */
-.jl-results { min-width: 0; }
-.jl-quick { display: none; }
-.jl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 16px; min-height: 46px; }
-.jl-count { font-size: 15.5px; color: var(--ink-2); }
-.jl-count strong { font: 740 21px/1 var(--font-wide); font-stretch: 108%; letter-spacing: -0.02em; color: var(--ink); margin-right: 3px; }
-.jl-count .jl-count__q { color: var(--ink); font-weight: 600; }
-/* sort: the app's segmented control (grey track, the chosen one a white pill) */
-.jl-sort { padding: 4px; border: 0; background: var(--sa-tag); }
-.jl-sort .tab { height: 36px; padding: 0 15px; font: 600 14px/1 var(--font); color: var(--ink-2); }
-.jl-sort .tab[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(10, 18, 48, .08), 0 0 0 1px var(--tile-line); }
+.jl-fab, .jl-scrim { display: none; }
 
+/* ---- tablets and phones: the filter card becomes a bottom sheet (only with JS; without it, it stays inline) */
+@media (max-width: 960px) {
+  .jl__grid { grid-template-columns: minmax(0, 1fr); }
+  html:not(.js) .jl-panel { position: static; max-height: none; margin-bottom: 24px; }
+  .js .jl-panel {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 70;
+    max-height: min(88dvh, 780px); border-radius: var(--rv-r-lg) var(--rv-r-lg) 0 0;
+    box-shadow: var(--rv-sh-4);
+    transform: translateY(104%); visibility: hidden;
+    transition: transform var(--rv-dur-3) var(--rv-ease), visibility 0s linear var(--rv-dur-3);
+  }
+  .js .jl-panel.is-open { transform: none; visibility: visible; transition-delay: 0s; }
+  /* the head is the drag handle (jobs.js: drag down past 80px to close) */
+  .js .jl-panel__head { position: relative; padding: 28px 14px 14px 22px; border-bottom: 1px solid var(--rv-line); touch-action: none; cursor: grab; }
+  .js .jl-panel__head button { cursor: pointer; }
+  .js .jl-panel__head::before { content: ""; position: absolute; top: 10px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--rv-line-2); }
+  .js .jl-panel__title { font-size: 22px; }
+  .js .jl-panel__close { display: inline-grid; box-shadow: none; background: var(--rv-chip-bg); }
+  .js .jl-panel__reset { display: none; }
+  .js .jl-panel__body { padding: 0 22px 12px; }
+  .js .jl-panel__body::after { border-radius: 0; }
+  .js .jl-panel__foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--rv-line); background: #fff; border-radius: 0; }
+  .js .jl-panel__foot .rv-pill--primary { flex: 1; min-width: 0; }
+  .js .jl-switches { padding-top: 10px; }
+  .js .fopt { min-height: 44px; }
+  .js .fgroup__more { min-height: 44px; margin-top: 0; padding: 0 4px 0 0; }
+  .js .jl-panel__hint { display: none; }
+  /* the sheet is modal: while it is open the board's section (its stacking context, rv.css §3) rises above the
+     site header, so the scrim covers the header too and nothing behind the sheet can be tapped */
+  html.jl-lock .jl { z-index: 60; }
+  .js .jl-scrim { display: block; position: fixed; inset: 0; z-index: 69; background: rgba(8, 10, 22, .5); opacity: 0; transition: opacity var(--rv-dur-3) var(--rv-ease); }
+  .js .jl-scrim.is-on { opacity: 1; }
+  .js .jl-fab {
+    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 45;
+    display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 22px 0 19px; border-radius: 999px;
+    background: #0D0F14; color: #fff; font: 600 15.5px/1 var(--font);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 18px 36px -14px rgba(0, 0, 0, .55), 0 4px 10px -4px rgba(0, 0, 0, .3);
+    transform: translate(-50%, 0); visibility: visible;
+    transition: transform var(--rv-dur-3) var(--rv-ease), opacity var(--rv-dur-3) var(--rv-ease), visibility 0s;
+  }
+  .js .jl-fab .icon { width: 19px; height: 19px; }
+  /* hidden = out of the tab order too (visibility flips once the slide-out has finished) */
+  .js .jl-fab.is-hidden {
+    transform: translate(-50%, 160%); opacity: 0; pointer-events: none; visibility: hidden;
+    transition: transform var(--rv-dur-3) var(--rv-ease), opacity var(--rv-dur-3) var(--rv-ease), visibility 0s linear var(--rv-dur-3);
+  }
+  .jl-fab__n { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; background: var(--rv-cobalt); color: #fff; font: 600 12.5px/1 var(--font); font-variant-numeric: tabular-nums; }
+  .jl-page .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+html.jl-lock { overflow: hidden; }
+
+/* ---------------------------------------------------------------- 3 results */
+.jl-results { min-width: 0; }
+/* the figures line: bold number + label, thin dividers (the concept's quiet line, no card) */
+.jl-figs { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 0; margin: 0 0 22px; padding: 4px 0 0; list-style: none; }
+.jl-fig { display: block; min-width: 0; font: 400 19.5px/1.3 var(--font); color: var(--rv-fg-2); white-space: nowrap; }
+.jl-fig + .jl-fig { margin-left: 28px; padding-left: 28px; border-left: 1px solid #C9CED7; }
+.jl-fig strong { font-weight: 600; letter-spacing: -0.012em; color: var(--rv-fg); font-variant-numeric: tabular-nums; }
+.jl-fig__link { color: inherit; text-decoration: none; border-radius: 6px; transition: color var(--rv-dur-2) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) { .jl-fig__link:hover { color: var(--rv-fg); text-decoration: underline; text-decoration-color: rgba(20, 22, 29, .3); text-underline-offset: 5px; text-decoration-thickness: 1px; } }
+.jl-fig__link:focus-visible { outline-offset: 4px; }
+/* while filters narrow the board, only the count stays (the board's own totals would mix two scopes) */
+.jl.is-filtered .jl-fig--more { display: none; }
+.jl-loading { color: var(--rv-fg-3); }
+.jl-loading::before {
+  content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px;
+  border: 1.5px solid var(--rv-line-2); border-top-color: var(--rv-cobalt); border-radius: 50%; animation: jl-spin .8s linear infinite;
+}
+@keyframes jl-spin { to { transform: rotate(360deg); } }
+
+/* tablets and phones: "Bộ lọc" and the quick filters (desktop: the card is on the left) */
+.jl-tools { display: none; }
+.jl-filterbtn {
+  flex: none; position: relative; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px 0 14px;
+  border-radius: 999px; background: #fff; color: var(--rv-fg); font: 600 15px/1 var(--font);
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .06), 0 1px 2px rgba(20, 30, 60, .06), 0 6px 14px -8px rgba(20, 30, 60, .2);
+  transition: box-shadow var(--rv-dur-2) var(--rv-ease), transform var(--rv-dur-1) var(--rv-ease);
+}
+.jl-filterbtn:active { transform: scale(var(--rv-press)); }
+.jl-filterbtn .icon { width: 18px; height: 18px; stroke-width: 1.9; }
+.jl-filterbtn__n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; background: var(--rv-cobalt); color: #fff; font: 600 12px/1 var(--font); font-variant-numeric: tabular-nums; }
+@media (max-width: 960px) {
+  .js .jl-tools { display: flex; align-items: center; gap: 10px; margin: 0 calc(-1 * var(--gutter)) 16px; padding: 0 0 0 var(--gutter); }
+  .js .jl-quick { flex: 1; min-width: 0; padding: 2px var(--gutter) 2px 0; scroll-padding-inline: 0 var(--gutter); }
+  .jl-quick .rv-filter { height: 44px; }
+}
+
+/* the sort: separate pills, the chosen one cobalt (rv.css §10 .rv-seg--pills; the concept's "Đề xuất") */
+.jl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 20px; }
+.jl-sort > [role="radio"] { min-height: 42px; padding: 0 22px; font-size: 17px; }
+.jl-sortnote { font-size: 14px; color: var(--rv-fg-3); }
+/* tablets and phones: the quick filters (grey pills, ink when on) ride beside "Bộ lọc", so the sort steps down a level
+   and changes shape: one segmented control (a soft track, the chosen segment a raised white block), 44 px segments.
+   A filter and a sort never share a look. */
+@media (max-width: 960px) {
+  .js .jl-sort {
+    flex-wrap: nowrap; gap: 0; padding: 3px; border-radius: var(--rv-r-md); background: var(--rv-seg-bg);
+  }
+  .js .jl-sort > [role="radio"] {
+    flex: 1 1 auto; min-height: 44px; padding: 0 14px; border-radius: 11px;
+    background: transparent; color: var(--rv-fg-2); font-size: 15px; box-shadow: none;
+  }
+  .js .jl-sort > [role="radio"]:not([aria-checked="true"]):hover { background: transparent; color: var(--rv-fg); }
+  .js .jl-sort > [role="radio"][aria-checked="true"] {
+    background: #fff; color: var(--rv-fg); font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 1px 2px rgba(20, 30, 60, .1), 0 4px 10px -4px rgba(20, 30, 60, .16);
+  }
+  /* a filter the quick row already shows lit is not repeated as a removable pill here (jobs.js: .is-dup-m) */
+  .js .jl-active .jl-pill.is-dup-m { display: none; }
+  .js .jl-active:not(:has(.jl-pill:not(.is-dup-m, .is-dup))) { display: none; }
+}
+
+/* active filters: white tokens on the sheet, × to drop one (removable, so not the lit look of a chosen pill) */
 .jl-active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
-.jl-active[hidden] { display: none; }
+.jl-active .jl-pill.is-dup { display: none; }   /* the chosen skill chip, lit right above, says it already */
+.jl-active:not(:has(.jl-pill:not(.is-dup))) { display: none; }
 .jl-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 34px; padding: 0 10px 0 14px;
-  border-radius: 999px;
-  background: var(--blue-50); color: var(--blue-600); box-shadow: inset 0 0 0 1px #C9D7FF;
-  font: 600 13.5px/1 var(--font);
-  max-width: 100%;
-  transition: box-shadow var(--d-micro) var(--ease), background-color var(--d-micro);
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 36px; padding: 0 10px 0 15px;
+  border-radius: 999px; background: #fff; color: var(--rv-fg);
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .08), 0 1px 2px rgba(20, 30, 60, .05);
+  font: 500 14px/1 var(--font); transition: box-shadow var(--rv-dur-2) var(--rv-ease), transform var(--rv-dur-1) var(--rv-ease);
 }
 .jl-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.jl-pill .icon { width: 14px; height: 14px; stroke-width: 2.2; opacity: .85; }
-.jl-pill:hover { box-shadow: inset 0 0 0 1.5px var(--blue); }
-.jl-clear-all { font: 640 13.5px/1 var(--font); color: var(--ink-2); padding: 8px 6px; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
-.jl-clear-all:hover { color: var(--ink); text-decoration-color: var(--ink); }
+.jl-pill .icon { width: 15px; height: 15px; stroke-width: 2.2; color: var(--rv-fg-3); transition: color var(--rv-dur-2) var(--rv-ease); }
+.jl-pill:hover { box-shadow: 0 0 0 1px rgba(20, 30, 60, .2), 0 2px 6px -2px rgba(20, 30, 60, .12); }
+.jl-pill:hover .icon { color: var(--rv-fg); }
+.jl-pill:active { transform: scale(var(--rv-press)); }
+@media (pointer: coarse) { .jl-pill { position: relative; } .jl-pill::after { content: ""; position: absolute; inset: -4px 0; } }
+.jl-clear-all { padding: 8px 6px; font: 500 14px/1 var(--font); color: var(--rv-fg-2); text-decoration: underline; text-decoration-color: var(--rv-line-2); text-underline-offset: 4px; }
+.jl-clear-all:hover { color: var(--rv-fg); text-decoration-color: currentColor; }
 
-/* rows: the home job card's recipe in a dense list (VR.jobRow / job_row.html) */
-.jl-rows { gap: 12px; transition: opacity var(--d-ui) var(--ease); }
+/* rows: white cards on the sheet (job_row.html / VR.jobRow): the 56 px logo tile, the title with the cobalt tick
+   (every job on the board passed the five checks), "company · field", the pay right-aligned with its age under
+   it, an outlined bookmark at the far right. Badges, level and source live on the job page. */
+.jl-rows { gap: 10px; transition: opacity var(--rv-dur-3) var(--rv-ease); }
 .jl-rows .job-row {
-  grid-template-columns: 52px minmax(0, 1fr) auto auto; gap: 18px;
-  padding: 20px 20px 20px 22px;
-  border: 0; border-radius: var(--sa-r-card);
-  background: #fff; box-shadow: var(--sa-sh-card);
-  transition: box-shadow var(--d-ui) var(--ease), transform var(--d-ui) var(--ease-expo);
+  grid-template-columns: 54px minmax(0, 1fr) auto 44px; gap: 22px; align-items: center; min-height: 82px; padding: 13px 18px 13px 20px;
+  border-radius: var(--rv-r-row); background: #fff;
+  box-shadow: 0 0 0 1px rgba(20, 30, 60, .03), 0 1px 2px rgba(20, 30, 60, .04), 0 8px 22px -12px rgba(20, 30, 60, .12);
+  transition: box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .jl-rows .job-row:hover { transform: translateY(-2px); box-shadow: var(--sa-sh-card-hover); }
-  .jl-rows .job-row:hover .job-row__title a { color: var(--ultra-ink); }
+  .jl-rows .job-row:hover { translate: 0 -2px; box-shadow: 0 0 0 1px rgba(20, 30, 60, .04), 0 2px 4px rgba(20, 30, 60, .05), 0 16px 36px -14px rgba(20, 30, 60, .2); }
+  .jl-rows .job-row:hover .job-row__title a { color: var(--rv-cobalt); }
 }
-.jl-rows .job-row:has(.job-row__title a:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
-.jl-rows .job-row__title a:focus-visible { outline: none; }
-.jl-rows .job-row > .logo { width: 52px; height: 52px; border-radius: 14px; font-size: 16.5px; align-self: start; }
-.jl-rows .job-row__main { gap: 6px; grid-template-columns: minmax(0, 1fr); }   /* the one-line tablet meta ellipsises inside its column, never under the pay */
-.jl-rows .job-row__title { font: 740 18px/1.3 var(--font); letter-spacing: -0.016em; }
-.jl-rows .job-row__title a { transition: color var(--d-micro) var(--ease); }
-.jl-rows .job-row__meta { font-size: 13.5px; }
-.jl-rows .job-row__badges { margin-top: 4px; gap: 6px; }
-.jl-rows .job-row .badge { height: 28px; padding: 0 11px; font: 500 13px/1 var(--font); }
-.jl-rows .job-row__side { gap: 6px; }
-.jl-rows .job-row__pay { font: 740 18.5px/1.2 var(--font); letter-spacing: -0.02em; color: var(--green-pay); }
-.jl-rows .job-row__pay small { margin-top: 2px; font-weight: 500; letter-spacing: 0; }
-.jl-rows .job-row__pay .muted { font: 600 15px/1.2 var(--font); letter-spacing: -0.01em; color: var(--muted); }
-.jl-rows .job-row__age { font-size: 13px; }
-.jl-rows .job-row__source { font: 500 13px/1 var(--font); }
-/* calm rows, toward the home job card: company · field · level at most (the employment type and the rest live on
-   the job page); on a field page every row would repeat the field, so it goes and the employment type takes its
-   place. The pay leads with the listing's own figure; another currency adds one quiet ≈ USD line. */
-.jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
-.jl.is-preset .jl-rows .job-row__meta span:nth-child(2) { display: none; }
-
-.jl-rows.is-loading { opacity: .5; pointer-events: none; transition: opacity .2s; }
-.jl-loading { color: var(--muted); }
-.jl-loading::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px;
-  border: 1.5px solid var(--line-2, #CBD2E0); border-top-color: var(--blue); border-radius: 50%; animation: jl-spin .8s linear infinite; }
-@keyframes jl-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .jl-loading::before { animation: none; } }
+.jl-rows .job-row > .logo { width: 54px; height: 54px; border-radius: 14px; font-size: 19px; }
+.jl-rows .job-row__main { gap: 5px; grid-template-columns: minmax(0, 1fr); }
+.jl-rows .job-row__title { display: flex; align-items: center; gap: 9px; min-width: 0; font: 600 19.5px/1.3 var(--font); letter-spacing: -0.02em; -webkit-line-clamp: none; }
+.jl-rows .job-row__title a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color var(--rv-dur-2) var(--rv-ease); }
+.jl-rows .job-row__title::after {
+  content: ""; flex: none; width: 21px; height: 21px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232C4FE6' d='M12 1.6l2.5 1.8 3.1-.1 1 2.9 2.5 1.9-.9 3 .9 2.9-2.5 1.9-1 2.9-3.1-.1L12 22.4l-2.5-1.8-3.1.1-1-2.9-2.5-1.9.9-2.9-.9-3 2.5-1.9 1-2.9 3.1.1z'/%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='m8.2 12.3 2.6 2.6 5-5.2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.jl-rows .job-row__meta { font-size: 16px; color: var(--rv-fg-3); }
+.jl-rows .job-row__meta span:first-child { font-weight: 400; color: var(--rv-fg-3); }
+.jl-rows .job-row__meta span::before { width: 18px; color: #A6ABB5; }
+.jl-rows .job-row__badges { display: none; }
+.jl-rows .job-row__side { gap: 5px; }
+.jl-rows .job-row__pay { font: 600 19.5px/1.2 var(--font); letter-spacing: -0.02em; color: var(--rv-fg); }
+.jl-rows .job-row__pay small { margin-top: 3px; font: 400 13px/1.3 var(--font); letter-spacing: 0; text-align: right; }
+.jl-rows .job-row__pay .muted { font: 400 16px/1.2 var(--font); letter-spacing: 0; color: var(--rv-fg-3); }
+.jl-rows .job-row__age { font-size: 15px; color: var(--rv-fg-3); }
+.jl-rows .job-row__age .job-age.is-new { color: var(--rv-fg-3); }
+.jl-rows .job-row__source { display: none; }
+.jl-rows .job-row .save-btn { width: 44px; height: 44px; color: var(--rv-fg); }
+.jl-rows .job-row .save-btn .icon { width: 23px; height: 23px; stroke-width: 1.8; }
+/* calm rows: company · field (on a field page every row would repeat the field: company · level instead) */
+.jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(n+3) { display: none; }
+.jl.is-preset .jl-rows .job-row__meta span:nth-child(2), .jl.is-preset .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
+.jl-rows.is-loading { opacity: .5; pointer-events: none; }
 @keyframes jl-in { from { opacity: 0; transform: translateY(6px); } }
-.jl-rows.is-fresh > * { animation: jl-in 300ms var(--ease) both; }
+.jl-rows.is-fresh > * { animation: jl-in var(--rv-dur-3) var(--rv-ease) both; }
 .jl-rows.is-fresh > :nth-child(2) { animation-delay: 25ms; }
 .jl-rows.is-fresh > :nth-child(3) { animation-delay: 50ms; }
 .jl-rows.is-fresh > :nth-child(4) { animation-delay: 75ms; }
 .jl-rows.is-fresh > :nth-child(5) { animation-delay: 100ms; }
 .jl-rows.is-fresh > :nth-child(n+6) { animation-delay: 125ms; }
-/* empty state: a white card, a blue app icon */
-.jl-rows .empty { padding: 52px 24px 48px; border: 0; border-radius: var(--sa-r-card); box-shadow: var(--sa-sh-card); }
-.jl-rows .empty__icon { width: 56px; height: 56px; border-radius: 15px; color: #fff;
-  background: radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #4C82FF 0%, #2F6BFF 58%, #2A60E6 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 10px 20px -12px rgba(10, 18, 48, .42); }
-.jl-rows .empty__icon .icon { width: 26px; height: 26px; stroke-width: 2; }
-.jl-rows .empty__title { font: 740 20px/1.3 var(--font); letter-spacing: -0.016em; }
-.jl-rows .empty .btn { border-radius: 999px; }
-.jl-suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; max-width: 560px; }
-.jl-suggest__label { width: 100%; font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+/* empty states (server: .empty, jobs.js: .rv-empty.jl-empty): a white card */
+.jl-rows .empty { padding: 52px 24px 48px; text-align: center; background: #fff; }
+.jl-rows .empty .rv-pill { margin-top: 12px; }
+.jl-empty { padding-block: 52px 48px; background: #fff; }
+.jl-suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; max-width: 580px; }
+.jl-suggest__label { width: 100%; margin-top: 6px; font-size: 14px; color: var(--rv-fg-3); }
+.jl-empty__clear { margin-top: 14px; }
+.jl-error { margin-bottom: 14px; }
 
-.jl-more { margin-top: 32px; display: grid; justify-items: center; gap: 16px; }
-.jl-more[hidden] { display: none; }
-.jl-more__progress { display: grid; justify-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
-.jl-more__progress strong { font-weight: 640; color: var(--ink-2); }
-.jl-more__bar { width: 200px; height: 4px; border-radius: 2px; background: var(--sa-tag); overflow: hidden; }
-.jl-more__bar i { display: block; height: 100%; background: var(--blue); border-radius: inherit; transition: width var(--d-base) var(--ease); }
-.jl-more__btn { min-width: 250px; border: 0; box-shadow: var(--sa-sh-card); }
-.jl-more__btn:hover { box-shadow: var(--sa-sh-card-hover); }
+/* load more: the count, the bar, one outlined pill */
+.jl-more { margin-top: 40px; }
+.jl-more strong { font-weight: 600; color: var(--rv-fg); }
+.jl-more .rv-more__bar > i { transition: width var(--rv-dur-3) var(--rv-ease); }
+.jl-more__btn { min-width: 240px; background: #fff; border-color: transparent; box-shadow: 0 0 0 1px rgba(20, 30, 60, .08), 0 6px 16px -10px rgba(20, 30, 60, .25); font-weight: 600; }
+.jl-more__btn:hover, .jl-more__btn:focus-visible { background: #fff; border-color: transparent; box-shadow: 0 0 0 1px rgba(20, 30, 60, .14), 0 12px 24px -12px rgba(20, 30, 60, .3); }
 html:not(.js) .jl-more__btn { display: none; }
-.jl-more__noscript { max-width: 60ch; text-align: center; font-size: 14px; color: var(--ink-2); }
+.jl-more__noscript { max-width: 60ch; font-size: 14px; color: var(--rv-fg-2); }
 
-.jl-trust {
-  margin-top: 40px; padding: 16px 20px 16px 16px; border-radius: 18px; background: var(--sa-tag);
-  display: flex; align-items: flex-start; gap: 14px; font-size: 14px; line-height: 1.55; color: var(--ink-2);
-}
-.jl-trust .app { margin-top: 1px; }
-/* a block with the arrow inline (as .jd-ask): when a 360 px phone wraps the line, the arrow follows the last word
-   instead of standing apart at the far right */
-.jl-ask { display: block; width: fit-content; max-width: 100%; margin-top: 14px; font-size: 15px; }
-.jl-ask .icon { display: inline-block; margin-left: 8px; vertical-align: -3px; }
+.jl-trust { margin-top: 48px; background: #fff; box-shadow: var(--jl-ring); }
+.jl-ask { margin-top: 10px; font-size: 15px; }
 
-.jl-fab, .jl-scrim { display: none; }
-
-/* "Tuyển ở Việt Nam" rail: three employers hiring in Vietnam above the untouched first page, as the home's
-   job cards (.njc), a little more compact in the narrower results column */
-.jl-rail { margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
-.jl-rail[hidden] { display: none; }
-.jl-rail__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 16px; }
-.jl-rail__title { font: 740 19px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
-.jl-rail__text { flex: 1; min-width: 0; font-size: 14.5px; color: var(--muted); }
-.jl-rail__all { padding: 6px 0; font-size: 15px; white-space: nowrap; }
-.jl-rail__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.jl-rail .njc { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 18px 16px 16px; }
-.jl-rail .njc__logo { width: 44px; height: 44px; border-radius: 12px; font-size: 15px; }
-.jl-rail .njc__title { font-size: 16.5px; }
-.jl-rail .njc__meta { gap: 10px; font-size: 13px; }
-/* every card in "Tuyển ở Việt Nam" would say "Việt Nam": the place goes, the employer reads in full */
-.jl-rail .njc__place { display: none; }
-.jl-rail .njc__pay { margin-top: 10px; font-size: 17px; }
-.jl-rail ul.njc__tags { margin-top: 12px; margin-right: 44px; }
-.jl-rail .njc__save { right: 12px; bottom: 12px; }
-/* the job cards on these pages (rail, "Việc tương tự", "Gợi ý để bắt đầu") never cut an employer's name: the meta
-   line wraps, the name takes up to two lines, the place follows it */
-:is(.page-jobs, .page-job, .page-saved) .njc__meta { flex-wrap: wrap; row-gap: 4px; white-space: normal; }
-:is(.page-jobs, .page-job, .page-saved) .njc__co > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
-:is(.page-jobs, .page-job, .page-saved) .njc__co .glyph { align-self: flex-start; margin-top: 1px; }
-/* njc.html prints the pay as the listing states it; a listing without one says so (the board's own words) */
-:is(.page-jobs, .page-job) .njc__pay:empty::before { content: "Lương thỏa thuận"; font-size: .84em; font-weight: 640; letter-spacing: -0.01em; color: var(--muted); }
-
-@media (min-width: 641px) and (max-width: 1180px) {
-  /* tablet and small-laptop rows: one meta line (company · field · level), never a lone
-     "Bán thời gian" wrapped onto its own line; the level ellipsises before the row grows */
+@media (max-width: 1180px) {
   .jl-rows .job-row__meta { flex-wrap: nowrap; }
   .jl-rows .job-row__meta span { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .jl-rows .job-row__meta span:first-child { flex-shrink: 0; max-width: 46%; }
-  .jl.is-preset .jl-rows .job-row__meta span:first-child { max-width: 72%; }
-  .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
-  .jl.is-preset .jl-rows .job-row__meta span:nth-child(2) { display: none; }
-  /* the board (not a field page): company · field only, as on phones. With the level too, the 1024/768 rows
-     cut two or three items in a row ("Dữ liệu & … · Senior / Ch… ", "Ju…"); the level lives on the job page */
-  .jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(3) { display: none; }
-  .jl:not(.is-preset) .jl-rows .job-row__meta span:first-child { max-width: 60%; }
+  .jl-rows .job-row__meta span:first-child { flex-shrink: 0; max-width: 60%; }
 }
 @media (max-width: 1100px) {
-  .jl__grid { grid-template-columns: 252px minmax(0, 1fr); gap: 24px; }
-  .jl-rows .job-row { grid-template-columns: 46px minmax(0, 1fr) auto auto; gap: 16px; padding: 18px 18px 18px 20px; }
-  .jl-rows .job-row > .logo { width: 46px; height: 46px; border-radius: 13px; }
-  .jl-rows .job-row__title { font-size: 17px; }
+  .jl__grid { grid-template-columns: 268px minmax(0, 1fr); gap: 24px; }
+  .jl-panel__head { padding: 24px 20px 8px; }
+  .jl-panel__title { font-size: 24px; }
+  .jl-panel__body { padding-inline: 20px; }
+  .jl-panel__body::after { margin-inline: -20px; }
+  .fopt, .fswitch { font-size: 15.5px; }
+  .fopt { gap: 12px; }
+  .fgroup__title { font-size: 19px; }
+  .jl-rows .job-row { grid-template-columns: 50px minmax(0, 1fr) auto 40px; gap: 16px; padding: 14px 12px 14px 16px; }
+  .jl-rows .job-row > .logo { width: 50px; height: 50px; border-radius: 13px; font-size: 18px; }
+  .jl-rows .job-row__title { font-size: 17.5px; }
+  .jl-rows .job-row__meta { font-size: 15px; }
   .jl-rows .job-row__pay { font-size: 17.5px; }
-  .jl-rail__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .jl-rail__cards > :nth-child(3) { display: none; }
+  .jl-rows .job-row__age { font-size: 14px; }
+  .jl-fig { font-size: 17px; }
+  .jl-fig + .jl-fig { margin-left: 20px; padding-left: 20px; }
 }
-
-/* ---- tablet & phone: the filter card becomes a bottom sheet (only with JS; without it, it stays inline) */
 @media (max-width: 960px) {
-  .jl { padding-top: 32px; }
   .jl__grid { grid-template-columns: minmax(0, 1fr); }
-  html:not(.js) .jl-panel { position: static; max-height: none; }
-  .js .jl-panel {
-    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 70;
-    max-height: min(88vh, 780px);
-    border-radius: 24px 24px 0 0;
-    box-shadow: 0 -16px 48px -16px rgba(11, 21, 48, .3);
-    transform: translateY(104%); visibility: hidden;
-    transition: transform 360ms var(--ease), visibility 0s linear 360ms;
-  }
-  .js .jl-panel.is-open { transform: none; visibility: visible; transition-delay: 0s; }
-  /* the head is the drag handle (jobs.js: drag down past 80px to close) */
-  .js .jl-panel__head { position: relative; padding: 24px 16px 12px 20px; border-bottom: 1px solid var(--line); touch-action: none; cursor: grab; }
-  .js .jl-panel__head button { cursor: pointer; }
-  .js .jl-panel__head::before { content: ""; position: absolute; top: 8px; left: 50%; width: 38px; height: 5px; margin-left: -19px; border-radius: 3px; background: var(--line-2); }
-  .js .jl-panel__title { font-size: 19px; }
-  .js .jl-panel__close { display: inline-grid; }
-  .js .jl-panel__reset { display: none; }
-  .js .jl-panel__body { padding: 0 20px 12px; }
-  .js .jl-panel__foot {
-    display: flex; gap: 10px;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--line); background: #fff;
-  }
-  .js .jl-panel__foot .btn { border-radius: 999px; }
-  .js .jl-panel__foot .btn--primary { flex: 1; min-width: 0; }
-  .js .jl-switches { padding-top: 8px; }
-  /* touch-size option rows in the sheet */
-  .js .fopt { min-height: 42px; }
-  .js .jl-panel__hint { display: none; }
-
-  .js .jl-scrim {
-    display: block; position: fixed; inset: 0; z-index: 69;
-    background: rgba(11, 21, 48, .44);
-    opacity: 0; transition: opacity var(--d-ui) var(--ease);
-  }
-  .js .jl-scrim.is-on { opacity: 1; }
-  .js .jl-scrim[hidden] { display: none; }
-
-  .js .jl-fab {
-    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 45;
-    display: inline-flex; align-items: center; gap: 8px;
-    height: 52px; padding: 0 22px 0 19px;
-    border-radius: 999px;
-    background: var(--ink); color: #fff;
-    font: 640 15.5px/1 var(--font);
-    box-shadow: 0 18px 36px -16px rgba(4, 12, 48, .55), 0 4px 10px -4px rgba(4, 12, 48, .3);
-    transform: translate(-50%, 0);
-    transition: transform var(--d-ui) var(--ease), opacity var(--d-ui) var(--ease);
-  }
-  .js .jl-fab.is-hidden { transform: translate(-50%, 160%); opacity: 0; pointer-events: none; }
-  .jl-fab__n {
-    min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
-    display: inline-grid; place-items: center;
-    background: var(--sun); color: var(--ink); font: 700 12.5px/1 var(--font);
-  }
-  .jl-fab__n[hidden] { display: none; }
-  .page-jobs .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
-
-  /* quick filters: the app's chips (grey, a pressed one solid blue), one row that scrolls sideways */
-  .js .jl-quick {
-    display: flex; gap: 8px; margin: 0 calc(-1 * var(--gutter)) 16px; padding: 0 var(--gutter) 2px;
-    overflow-x: auto; scrollbar-width: none; scroll-padding-inline: var(--gutter);
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
-  }
-  .jl-quick::-webkit-scrollbar { display: none; }
-  .jl-quick .chip { flex: none; border: 0; background: var(--sa-tag); font-weight: 600; color: var(--ink-2); }
-  .jl-quick .chip[aria-pressed="true"] { background: var(--blue); color: #fff; }
-}
-html.jl-lock { overflow: hidden; }
-
-@media (max-width: 767px) {
-  .jl { padding: 24px 0 72px; }
 }
 @media (max-width: 640px) {
-  .jl-bar { margin-bottom: 12px; }
-  .jl-count { font-size: 14.5px; }
-  .jl-count strong { font-size: 19px; }
-  .jl-sort .tab { padding: 0 12px; font-size: 13.5px; }
+  .jl__grid { margin-top: 24px; }
+  /* the figures: three columns, the number over its label */
+  .jl-figs { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 0 12px; margin-bottom: 18px; padding: 0; }
+  /* the label may wrap under its figure (a field page at 360: "việc trong ngành này" beside "16,8 USD/giờ"); the figure never does */
+  .jl-fig, .jl-fig__link { display: grid; align-content: start; gap: 2px; font-size: 13px; line-height: 1.3; white-space: normal; text-wrap: balance; }
+  .jl-fig { min-width: min-content; }   /* the track never shrinks under its figure */
+  .jl-fig + .jl-fig { margin-left: 0; padding-left: 14px; }
+  .jl-fig strong { margin: 0; font-size: 19px; line-height: 1.15; letter-spacing: -0.02em; white-space: nowrap; }
+  .jl.is-filtered .jl-figs { grid-template-columns: minmax(0, 1fr); }
+  .jl.is-filtered .jl-fig--count { display: block; font-size: 15px; }
+  .jl.is-filtered .jl-fig--count strong { display: inline; font-size: 17px; margin-right: .3em; }
+  .jl-bar { margin-bottom: 14px; }
+  .jl-sort { width: 100%; flex-wrap: nowrap; gap: 8px; }
+  .jl-sort > [role="radio"] { flex: 1 1 auto; min-height: 40px; padding: 0 10px; font-size: 15px; }
   .jl-rows { gap: 10px; }
   .jl-more__btn { width: 100%; }
-  /* compact rows: company · field (level/employment left to the detail page). Each item stays
-     whole: the field wraps to its own line rather than being cut mid-word ("Marketing & G…").
-     An item is only ellipsised when it alone is wider than the row. */
-  .jl-rows .job-row { grid-template-columns: 44px minmax(0, 1fr) auto; row-gap: 8px; column-gap: 12px; padding: 16px 14px 16px 16px; border-radius: var(--sa-r-card-sm); }
-  .jl-rows .job-row > .logo { width: 44px; height: 44px; border-radius: 12px; font-size: 15px; }
-  .jl-rows .job-row__main { grid-column: 2 / 4; grid-row: 1; gap: 4px; }
-  .jl-rows .job-row__title { font-size: 16.5px; line-height: 1.3; padding-right: 44px; }
-  .jl-rows .job-row .save-btn { align-self: start; grid-column: 3; grid-row: 1; }
-  .jl-rows .job-row__side { grid-column: 2 / 4; }
-  .jl-rows .job-row__meta { flex-wrap: wrap; min-width: 0; font-size: 13px; }
-  .jl-rows .job-row__meta span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .jl:not(.is-preset) .jl-rows .job-row__meta span:nth-child(n+3), .jl.is-preset .jl-rows .job-row__meta span:nth-child(n+4) { display: none; }
-  /* the meta line keeps clear of the round save button, as the title does */
-  .jl-rows .job-row__meta { padding-right: 44px; }
-  .jl-rows .job-row__badges { margin-top: 4px; }
-  .jl-rows .job-row .badge { height: 26px; padding: 0 10px; font-size: 12.5px; }
-  .jl-rows .job-row__side { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 2px 10px; text-align: left; }
+  /* compact white cards: [logo] title + tick / company · field / pay · age, the bookmark top right */
+  .jl-rows .job-row { grid-template-columns: 48px minmax(0, 1fr) 40px; align-items: start; row-gap: 8px; column-gap: 14px; min-height: 0; padding: 16px 8px 16px 14px; }
+  .jl-rows .job-row > .logo { width: 48px; height: 48px; border-radius: 13px; font-size: 17px; }
+  .jl-rows .job-row__main { grid-column: 2; grid-row: 1; gap: 4px; }
+  /* two lines at most, the tick right after the last word */
+  .jl-rows .job-row__title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 16.5px; line-height: 1.3; letter-spacing: -0.014em; }
+  .jl-rows .job-row__title a { display: inline; white-space: normal; overflow: visible; }
+  .jl-rows .job-row__title::after { display: inline-block; width: 17px; height: 17px; margin-left: 6px; vertical-align: -3px; }
+  .jl-rows .job-row .save-btn { align-self: start; grid-column: 3; grid-row: 1; margin-top: -6px; }
+  .jl-rows .job-row__side { grid-column: 2 / 4; grid-row: 2; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 2px 12px; text-align: left; }
+  .jl-rows .job-row__meta { flex-wrap: nowrap; min-width: 0; font-size: 14px; }
+  .jl-rows .job-row__meta span { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jl-rows .job-row__meta span:first-child { flex-shrink: 0; max-width: 62%; }
   .jl-rows .job-row__pay { font-size: 16.5px; }
-  .jl-rows .job-row__pay small { max-width: none; }
-  .jl-rail { margin-bottom: 24px; padding-bottom: 24px; }
-  .jl-rail__head { margin-bottom: 12px; }
-  .jl-rail__text { order: 3; flex-basis: 100%; font-size: 14px; }
-  .jl-rail__all { margin-left: auto; }
-  /* phones: the three cards scroll sideways (a stack would push the list a screen down) */
-  .jl-rail__cards {
-    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 86%; gap: 10px;
-    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-    margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 14px; scroll-padding-inline: var(--gutter);
-  }
-  .jl-rail__cards > :nth-child(3) { display: grid; }
-  .jl-rail__cards::-webkit-scrollbar { display: none; }
-  .jl-rail__cards > * { scroll-snap-align: start; }
-  .jl-trust { margin-top: 32px; font-size: 13.5px; }
+  .jl-rows .job-row__pay small { text-align: left; }
+  .jl-rows .job-row__age { font-size: 13.5px; }
+  .jl-trust { margin-top: 36px; font-size: 14px; }
 }
-/* small phones: one rhythm for every row — the pay (and its ≈ USD line), then age · source on their own line */
-@media (max-width: 479px) {
-  .jl-rows .job-row__side { flex-direction: column; align-items: flex-start; gap: 4px; }
+@media (max-width: 380px) {
+  .jl-fig strong { font-size: 17.5px; }
+  .jl-fig, .jl-fig__link { font-size: 12.5px; }
+  .jl-fig + .jl-fig { padding-left: 10px; }
+  .jl-sort > [role="radio"] { padding: 0 8px; font-size: 14.5px; }
 }
 
 /* ---------------------------------------------------------------- 4 field page */
-/* the field's hourly pay in one quiet line above the list (out of the hero, which stays title · lead · search · counts) */
-.fd-pay {
-  margin-bottom: 20px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
-  font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
-}
-.fd-pay strong { color: var(--ink); font-weight: 680; }
-.fd-pay__link { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; font-weight: 640; color: var(--ultra-ink); white-space: nowrap; vertical-align: bottom; }
-.fd-pay__link .icon { width: 16px; height: 16px; stroke-width: 1.9; transition: transform var(--d-ui) var(--ease-expo); }
-.fd-pay__link:hover .icon { transform: translateX(3px); }
-/* "Kỹ năng hay gặp": the field's frequent tags, exact-tag filters (jobs.js), the app's grey chips */
-.fd-skills { margin-bottom: 28px; display: grid; gap: 12px; }
-.fd-skills__label { font: 700 14px/1.3 var(--font); color: var(--ink); }
-.fd-skills__list { display: flex; flex-wrap: wrap; gap: 8px; }
-.fd-skills__list .chip { border: 0; background: var(--sa-tag); font-weight: 600; color: var(--ink-2); }
-.fd-skills__list .chip:hover { background: #E7EBF3; }
-.fd-skills__list .chip__count { background: #fff; }
-.fd-skills__list .chip[aria-pressed="true"] { background: var(--blue); color: #fff; }
-.fd-skills__list .chip[aria-pressed="true"] .chip__count { background: rgba(11, 21, 48, .2); color: #fff; }
-/* the field page's list hands over to the guides section (its own hairline head) */
-.page-field .jl { padding-bottom: 72px; }
-.fd-after { padding-bottom: 88px; }
+/* The approved board, preset to one field: the list stays the centre. Around it, small and real: the field's pay as a
+   white mini window on the band (>= 1024: the median in mint ink, the middle half as a band with its ticks), the
+   median in the figures line in mint ink, the field's skills as filters, then the guides to do before applying as ONE
+   lead (a cover photo with the guide's own first steps floating over it) beside two compact app-icon rows. */
+.fd-hero__pay { align-self: center; }
+.fd-pay { --ax: calc(var(--p75) * 1.25); display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; width: 300px; padding: 14px 18px 12px 14px; }
+.fd-pay .rv-mini__head { grid-row: 1 / 3; margin: 0; align-self: start; }
+.fd-pay .rv-mini__head > span:last-child { display: none; }
+/* the kit keeps this icon in its hue (it sits on the white window, not on the band); a tighter shadow at this size */
+.rv .rv-hero .fd-pay .rv-appicon { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 6px 14px -6px rgba(var(--hue-rgb), .5); }
+.fd-pay > :not(.rv-mini__head) { grid-column: 2; }
+.fd-pay__big { margin-top: 0; }
+.fd-pay__label { font: 500 12.5px/1.3 var(--font); color: var(--rv-fg-3); }
+.fd-pay__big small { color: var(--hue-ink); font-weight: 600; }
+.fd-pay__track { position: relative; display: block; height: 8px; margin-top: 12px; border-radius: 99px; background: rgba(28, 48, 92, .08); }
+.fd-pay__band { position: absolute; top: 0; bottom: 0; left: calc(var(--p25) / var(--ax) * 100%); width: calc((var(--p75) - var(--p25)) / var(--ax) * 100%); border-radius: 99px; background: linear-gradient(90deg, var(--hue-top), var(--hue)); transform-origin: left center; }
+.fd-pay__med { position: absolute; top: -5px; bottom: -5px; left: calc(var(--med) / var(--ax) * 100%); width: 2px; margin-left: -1px; border-radius: 2px; background: var(--rv-text); }
+.fd-pay__ticks { position: relative; display: block; height: 15px; margin-top: 6px; font: 400 12.5px/15px var(--font); color: var(--rv-fg-3); font-variant-numeric: tabular-nums; }
+.fd-pay__ticks i { position: absolute; top: 0; left: calc(var(--at) / var(--ax) * 100%); translate: -50% 0; font-style: normal; }
 
+html.rv-live [data-live]:not(.is-live) .fd-pay__band { transform: scaleX(0); }
+html.rv-live .fd-pay__band { transition: transform var(--rv-dur-4) var(--rv-ease) 260ms; }
+/* the figures line: the field's median is a salary (mint ink) */
+.fd-fig-pay { color: var(--hue-mint-ink) !important; }
+/* "Kỹ năng hay gặp": the field's frequent tags, exact-tag filters (jobs.js) */
+.fd-skills { margin-bottom: 24px; display: grid; gap: 12px; }
+.fd-skills__label { font: 600 16px/1.3 var(--font); color: var(--rv-fg); }
+.fd-skills__list .rv-filter:not([aria-pressed="true"]) { background: #fff; box-shadow: 0 0 0 1px rgba(20, 30, 60, .05), 0 1px 2px rgba(20, 30, 60, .05); }
+/* "Làm trước khi ứng tuyển": the sheet goes on under the list: one lead guide beside two compact rows */
+.fd-after { padding-block: 0 clamp(64px, 6vw, 96px); }
+.fd-after__head { margin-bottom: 28px; }
+.fd-after__title { font: 600 clamp(28px, 2.6vw, 36px)/1.15 var(--font); letter-spacing: -0.028em; color: var(--rv-fg); text-wrap: balance; }
+
+.fd-guides { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--rv-gap); align-items: stretch; }
+.fd-guide { color: inherit; text-decoration: none; background: #fff; }
+.fd-guide--lead { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 0 28px; min-height: 280px; padding: 0 30px 0 0; overflow: clip; border-radius: var(--rv-r-lg); }
+.fd-guide__photo { position: relative; align-self: stretch; display: block; min-height: 100%; overflow: hidden; }
+.fd-guide__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fd-guide__photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 14, 30, 0) 40%, rgba(10, 14, 30, .28)); }
+/* the guide's own first steps floating over the photo's edge (the first two ticked) */
+.fd-guide__steps { position: absolute; left: 24px; bottom: 24px; z-index: 1; display: block; width: min(300px, calc(55% - 12px)); padding: 12px 14px 14px; }
+.fd-guide__steps .rv-mini__head { margin-bottom: 10px; color: var(--rv-fg-2); font-weight: 600; }
+/* the kit's ticks (.rv-ticks, spans inside this link card), a size smaller */
+.fd-guide__ticks { gap: 7px; font-size: 13px; line-height: 1.3; }
+.fd-guide__ticks > * { grid-template-columns: 18px minmax(0, 1fr); gap: 8px; }
+.fd-guide__ticks > *::before { width: 18px; height: 18px; }
+.fd-guide__ticks > .is-done::before { background-size: 12px; }
+.fd-guide__body { display: grid; gap: 6px; min-width: 0; }
+.fd-guide__title { font: 600 18px/1.3 var(--font); letter-spacing: -0.016em; color: var(--rv-fg); text-wrap: balance; transition: color var(--rv-dur-2) var(--rv-ease); }
+.fd-guide--lead .fd-guide__title { font-size: clamp(22px, 1.9vw, 26px); line-height: 1.2; letter-spacing: -0.024em; }
+.fd-guide__meta { font-size: 14.5px; line-height: 1.35; color: var(--rv-fg-3); }
+.fd-guides__side { display: grid; grid-auto-rows: minmax(0, 1fr); gap: var(--rv-gap); min-width: 0; }
+.fd-guide--row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px; align-items: center; gap: 18px; padding: 20px 20px 20px 22px; }
+.fd-guide__go { width: 20px; height: 20px; color: var(--rv-fg-3); transition: translate var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .fd-guide:hover .fd-guide__title { color: var(--hue-ink); }
+  .fd-guide:hover .fd-guide__go { translate: 3px 0; color: var(--hue-ink); }
+}
+@media (max-width: 1100px) {
+  .fd-guides { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 960px) {
-  .fd-skills { margin-bottom: 20px; }
+  .fd-skills { margin-bottom: 18px; }
   .fd-skills__list {
-    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-    margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 2px;
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+    margin: 0 calc(-1 * var(--gutter)); padding: 2px var(--gutter);
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
   }
   .fd-skills__list::-webkit-scrollbar { display: none; }
-  .fd-skills__list .chip { flex: none; }
-  /* one chip row above the list on phones and tablets: the field's skills (the quick filters are in the sheet) */
-  .js .page-field .jl-results:has(.fd-skills) .jl-quick { display: none; }
+  /* one chip row beside "Bộ lọc" on phones and tablets: the field's skills take it (block jobs_quick; the quick
+     filters are in the sheet), so the labelled row above the list steps aside */
+  .js .fd-page .jl-results:has(.fd-quick) .fd-skills { display: none; }
 }
 @media (max-width: 767px) {
-  .fd-pay { font-size: 14px; margin-bottom: 16px; }
-  .page-field .jl { padding-bottom: 56px; }
-  .fd-after { padding-bottom: 64px; }
+  .fd-after__head { margin-bottom: 20px; }
+  .fd-after__title { font-size: 26px; letter-spacing: -0.022em; }
+  .fd-guide--lead { grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 0; border-radius: 22px; }
+  .fd-guide__photo { min-height: 236px; }
+  .fd-guide__steps { left: 16px; right: 16px; bottom: auto; top: 112px; width: auto; max-width: 300px; }
+  .fd-guide--lead .fd-guide__body { padding: 18px 20px 22px; }
+  .fd-guide--lead .fd-guide__title { font-size: 21px; }
+  .fd-guide--row { grid-template-columns: 44px minmax(0, 1fr) 18px; gap: 14px; padding: 16px 14px 16px 16px; }
+  .fd-guide--row .rv-appicon { --s: 44px; }
+  .fd-guide__title { font-size: 16.5px; }
 }
 
+/* ================================================================ 5–7 direction A "Ảnh thật, chữ biên tập" (19/11)
+   The job page, the tracker and the salary page on the ed.css kit (portal/INNER_A_SPEC.md): white and a warm
+   off-white alternating, editorial rows on hairlines, thin grey numerals (the chosen or key one cobalt), ONE product
+   view per section, photographs (salary, saved) bringing the colour. The board's own rows (.jl-rows .job-row, §3) are
+   reused as they are. Nothing here reaches /viec-lam/ or /nganh/: every rule names .jd- .sv- .sl- or one of the
+   three page classes. */
+/* the light numerals, the warm surface and its tones, the drawn rule are the kit's (ed.css §9 §11: --ed-num, --ed-num-h,
+   .ed-sec--warm, --ed-rule) */
+/* the board's rows on these pages (§3 .jl-rows): company · field on the meta line, as on /viec-lam/ */
+:is(.jd-rows, .sv-suggest__rows) .job-row__meta span:nth-child(n+3) { display: none; }
+/* the rows rise in once, 60 ms apart (the include stays as it is: no .rv-in on it) */
+html.rv-live :is(.jd-rows, .sv-suggest__rows) > .job-row {
+  transition: opacity var(--rv-dur-4) var(--rv-ease) calc(var(--i, 0) * 60ms), transform var(--rv-dur-4) var(--rv-ease) calc(var(--i, 0) * 60ms),
+              box-shadow var(--rv-dur-3) var(--rv-ease), translate var(--rv-dur-3) var(--rv-ease);
+}
+html.rv-live :is(.jd-rows, .sv-suggest__rows).rv-pre:not(.is-live) > .job-row { opacity: 0; transform: translateY(14px); }
+
 /* ---------------------------------------------------------------- 5 job detail */
-/* A compact cobalt head (employer, title, chips, age · source) clear of the right column; the white pay card sits
-   in that column, rises --jd-pull into the band from the white body and stays in view (sticky) as the page scrolls. */
-.page-job { --jd-aside: 384px; --jd-gap: 64px; --jd-pull: 300px; }
-.jd-hero { --glow-at: 90% 78%; --glow-size: 30% 60%; padding-bottom: 64px; }
-.jd-hero__inner { padding-right: calc(var(--jd-aside) + var(--jd-gap)); }
-.jd-head { min-width: 0; max-width: 760px; }
-.jd-crumb li[aria-current] { min-width: 0; }
-.jd-crumb__cur { display: block; max-width: 36ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.jd-org { display: flex; align-items: center; gap: 14px; }
-.jd-org .logo--lg { box-shadow: 0 10px 22px -14px rgba(4, 12, 48, .6); }
-/* the initials tile on cobalt: the home's app-icon recipe, shadow only (no outline ring); a deeper soft drop
-   shadow sets a blue tile apart from the band */
-.page-job .jd-org .logo--lg:not(:has(img)) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1.5px 0 rgba(0, 0, 0, .12), 0 14px 26px -12px rgba(4, 12, 48, .62), 0 3px 8px -3px rgba(4, 12, 48, .3); }
-.jd-org__text { min-width: 0; display: grid; gap: 3px; }
-.jd-org__name { font: 680 17px/1.3 var(--font); letter-spacing: -0.012em; color: #fff; }
-.jd-org__meta { font-size: 14.5px; color: #fff; }
-.jd-org__meta a { color: #fff; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .45); text-underline-offset: 3px; }
-.jd-org__meta a:hover { text-decoration-color: #fff; }
+/* No photograph: the job is the centre. One white section holds the whole job (so the apply box can stay in view
+   beside every row): the crumb; the header (the employer's tile, "company · field · posted", the title huge, the
+   rest of a long scraped title as one quieter line); the apply box (sticky on desktop: the pay big in cobalt with its
+   period, the job's range on its field's real spread, the black pill); then the sections as editorial rows. */
+/* the kit's text-only header (ed.css §17 .ed-top); the apply box inside it stays in view, so nothing clips it */
+.rv .rv-hero.ed-top.jd-hero { overflow: visible; }
+.jd-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 392px);
+  grid-template-areas: "crumb crumb" "head aside" "main aside";
+  column-gap: clamp(48px, 6.4vw, 104px);
+  padding-block: 0 clamp(80px, 7.4vw, 112px);
+}
+.jd-crumb { grid-area: crumb; margin-bottom: clamp(30px, 3.2vw, 48px); }
+.jd-crumb li:last-child { min-width: 0; }
+.jd-crumb__cur { display: block; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jd-head { grid-area: head; min-width: 0; }
+.jd-main { grid-area: main; min-width: 0; }
+.jd-aside { grid-area: aside; align-self: start; position: sticky; top: calc(var(--header-h) + 28px); display: grid; gap: 22px; min-width: 0; }
+
+/* the header. The employer's tile is small and quiet so the H1 and the cobalt pay lead: a real mark on white, else the
+   monogram in ink on white with the kit's hairline (like .ed-face), never a tinted app-icon tile; an anonymous Upwork
+   client the platform's "up" in its green on the same white tile (the board's rows keep their own tiles, §3) */
+.jd-page .jd-logo {
+  width: 60px; height: 60px; border-radius: 16px; font-size: 20px;
+  background: #fff; color: var(--ed-ink); box-shadow: inset 0 0 0 1px var(--ed-line);
+}
+.jd-page .jd-logo:has(img) { box-shadow: inset 0 0 0 1px var(--ed-line); }
+.jd-page .jd-logo img { padding: 7px; }
+.jd-page .jd-logo:empty { background: #fff; color: #14A800; box-shadow: inset 0 0 0 1px var(--ed-line); }
+.jd-org { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0; font: 400 17px/1.45 var(--font); color: var(--ed-grey); }
+.jd-org > * + *::before { content: "·"; display: inline-block; margin: 0 10px; color: #B3B8C1; }
+.jd-org__name { font-weight: 600; color: var(--ed-ink); }
+.jd-org__field { color: inherit; text-decoration: none; border-radius: 4px; transition: color var(--rv-dur-2) var(--rv-ease); }
+.jd-org__field:hover { color: var(--rv-cobalt); }
+.jd-org__field:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 3px; }
+/* the meta line's links reach 44 px without moving the line (padding taken back by a negative margin) */
+.jd-org__field, .jd-kv__link { padding-block: 11px; margin-block: -11px; }
 .jd-title {
-  margin-top: 22px;
-  font: 740 clamp(32px, 3.2vw, 46px)/1.1 var(--font-wide); font-stretch: 110%; letter-spacing: -0.022em;
-  color: #fff; text-wrap: balance; overflow-wrap: anywhere;
+  margin-top: 14px; padding-block: .05em;
+  font: 600 var(--ed-h1-long)/1.03 var(--font); letter-spacing: -0.036em;   /* the kit's long title size */
+  color: var(--ed-ink); text-wrap: balance; overflow-wrap: anywhere;
 }
 /* a headline that stays over 60 characters (no separator to split at: jobs_tags.title_parts) steps down a size,
    one more past 80, so it keeps to about two lines */
-.jd-title--long { font-size: clamp(28px, 2.5vw, 36px); line-height: 1.14; }
-.jd-title--xlong { font-size: clamp(26px, 2.15vw, 31px); }
+.jd-title--long { font-size: clamp(36px, 3.5vw, 50px); line-height: 1.08; letter-spacing: -0.032em; }
+.jd-title--xlong { font-size: clamp(32px, 2.9vw, 42px); }
 /* the rest of a long scraped title: a quieter line under the headline, so the role keeps its scale */
-.jd-title__rest {
-  display: block; margin-top: 12px;
-  font: 500 max(17px, .42em)/1.45 var(--font); font-stretch: 100%; letter-spacing: -0.006em;
-  color: #fff; text-wrap: pretty;
+.jd-title__rest { display: block; margin-top: 18px; max-width: 38em; font: 400 clamp(18px, 1.4vw, 21px)/1.45 var(--font); letter-spacing: -0.008em; color: var(--ed-grey); text-wrap: pretty; }
+.jd-checked { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; font: 400 15.5px/1.4 var(--font); color: var(--ed-grey); }
+.jd-checked a {
+  display: inline-flex; align-items: center; gap: 9px; min-height: 44px; border-radius: 6px;
+  font-weight: 500; color: var(--rv-cobalt); text-decoration: none;
+  transition: color var(--rv-dur-2) var(--rv-ease);
 }
-.jd-badges { margin-top: 24px; gap: 10px; }
-.jd-badges > li { height: 40px; padding: 0 16px 0 13px; font-size: 14.5px; background: rgba(9, 22, 92, .16); }   /* a touch deeper than the kit's chip: small white text stays >= 4.5:1 on the bright right of the band */
-.jd-badges .icon { width: 20px; height: 20px; stroke-width: 2; color: var(--sun); }
-.jd-posted { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0; font-size: 14.5px; color: #fff; }
-.jd-posted > span + span::before { content: "·"; margin: 0 9px; color: rgba(255, 255, 255, .6); }
-.jd-hero .job-age.is-new { color: #fff; font-weight: 640; }
+.jd-checked a .icon { flex: none; width: 22px; height: 22px; padding: 4px; border-radius: 50%; background: var(--rv-cobalt); color: #fff; stroke-width: 2.6; }
+.jd-checked a:hover { color: var(--rv-cobalt-600, #2341C4); text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.jd-checked a:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 2px; }
 
-.jd { position: relative; z-index: 1; padding: 0 0 72px; background: #fff; }
-.jd-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--jd-aside);
-  grid-template-areas: "main aside";
-  column-gap: var(--jd-gap);
-  align-items: start;
+/* THE PRODUCT VIEW: the apply box (ed.css .ed-frame) */
+.jd-apply { padding: 28px 28px 26px; }
+.jd-apply__label { font: 600 13px/1.3 var(--font); letter-spacing: .1em; text-transform: uppercase; color: var(--ed-grey); }
+.jd-apply__pay { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.jd-apply__amount { font: 600 58px/.95 var(--font); letter-spacing: -0.045em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; padding-block: .04em; }
+/* a figure over 9 characters ("1.500–1.800", "160.000–225.000") steps down so the box keeps its proportions */
+.jd-apply__amount--long { font-size: 38px; letter-spacing: -0.034em; }
+.jd-apply__amount--none { font-size: 42px; letter-spacing: -0.034em; color: var(--ed-ink); }
+.jd-apply__unit { font: 500 19px/1.2 var(--font); letter-spacing: -0.01em; color: var(--ed-ink); white-space: nowrap; }
+.jd-apply__sub { margin-top: 8px; font: 400 15px/1.45 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.jd-apply__pay + .jd-apply__sub { margin-top: 12px; }
+/* the job's range on its field's real hourly spread: a slim track, the field's middle half a grey band, the median a
+   tick, the job's range the cobalt bar (it draws once from the left) */
+.jd-cmp { --ax: calc(max(var(--hi), var(--p75)) * 1.12); margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--ed-line); }
+.jd-cmp__cap { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font: 400 14.5px/1.35 var(--font); color: var(--ed-grey); }
+.jd-cmp__cap > span { min-width: 0; text-wrap: pretty; }
+.jd-cmp__verdict { flex: none; font-weight: 600; color: var(--ed-ink); white-space: nowrap; }
+.jd-cmp__cap > .jd-cmp__n { flex: none; white-space: nowrap; }
+.jd-cmp__plot { position: relative; padding-top: 44px; }
+.jd-cmp__track { position: relative; display: block; height: 6px; border-radius: 99px; background: #EDEFF3; }
+.jd-cmp__field { position: absolute; top: 0; bottom: 0; left: calc(var(--p25) / var(--ax) * 100%); width: calc((var(--p75) - var(--p25)) / var(--ax) * 100%); border-radius: 99px; background: #D3D8E1; }
+.jd-cmp__job {
+  position: absolute; top: -3px; bottom: -3px; left: calc(var(--lo) / var(--ax) * 100%);
+  width: max(calc((var(--hi) - var(--lo)) / var(--ax) * 100%), 12px); border-radius: 99px;
+  background: var(--rv-cobalt); transform-origin: left center;
 }
-.jd-main { grid-area: main; min-width: 0; padding-top: 48px; }
-.jd-aside { grid-area: aside; position: sticky; top: calc(var(--header-h) + 20px); margin-top: calc(-1 * var(--jd-pull)); }
+.jd-cmp__med { position: absolute; top: -8px; bottom: -8px; left: calc(var(--med) / var(--ax) * 100%); width: 2px; margin-left: -1px; border-radius: 2px; background: var(--ed-ink); }
+.jd-cmp__ticks { position: relative; display: block; height: 16px; margin-top: 10px; font: 400 13px/16px var(--font); color: var(--ed-grey); font-variant-numeric: tabular-nums; }
+.jd-cmp__t { position: absolute; top: 0; font-style: normal; white-space: nowrap; transform: translateX(-50%); }
+.jd-cmp__t--a { left: calc(var(--p25) / var(--ax) * 100%); }
+.jd-cmp__t--b { left: calc(var(--p75) / var(--ax) * 100%); }
+/* the median's label sits above the track, over its tick (clamped inside the box) */
+.jd-cmp__t--m { top: -50px; left: clamp(76px, calc(var(--med) / var(--ax) * 100%), calc(100% - 76px)); font-weight: 600; color: var(--ed-ink); }
+.jd-cmp--field .jd-cmp__field { background: #BCC4D1; }
+html.rv-live [data-live]:not(.is-live) .jd-cmp__job { transform: scaleX(0); }
+html.rv-live .jd-cmp__job { transition: transform var(--rv-dur-4) var(--rv-ease) 220ms; }
+.jd-apply__actions { margin-top: 26px; display: grid; gap: 10px; }
+.jd-apply__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.jd-apply__row .rv-pill { min-width: 0; padding: 0 12px; }
+.jd-save[aria-pressed="true"] { border-color: var(--rv-cobalt); color: var(--rv-cobalt); }
+.jd-save[aria-pressed="true"] .icon { fill: currentColor; }
+.jd-help { border-top: 0; }
+.jd-help .ed-row { min-height: 60px; }
+.jd-help .ed-row__t { font-size: 16.5px; }
+.jd-help .ed-row__d { font-size: 15px; color: var(--rv-cobalt); }
 
-/* the pay card: the kit's white card, floating (it rises from the cobalt band) */
-.jd-apply {
-  padding: 26px 26px 22px;
-  border-radius: var(--sa-r-card);
-  background: #fff;
-  box-shadow: 0 0 0 1px var(--tile-line), 0 34px 60px -30px rgba(4, 12, 48, .42), 0 10px 22px -12px rgba(4, 12, 48, .18);
+/* the sections: a title, then editorial rows on hairlines */
+.jd-block { margin-top: clamp(56px, 5vw, 76px); }
+.jd-block[id] { scroll-margin-top: calc(var(--header-h) + 20px); }
+.jd-block__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; }
+.jd-h2 { font: 600 var(--rv-hc)/1.2 var(--font); letter-spacing: -0.024em; color: var(--ed-ink); text-wrap: balance; }
+/* key facts: the label left (grey), the value right (ink); only what the listing states */
+.jd-kv { margin: 22px 0 0; border-top: 1px solid var(--ed-line); }
+.jd-kv > div { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); align-items: baseline; gap: 4px 24px; padding: 17px 0; border-bottom: 1px solid var(--ed-line); }
+.jd-kv dt { font: 400 16px/1.45 var(--font); color: var(--ed-grey); }
+.jd-kv dd { margin: 0; min-width: 0; font: 500 17.5px/1.45 var(--font); color: var(--ed-ink); overflow-wrap: anywhere; }
+.jd-kv dd small { display: block; margin-top: 2px; font: 400 15px/1.45 var(--font); color: var(--ed-grey); }
+.jd-kv__link {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; color: var(--rv-cobalt);
+  text-decoration: underline; text-decoration-color: rgba(44, 79, 230, .32); text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: text-decoration-color var(--rv-dur-2) var(--rv-ease);
 }
-.jd-apply__label { display: flex; align-items: center; gap: 10px; font: 640 14.5px/1.2 var(--font); color: var(--ink-2); }
-.jd-apply__pay { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.jd-apply__amount { font: 740 40px/1.05 var(--font-wide); font-stretch: 106%; letter-spacing: -0.03em; color: var(--green-pay); }
-.jd-apply__amount--muted { font-size: 32px; color: var(--ink-2); }
-.jd-apply__unit { font: 640 16px/1.2 var(--font); letter-spacing: -0.01em; color: var(--ink-2); }
-.jd-apply__sub { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
-.jd-apply__cta { margin-top: 22px; }
-.jd-apply__row { margin-top: 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.jd-apply__btn { width: 100%; height: 44px; justify-content: center; border-color: var(--tile-line); }
-.jd-apply__note { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; color: var(--muted); }
-.jd-apply__note strong { color: var(--ink-2); font-weight: 640; }
-.jd-apply__scam {
-  margin-top: 14px; display: flex; gap: 12px; align-items: center;
-  padding: 12px 14px 12px 12px; border-radius: 16px;
-  background: var(--coral-50);
-  font-size: 13.5px; line-height: 1.45; color: var(--ink-2);
-  transition: background-color var(--d-micro) var(--ease);
+.jd-kv__link:hover { text-decoration-color: currentColor; }
+.jd-kv__link .icon { width: 15px; height: 15px; stroke-width: 1.8; }
+.jd-skills { display: flex; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.jd-skills li:not(:last-child)::after { content: ","; margin-right: .4em; color: var(--ed-grey); }
+.jd-skills a {
+  border-radius: 4px; color: var(--ed-ink); text-decoration: underline; text-decoration-color: #C6CBD3;
+  text-decoration-thickness: 1px; text-underline-offset: 5px;
+  transition: color var(--rv-dur-2) var(--rv-ease), text-decoration-color var(--rv-dur-2) var(--rv-ease);
 }
-.jd-apply__scam strong { color: var(--coral-ink); font-weight: 640; }
-.jd-apply__scam:hover { background: #FBE2E2; }
-.jd-apply__scam:hover strong { text-decoration: underline; text-underline-offset: 3px; }
-/* the arrow follows the words: inline text with an inline arrow, so a wrapped line never strands it at the far right */
-.jd-ask { display: block; width: fit-content; max-width: 100%; margin: 14px 0 0 6px; font-size: 15px; }
-.jd-ask .icon { display: inline-block; margin-left: 8px; vertical-align: -3px; }
-
-/* white cards in the main column */
-.jd-card { padding: 28px 30px 30px; }
-.jd-card + .jd-card { margin-top: 20px; }
-.jd-h2 { font: 740 21px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
-.jd-facts {
-  margin: 22px 0 0;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 24px;
+.jd-skills a:hover { color: var(--rv-cobalt); text-decoration-color: currentColor; }
+.jd-skills a:focus-visible, .jd-kv__link:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 3px; }
+/* the five checks: a thin grey numeral, the check and the listing's own words, a cobalt tick (they pop in once) */
+.jd-checks__more { min-height: 44px; }
+.jd-checks__list { margin: 22px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.jd-check { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 16px; min-height: 84px; padding: 16px 0; border-bottom: 1px solid var(--ed-line); }
+.jd-check__n { font: 400 34px/1 var(--font); letter-spacing: -0.035em; color: var(--ed-num); font-variant-numeric: tabular-nums; }
+.jd-check__body { display: grid; gap: 4px; min-width: 0; }
+.jd-check__body b { font: 600 18.5px/1.3 var(--font); letter-spacing: -0.014em; color: var(--ed-ink); }
+.jd-check__val { font: 400 15.5px/1.45 var(--font); color: var(--ed-grey); overflow-wrap: anywhere; }
+.jd-check__mark {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #EEF0F3; color: var(--rv-cobalt);
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease);
 }
-.jd-fact { min-width: 0; }
-.jd-fact dt { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
-.jd-fact__ic { flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-50); color: var(--blue); }
-.jd-fact__ic .icon { width: 17px; height: 17px; stroke-width: 1.9; }
-.jd-fact dd { margin: 6px 0 0 42px; display: grid; gap: 3px; }
-.jd-fact__v { font: 680 16px/1.35 var(--font); letter-spacing: -0.008em; color: var(--ink); overflow-wrap: anywhere; }
-.jd-fact__v.is-none { font-weight: 500; color: var(--muted); }
-.jd-fact__s { font-size: 13px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
-.jd-fact__link { display: inline-flex; align-items: center; gap: 5px; justify-self: start; }
-.jd-fact__link:hover { color: var(--ultra-ink); }
-.jd-fact--pay .jd-fact__ic { background: var(--mint-50); color: var(--mint-ink); }
-.jd-fact--pay .jd-fact__v { font-weight: 740; color: var(--green-pay); }
-.jd-fact--pay .jd-fact__v.is-none { font-weight: 500; color: var(--muted); }
-
-.jd-checks__head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding-bottom: 14px; }
-.jd-checks__titles { flex: 1; min-width: 0; }
-.jd-checks__title { font: 740 19px/1.25 var(--font); letter-spacing: -0.016em; color: var(--ink); }
-.jd-checks__sub { margin-top: 2px; font-size: 13.5px; color: var(--muted); }
-.jd-checks__more { padding: 6px 0; font-size: 15px; }
-.app.jd-app--grey { --c: #7C86A0; }
-.jd-checks__list li {
-  display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 14px; align-items: center;
-  padding: 13px 0; border-top: 1px solid var(--line);
-  font-size: 15px; color: var(--ink);
+.jd-check__mark .icon { width: 17px; height: 17px; stroke-width: 2.4; }
+/* a check and its evidence on the page are twins (ed.js data-ed-k): pointing at either lights both. The row: its
+   numeral cobalt, its disc filled; the evidence (the remote phrase, "Tuyển ở", "Đăng …", the pay, the source): a soft
+   cobalt tint behind the words. Nothing moves. */
+.jd-check[data-ed-k] .jd-check__n { transition: color var(--rv-dur-2) var(--rv-ease); }
+.jd-check.is-lit .jd-check__n { color: var(--rv-cobalt); }
+.jd-check.is-lit .jd-check__mark { background: var(--rv-cobalt); color: #fff; }
+.jd-ev { border-radius: 5px; transition: background-color var(--rv-dur-2) var(--rv-ease), box-shadow var(--rv-dur-2) var(--rv-ease); }
+.jd-page mark.jd-ev { background: transparent; color: inherit; }
+.jd-page .jd-ev.is-lit { background-color: rgba(44, 79, 230, .1); box-shadow: 0 0 0 4px rgba(44, 79, 230, .1); }
+.jd-apply__pay.jd-ev { width: fit-content; max-width: 100%; }
+.jd-page .jd-apply__pay.jd-ev.is-lit { border-radius: 10px; background-color: rgba(44, 79, 230, .07); box-shadow: 0 0 0 6px rgba(44, 79, 230, .07); }
+.jd-check__mark--open { width: auto; height: 30px; padding: 0 12px; border-radius: 99px; background: none; box-shadow: inset 0 0 0 1px #D2D6DD; color: var(--ed-grey); font: 500 13.5px/1 var(--font); white-space: nowrap; }
+html.rv-live .jd-checks__list:not(.is-live) .jd-check__mark { transform: scale(.4); opacity: 0; }
+html.rv-live .jd-check__mark {
+  transition: transform var(--rv-dur-3) var(--rv-ease) calc(var(--i, 0) * 90ms + 160ms), opacity var(--rv-dur-3) var(--rv-ease) calc(var(--i, 0) * 90ms + 160ms);
 }
-.jd-checks__list li:last-child { padding-bottom: 0; }
-.jd-checks__name { font-weight: 600; }
-.jd-tick { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--mint-50); color: var(--mint-ink); }
-.jd-tick .icon { width: 15px; height: 15px; stroke-width: 2.4; }
-.jd-checks__val { font-size: 13.5px; color: var(--muted); text-align: right; max-width: 330px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* a check the listing gives no evidence for: neutral dash, never a tick (facts.vietnam_access) */
-.jd-tick--open { background: var(--sa-tag); box-shadow: inset 0 0 0 1px var(--line-2); }
-.jd-tick--open::before { content: ""; width: 9px; height: 1.5px; border-radius: 1px; background: var(--muted); }
-.jd-checks__open { margin-left: 6px; font: 500 12.5px/1 var(--font); color: var(--muted); }
-
-.jd-section { margin-top: 52px; }
-.jd-section > .jd-h2 { margin-bottom: 16px; }
-.jd-desc__lang { margin: -8px 0 18px; font-size: 13.5px; color: var(--muted); }
-.jd-body { max-width: 72ch; font-size: 16.5px; line-height: 1.75; color: var(--ink-2); overflow-wrap: anywhere; }
+/* the description (the listing's own text; jobs.js marks heading-like lines .jd-h and folds a long one) */
+.jd-body { margin-top: 22px; max-width: 68ch; font: 400 17.5px/1.72 var(--font); color: var(--ed-ink-2); overflow-wrap: anywhere; }
 .jd-body > * + * { margin-top: 1em; }
-.jd-body p.jd-h, .jd-body h3 { margin-top: 1.7em; font: 700 17.5px/1.35 var(--font); letter-spacing: -0.012em; color: var(--ink); }
-.jd-body p.jd-h + *, .jd-body h3 + * { margin-top: .55em; }
+.jd-body p.jd-h, .jd-body h3 { margin-top: 1.6em; font: 600 19px/1.35 var(--font); letter-spacing: -0.014em; color: var(--ed-ink); }
+.jd-body p.jd-h + *, .jd-body h3 + * { margin-top: .5em; }
 .jd-body > :first-child, .jd-body > p.jd-h:first-child { margin-top: 0; }
 .jd-body ul { padding-left: 1.25em; }
 .jd-body li + li { margin-top: .4em; }
-.jd-body li::marker { color: var(--muted); }
-.jd-body.is-clamped {
-  max-height: 620px; overflow: hidden;
-  -webkit-mask-image: linear-gradient(#000 70%, transparent);
-  mask-image: linear-gradient(#000 70%, transparent);
-}
-.jd-desc__more { margin-top: 16px; border: 0; box-shadow: var(--sa-sh-card); }
-.jd-desc__more:hover { box-shadow: var(--sa-sh-card-hover); }
-.jd-desc__more .icon { transition: transform var(--d-ui) var(--ease); }
+.jd-body li::marker { color: var(--ed-grey); }
+.jd-body.is-clamped { max-height: 560px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 72%, transparent); mask-image: linear-gradient(#000 72%, transparent); }
+.jd-desc__more { margin-top: 18px; }
+.jd-desc__more .icon { transition: transform var(--rv-dur-2) var(--rv-ease); }
 .jd-desc__more[aria-expanded="true"] .icon { transform: rotate(180deg); }
-.jd-skills { gap: 8px; }
-.jd-skills > li { padding: 0; height: 34px; transition: background-color var(--d-micro) var(--ease); }
-.jd-skills > li:hover { background: #E7EBF3; }
-.jd-skills a { display: inline-flex; align-items: center; height: 100%; padding: 0 14px; border-radius: inherit; color: var(--ink-2); font-weight: 560; }
-.jd-skills a:hover { color: var(--ink); }
-.jd-owner {
-  margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--line);
-  display: flex; gap: 10px; max-width: 80ch;
-  font-size: 13.5px; line-height: 1.6; color: var(--muted);
-}
-.jd-owner .icon { margin-top: 3px; flex: none; }
-.jd-owner strong { color: var(--ink-2); font-weight: 640; }
+.jd-owner { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--ed-line); font: 400 14.5px/1.5 var(--font); color: var(--ed-grey); }
+.jd-owner strong { font-weight: 500; color: var(--ed-ink-2); }
+.jd-owner a { color: var(--rv-cobalt); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; border-radius: 3px; }
 
-/* "Việc tương tự": the home's job cards (njc.html) */
-.jd-similar { padding-bottom: 88px; }
+/* the next jobs: the board's rows on the warm section */
+.jd-similar__head { align-items: baseline; }
+.jd-bar__cta { padding: 0 22px; }
+.jd-bar .rv-actionbar__value.is-long { font-size: 16px; }
 
-.jd-bar { display: none; }
-
-@media (max-width: 1180px) {
-  .page-job { --jd-aside: 344px; --jd-gap: 40px; }
-  .jd-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* a short laptop screen (1366x657, 1280x720): the box and its two help rows are taller than the screen, so only the box
+   stays in view (the rows scroll on under it); taller screens keep the whole aside in view */
+@media (min-width: 900px) and (max-height: 779px) {
+  .jd-aside { position: static; align-self: stretch; align-content: start; }
+  .jd-apply { position: sticky; top: calc(var(--header-h) + 20px); z-index: 1; }
 }
-@media (max-width: 960px) {
-  .jd-hero { --glow-at: 100% 100%; --glow-size: 56% 34%; padding-bottom: 76px; }
-  .jd-hero__inner { padding-right: 0; }
-  .jd-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "aside" "main"; }
-  /* the pay card follows the head, rising a little into the band */
-  .jd-aside { position: static; margin-top: -44px; }
-  .jd-main { padding-top: 36px; }
-  .jd-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .jd-bar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
-    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
-    background: #fff; box-shadow: 0 -1px 0 var(--line), 0 -10px 28px -16px rgba(11, 21, 48, .24);
-    transition: transform var(--d-ui) var(--ease);
-  }
-  .jd-bar.is-hidden { transform: translateY(110%); }
-  .jd-bar__pay { min-width: 0; display: grid; gap: 1px; }
-  .jd-bar__pay strong { font: 740 18px/1.15 var(--font); letter-spacing: -0.02em; color: var(--green-pay); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .jd-bar__pay strong:not(.num) { color: var(--ink); }
-  .jd-bar__pay span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .jd-bar .save-btn { width: 44px; height: 44px; }
-  .jd-bar__cta { padding: 0 20px; }
-  .page-job .site-footer { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-  .page-job .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
+@media (max-width: 1100px) {
+  .jd-grid { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 48px; }
+  .jd-apply { padding: 24px 22px 22px; }
+  .jd-apply__amount { font-size: 50px; }
+  .jd-apply__amount--long { font-size: 34px; }
 }
-/* tablets: the full-width pay card reads as a scaled-up phone, so pay sits left and the
-   actions right (auto-width "Ứng tuyển", save and copy as icon buttons); notes stay below */
-@media (min-width: 641px) and (max-width: 960px) {
-  .jd-apply { padding: 24px 26px 22px; }
-  .jd-apply__top { display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; }
-  .jd-apply__info { min-width: 0; }
-  .jd-apply__actions { flex: none; display: flex; align-items: center; gap: 8px; }
-  .jd-apply__cta { margin-top: 0; width: auto; min-width: 220px; }
-  .jd-apply__row { margin-top: 0; display: flex; gap: 8px; }
-  .jd-apply__btn { width: 54px; height: 54px; padding: 0; border-radius: 50%; }
-  .jd-apply__btn > span { display: none; }
-  .jd-apply__btn .icon { width: 20px; height: 20px; }
-  .jd-apply__note { margin-top: 20px; }
-  .jd-apply__scam { margin-top: 12px; }
+/* tablets portrait and phones: one column; the apply box follows the header (not sticky: the action bar takes over) */
+@media (max-width: 899px) {
+  .jd-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "crumb" "head" "aside" "main"; }
+  .jd-aside { position: static; margin-top: 32px; max-width: 560px; }
 }
 @media (max-width: 767px) {
-  .jd-hero { padding-bottom: 68px; }
-  .jd-title { margin-top: 18px; font-size: clamp(28px, 7.6vw, 34px); letter-spacing: -0.018em; line-height: 1.14; }
-  .jd-title--long { font-size: clamp(24px, 6.6vw, 28px); }
-  .jd-title--xlong { font-size: clamp(22px, 6vw, 25px); }
-  .jd-title__rest { margin-top: 8px; font-size: 15.5px; }
-  .jd-badges { margin-top: 18px; gap: 6px; }
-  .jd-badges > li { height: 34px; padding: 0 12px 0 10px; gap: 7px; font-size: 13px; }
-  .jd-badges .glyph { width: 16px; height: 16px; }
-  .jd-posted { margin-top: 14px; font-size: 13.5px; }
-  .jd-card { padding: 22px 18px 24px; border-radius: var(--sa-r-card-sm); }
-  .jd-section { margin-top: 44px; }
-  .jd-h2 { font-size: 19px; }
-  .jd-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; }
-  .jd-fact--pay { grid-column: 1 / -1; }
-  .jd-fact dd { margin-left: 0; margin-top: 8px; }
-  .jd-fact__v { font-size: 15px; }
-}
-@media (max-width: 640px) {
-  .jd { padding-bottom: 56px; }
-  /* the h1 right below names the job: on phones the trail stops at the field so it stays one line */
-  .jd-crumb li[aria-current] { display: none; }
-  .jd-org .logo--lg { width: 48px; height: 48px; border-radius: 13px; }
-  .jd-org__name { font-size: 16px; }
-  .jd-org__meta { font-size: 13.5px; }
-  .jd-aside { margin-top: -40px; }
-  .jd-apply { padding: 22px 18px 18px; border-radius: var(--sa-r-card-sm); }
-  .jd-apply__amount { font-size: 34px; }
-  .jd-checks__head { align-items: flex-start; }
-  .jd-checks__more { flex-basis: 100%; padding: 0 0 4px 58px; }
-  .jd-checks__list li { grid-template-columns: 26px minmax(0, 1fr); row-gap: 2px; align-items: start; }
-  .jd-tick { grid-row: 1 / span 2; margin-top: 1px; }
-  .jd-checks__val { grid-column: 2; text-align: left; max-width: none; white-space: normal; }
-  .jd-body { font-size: 16px; line-height: 1.72; }
-  .jd-body.is-clamped { max-height: 520px; }
-  .jd-bar__cta { padding: 0 16px; }
+  .jd-grid { padding-block: 0 72px; }
+  .jd-crumb { margin-bottom: 24px; }
+  /* phones: the way back only ("Việc làm / the field"): home and the job itself are one tap or one screen away */
+  .jd-crumb li:first-child, .jd-crumb li:last-child { display: none; }
+  .rv .jd-crumb li:nth-child(2)::before { content: none; }
+  .jd-page .jd-logo { width: 48px; height: 48px; border-radius: 13px; font-size: 16px; }
+  .jd-page .jd-logo img { padding: 5px; }
+  .jd-org { margin-top: 16px; font-size: 15.5px; }
+  .jd-org__name { flex-basis: 100%; }
+  .jd-org__field::before { content: none; }
+  .jd-org > * + *::before { margin: 0 8px; }
+  .jd-title { margin-top: 10px; line-height: 1.06; }
+  .jd-title--long { font-size: clamp(29px, 8vw, 32px); }
+  .jd-title--xlong { font-size: clamp(26px, 7.2vw, 29px); }
+  .jd-title__rest { margin-top: 12px; font-size: 17px; }
+  .jd-checked { margin-top: 12px; font-size: 15px; }
+  .jd-aside { margin-top: 24px; gap: 14px; }
+  .jd-apply { padding: 22px 20px 20px; border-radius: 16px; }
+  .jd-apply__amount { font-size: 48px; }
+  .jd-apply__amount--long { font-size: 32px; }
+  .jd-apply__amount--none { font-size: 36px; }
+  .jd-apply__unit { font-size: 17px; }
+  .jd-block { margin-top: 52px; }
+  .jd-kv > div { grid-template-columns: 116px minmax(0, 1fr); gap: 2px 14px; padding: 14px 0; }
+  .jd-kv dt { font-size: 15px; }
+  .jd-kv dd { font-size: 16.5px; }
+  .jd-kv__more { display: none; }
+  /* each skill a 44 px tap target: the list's lines become 44 px rows */
+  .jd-skills a { display: inline-flex; align-items: center; min-height: 44px; }
+  .jd-kv > .jd-kv__skills { padding-block: 4px; }
+  .jd-check { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; min-height: 76px; padding: 14px 0; align-items: start; }
+  .jd-check__n { font-size: 26px; padding-top: 1px; }
+  .jd-check__body b { font-size: 17px; }
+  .jd-check__val { font-size: 15px; }
+  .jd-check__mark { width: 28px; height: 28px; }
+  .jd-check__mark .icon { width: 15px; height: 15px; }
+  .jd-check__mark--open { width: auto; height: 28px; padding: 0 10px; font-size: 13px; }
+  .jd-body { font-size: 16.5px; }
+  .jd-body.is-clamped { max-height: 480px; }
+  .jd-desc__more { width: 100%; }
+  .jd-owner { margin-top: 44px; }
 }
 
 /* ---------------------------------------------------------------- 6 saved tracker */
-/* A centred compact cobalt hero (no art), then the board on white, drawn like an app: soft grey columns, each
-   headed by its status tile (.sv-tile, the kit's app-icon recipe at 28 px), crisp white cards. */
-.sv-hero .sa-hero__copy { max-width: 760px; }
-.sv-sub strong { color: #fff; font-weight: 740; }
-.sv-head__actions[hidden] { display: none; }
-.sv { padding: 56px 0 88px; background: #fff; }
-.sv .notice { margin-bottom: 24px; }
+/* A compact split hero (ed.css §3 at a shorter height), then on the warm section the statuses as one row of numbers
+   that drives the list: thin grey counts, the chosen one cobalt with its underline drawn in; the saved jobs as the
+   board's own rows with this page's controls (status menu, note, "Bỏ lưu"); "Tất cả" groups them by status. */
+.sv-hero .ed-split__media img { object-position: 50% 42%; }   /* the kit's compact flush split hero (ed.css §3) */
+.sv-title { max-width: none; }
+.sv-hero .sv-head__actions { margin-top: 30px; }
+.sv-page .sv.ed-sec { padding-block: clamp(48px, 4.6vw, 72px) clamp(80px, 7.4vw, 112px); }
 
-/* the status tile: a solid colour, white glyph, matte (superapp.css .app recipe, small) */
-.sv-tile {
-  --c: #2F6BFF;
-  flex: none; width: 28px; height: 28px; border-radius: 8px;
-  display: inline-grid; place-items: center; color: #fff;
-  background:
-    radial-gradient(60% 50% at 30% 18%, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0) 100%),
-    linear-gradient(180deg, color-mix(in srgb, var(--c) 86%, #fff) 0%, var(--c) 58%, color-mix(in srgb, var(--c) 90%, #000) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .12), 0 6px 12px -8px rgba(10, 18, 48, .45);
+/* the numbers row */
+.sv-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid var(--ed-line); }
+.sv-tabs:empty { min-height: 113px; }
+.sv-tab {
+  position: relative; display: grid; justify-items: start; align-content: end; gap: 8px; min-width: 0; min-height: 112px;
+  padding: 12px 16px 18px 0; border: 0; background: none; text-align: left; cursor: pointer; color: var(--ed-grey);
+  transition: background-color var(--rv-dur-2) var(--rv-ease);
 }
-.sv-tile .glyph { width: 17px; height: 17px; }
-.sv-tile .icon { width: 16px; height: 16px; stroke-width: 2.4; }
-.sv-tile--applied { --c: #7E5BF2; }
-.sv-tile--interview { --c: #22B35E; }
-.sv-tile--offer { --c: #FFBF2E; }
-.sv-tile--rejected { --c: #8A93A8; }
+.sv-tab__n { font: 400 clamp(44px, 4vw, 58px)/.9 var(--font); letter-spacing: -0.045em; color: var(--ed-num); font-variant-numeric: tabular-nums; padding-block: .04em; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sv-tab__l { font: 500 15.5px/1.3 var(--font); color: var(--ed-grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sv-tab::after {
+  content: ""; position: absolute; left: 0; right: 16px; bottom: -1px; height: 2px; border-radius: 2px;
+  background: var(--rv-cobalt); transform: scaleX(0); transform-origin: left center; transition: transform var(--rv-dur-3) var(--rv-ease);
+}
+.sv-tab.is-zero .sv-tab__n { color: #CDD1D7; }
+.sv-tab:hover .sv-tab__n { color: var(--ed-num-h); }
+.sv-tab:hover .sv-tab__l { color: var(--ed-ink); }
+.sv-tab[aria-pressed="true"] .sv-tab__n { color: var(--rv-cobalt); }
+.sv-tab[aria-pressed="true"] .sv-tab__l { color: var(--ed-ink); font-weight: 600; }
+.sv-tab[aria-pressed="true"]::after { transform: none; }
+.sv-tab:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 4px; border-radius: 10px; }   /* clear of the numeral */
+.sv-tab:active .sv-tab__n { color: var(--ed-ink-2); }
+/* a row dragged over a status: the status lights up */
+.sv-tab.is-over { background: rgba(44, 79, 230, .07); border-radius: 10px 10px 0 0; }
+.sv-tab.is-over .sv-tab__n { color: var(--rv-cobalt); }
+.sv.is-dragging .sv-tab:not([data-tab="all"]) .sv-tab__l { color: var(--ed-ink); }
 
-.sv-tabs { display: none; }
-.sv-board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; align-items: start; }
-.sv-board[hidden] { display: none; }
-.sv-col {
-  min-width: 0; min-height: 360px;
-  display: flex; flex-direction: column; gap: 10px;
-  padding: 12px;
-  border-radius: var(--sa-r-card);
-  background: #F3F5F9;
-  transition: background-color var(--d-micro) var(--ease), box-shadow var(--d-micro) var(--ease);
-}
-.sv-col.is-over { background: var(--blue-50); box-shadow: inset 0 0 0 2px #C9D7FF; }
-.sv-col__head { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 4px; }
-.sv-col__title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font: 700 15px/1.3 var(--font); letter-spacing: -0.01em; color: var(--ink); }
-.sv-col__n { min-width: 28px; height: 24px; padding: 0 8px; display: grid; place-items: center; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--tile-line); font: 640 12.5px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.sv-col__list { display: grid; gap: 10px; }
-.sv-col__empty {
-  display: grid; place-items: center; text-align: center;
-  min-height: 96px; padding: 16px;
-  border: 1.5px dashed #CFD6E3; border-radius: 16px;
-  font-size: 13px; line-height: 1.45; color: var(--muted);
-}
+/* the list (it cross-fades when the view changes) */
+.sv-list { margin-top: clamp(32px, 3vw, 44px); }
+.sv-list:empty { min-height: 300px; }
+.sv-list.is-swap { animation: sv-swap 200ms var(--rv-ease) both; }
+@keyframes sv-swap { from { opacity: 0; } to { opacity: 1; } }
+.sv-group + .sv-group:not([hidden]) { margin-top: 44px; }
+.sv-group__t { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; font: 600 13px/1.3 var(--font); letter-spacing: .1em; text-transform: uppercase; color: var(--ed-ink); }
+.sv-group__n { font-weight: 500; letter-spacing: 0; color: var(--ed-grey); }
+.sv-list:not([data-view="all"]) .sv-group__t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sv-group__empty { padding: 30px 0; border-block: 1px solid var(--ed-line); font: 400 17px/1.5 var(--font); color: var(--ed-grey); }
+.sv-group.is-over .sv-rows { outline: 2px dashed rgba(44, 79, 230, .4); outline-offset: 6px; border-radius: calc(var(--rv-r-row) + 4px); }
 
-.sv-card {
-  position: relative;
-  display: grid; gap: 10px;
-  padding: 14px 14px 12px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 0 0 1px var(--tile-line), 0 1px 2px rgba(10, 18, 48, .04), 0 12px 22px -18px rgba(10, 18, 48, .28);
-  transition: box-shadow var(--d-ui) var(--ease), opacity var(--d-micro), transform var(--d-ui) var(--ease-expo);
+/* a saved job as the board's row: tile · title + "company · saved when" (+ the note) · pay · status menu + note · ✕ */
+.sv-rows.jl-rows .job-row { grid-template-columns: 54px minmax(0, 1fr) auto auto 44px; gap: 20px; padding-right: 10px; }
+.sv-rows .job-row[draggable="true"] { cursor: grab; }
+.sv-rows .job-row.is-dragging { opacity: .45; }
+.sv-rows .job-row.is-flash { animation: sv-flash .9s var(--rv-ease); }
+@keyframes sv-flash { 0% { box-shadow: 0 0 0 3px rgba(44, 79, 230, .45); } 100% { box-shadow: 0 0 0 1px rgba(20, 30, 60, .03), 0 1px 2px rgba(20, 30, 60, .04), 0 8px 22px -12px rgba(20, 30, 60, .12); } }
+.sv-rows .job-row.is-closed .job-row__title a { color: var(--ed-grey); }
+.sv-rows .job-row.is-closed .job-row__title::after { content: none; }   /* a closed listing is no longer a checked, open job */
+.sv-row__closed { color: var(--ed-ink-2); font-weight: 500; }
+.sv-row__ctl { display: flex; align-items: center; gap: 4px; }
+/* the title's link covers the row (base.css .job-row__title a::after): this page's controls sit above it */
+.sv-row :is(.sv-row__ctl, .sv-row__remove, .sv-note, .sv-note__edit) { position: relative; z-index: 2; }
+.rv .sv-row .sv-select {
+  width: 172px; height: 44px; min-height: 0; padding: 0 36px 0 14px; border-radius: 12px; border: 1px solid #D5D9E0;
+  background-color: #fff; background-position: right 12px center; background-size: 16px; background-repeat: no-repeat;
+  font: 500 15px/1 var(--font); color: var(--ed-ink); cursor: pointer;
 }
-@media (hover: hover) and (pointer: fine) {
-  .sv-card:hover { box-shadow: 0 0 0 1px var(--line-2), 0 1px 2px rgba(10, 18, 48, .05), 0 18px 30px -18px rgba(10, 18, 48, .34); }
+.rv .sv-row .sv-select:hover { border-color: #B9BFC9; background-color: #fff; }
+.sv-icon {
+  flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px;
+  color: var(--ed-grey); background: none; cursor: pointer;
+  transition: background-color var(--rv-dur-2) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease);
 }
-.sv-card[draggable="true"] { cursor: grab; }
-.sv-card.is-dragging { opacity: .45; }
-.sv-card.is-flash { animation: sv-flash 900ms var(--ease); }
-@keyframes sv-flash { 0% { box-shadow: 0 0 0 3px var(--blue-100); } 100% { box-shadow: 0 0 0 1px var(--tile-line), 0 12px 22px -18px rgba(10, 18, 48, .28); } }
-.sv-card__top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
-.sv-card .logo--sm { width: 34px; height: 34px; border-radius: 10px; }
-.sv-card__remove { width: 28px; height: 28px; margin: -4px -6px -4px 0; }
-.sv-card__company { font: 500 13px/1.35 var(--font); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sv-card__title { font: 700 15.5px/1.32 var(--font); letter-spacing: -0.012em; color: var(--ink); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
-.sv-card__title a:hover { color: var(--ultra-ink); }
-.sv-card__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted); }
-.sv-card__pay { font: 740 14.5px/1.3 var(--font); letter-spacing: -0.01em; color: var(--green-pay); }
-.sv-card__pay.is-none { font-weight: 560; color: var(--muted); }
-.sv-card .badge { height: 22px; font-size: 11.5px; padding: 0 8px; }
-/* a long note shows four lines; clicking it opens the full text in the editor */
+.sv-icon .icon { width: 19px; height: 19px; stroke-width: 1.8; }
+.sv-icon:hover { background: #F1F2F5; color: var(--ed-ink); }
+.sv-icon:active { background: #E8EAEE; }
+.sv-icon:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 0; }
+/* a long note shows two lines; clicking it opens the full text in the editor */
 .sv-note {
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
-  width: 100%; text-align: left;
-  /* vertical space as transparent borders, not padding: overflow clips at the padding box,
-     so a fifth line cannot peek into the bottom padding (the background still paints under them) */
-  padding: 0 10px; border-block: 8px solid transparent; border-radius: 10px;
-  background: var(--sa-tag);
-  font-size: 13px; line-height: 1.45; color: var(--ink-2);
-  white-space: pre-wrap; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+  width: fit-content; max-width: 100%; margin-top: 6px; text-align: left;
+  padding: 0 10px; border-block: 6px solid transparent; border-radius: 10px; background: #F4F2EE;
+  font: 400 14.5px/1.45 var(--font); color: var(--ed-ink-2); white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
 }
-.sv-note:hover { background: #E7EBF3; }
+.sv-note:hover { background: #ECE9E3; }
+.sv-note:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 2px; }
 .sv-note__edit {
-  width: 100%; min-height: 76px; max-height: 320px; field-sizing: content; resize: vertical;
-  padding: 8px 10px; border-radius: 10px;
-  border: 1px solid var(--blue); box-shadow: 0 0 0 3px var(--blue-50);
-  background: #fff; color: var(--ink);
-  font-size: 13.5px; line-height: 1.45;
+  width: 100%; min-height: 72px; max-height: 320px; field-sizing: content; resize: vertical; margin-top: 8px; padding: 8px 12px; border-radius: 10px;
+  border: 1px solid var(--rv-cobalt); box-shadow: 0 0 0 3px rgba(44, 79, 230, .16); background: #fff; color: var(--ed-ink);
+  font: 400 15px/1.45 var(--font);
 }
 .sv-note__edit:focus { outline: none; }
-.sv-card__foot { display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
-.sv-select {
-  flex: 1; min-width: 0; height: 34px; min-height: 0;
-  padding: 0 26px 0 10px;
-  border-radius: 10px; border: 1px solid var(--line-2);
-  font: 600 13px/1 var(--font); color: var(--ink);
-  background-position: right 7px center; background-size: 15px;
-}
-.sv-icon { width: 34px; height: 34px; flex: none; display: inline-grid; place-items: center; border-radius: 10px; color: var(--muted); transition: background-color var(--d-micro), color var(--d-micro); }
-.sv-icon .icon { width: 17px; height: 17px; }
-.sv-icon:hover { background: var(--sa-tag); color: var(--ink); }
-.sv-icon--risk:hover { background: var(--coral-50); color: var(--coral-ink); }
-
-/* undo bar after removing a card (toast twin with one action) */
+.sv-line { margin-top: 28px; font: 400 15px/1.5 var(--font); color: var(--ed-grey); }
+/* undo bar after removing a row (the toast's twin with one action) */
 .sv-undo {
   position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 81;
-  display: flex; align-items: center; gap: 14px;
-  max-width: calc(100% - 32px);
-  padding: 8px 8px 8px 18px;
-  border-radius: 999px;
-  background: var(--ink); color: #fff;
-  font: 500 14.5px/1.35 var(--font);
-  box-shadow: 0 18px 36px -16px rgba(4, 12, 48, .55);
-  opacity: 0; transform: translate(-50%, 8px);
-  transition: opacity var(--d-ui) var(--ease), transform var(--d-ui) var(--ease);
+  display: flex; align-items: center; gap: 14px; max-width: calc(100% - 32px); padding: 7px 7px 7px 20px; border-radius: 999px;
+  background: #1D1E24; color: #fff; font: 500 14.5px/1.35 var(--font);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 0 rgba(255, 255, 255, .08), 0 20px 40px -16px rgba(0, 0, 0, .8);
+  opacity: 0; transform: translate(-50%, 8px); transition: opacity .35s var(--rv-ease), transform .35s var(--rv-ease);
 }
 .sv-undo.is-on { opacity: 1; transform: translate(-50%, 0); }
 .sv-undo span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sv-undo button { flex: none; height: 34px; padding: 0 16px; border-radius: 999px; background: var(--sun); color: var(--ink); font: 680 14px/1 var(--font); }
-.sv-undo button:hover { background: #FFD466; }
+.sv-undo button { flex: none; height: 44px; padding: 0 18px; border-radius: 999px; background: #fff; color: #000; font: 500 14.5px/1 var(--font); }
+.sv-undo button:hover { background: #F1F2F6; }
+.sv-undo button:focus-visible { outline: 2px solid var(--rv-cobalt-l); outline-offset: 2px; }
 
-.sv-local { margin-top: 28px; padding: 14px 18px 14px 14px; border-radius: 18px; background: var(--sa-tag); display: flex; align-items: center; gap: 12px; max-width: 880px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
-.sv-local[hidden] { display: none; }
+/* nothing saved: one honest line and the way to the board, then three real jobs as the board's rows */
+.sv-empty { display: grid; justify-items: start; }
+.sv-empty__title { font: 600 clamp(24px, 2vw, 28px)/1.2 var(--font); letter-spacing: -0.024em; color: var(--ed-ink); text-wrap: balance; }
+.sv-empty__text { margin-top: 10px; font: 400 clamp(17px, 1.3vw, 19px)/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.sv-empty__mark { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-inline: 2px; border-radius: 9px; vertical-align: -8px; background: #fff; box-shadow: inset 0 0 0 1px var(--ed-line); color: var(--ed-ink); }
+.sv-empty__mark .icon { width: 16px; height: 16px; stroke-width: 1.9; }
+.sv-empty__go { margin-top: 30px; }
+.sv-suggest { margin-top: clamp(64px, 6vw, 96px); }
+.sv-suggest__head { margin-bottom: 22px; align-items: baseline; }
+.sv-suggest__title { font: 600 clamp(24px, 2.2vw, 30px)/1.15 var(--font); letter-spacing: -0.024em; color: var(--ed-ink); }
 
-/* the app itself, the whole phone standing on the white body (.sa-phone--on-light, the home's side-phone size),
-   the caption under it; beside it the white card with the message, three steps and the way to the board. The list
-   shows three real jobs; the statuses are illustrative (the caption says so). */
-.sv-empty {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 64px; align-items: center;
-  max-width: 1080px; margin-inline: auto;
-}
-.sv-empty[hidden] { display: none; }
-.sv-empty--solo { grid-template-columns: minmax(0, 1fr); max-width: 760px; }   /* an empty catalog: the message alone */
-.sv-art { display: grid; justify-items: center; align-content: center; gap: 22px; padding: 4px 0 8px; }
-.sv-art .sa-phone { --phone-k: .635; }
-/* the honesty caption with a one-line short form on phones (saved.html, salary.html: demo_cap.html's markup) */
-.jl-cap__short { display: none; }
-/* the phone's status line: the pay chip, then the status as a quiet grey pill with the board's colour dot */
-.va-sv { justify-self: stretch; margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.va-sv .va-job__pay { margin-top: 0; }
-.va-sv__st {
-  height: 26px; padding: 0 9px 0 8px; display: inline-flex; align-items: center; gap: 6px;
-  border-radius: 8px; background: var(--va-inset); font: 650 12.5px/1 var(--font); color: var(--ink-2); white-space: nowrap;
-}
-.va-sv__st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--st, #2F6BFF); }
-.va-sv__st--applied { --st: #7E5BF2; }
-.va-sv__st--interview { --st: #22B35E; }
-.sv-empty__body {
-  padding: 52px 52px 48px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
-  border-radius: 28px; background: #fff; box-shadow: var(--sa-sh-card);
-}
-.sv-empty__text { margin-top: 14px; font-size: 17px; line-height: 1.6; color: var(--ink-2); max-width: 44ch; }
-.sv-empty__icon { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; vertical-align: -6px; background: var(--blue-50); color: var(--blue); }
-.sv-steps { margin-top: 26px; width: 100%; display: grid; border-top: 1px solid var(--line); }
-.sv-steps li { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
-.sv-steps strong { display: block; font: 700 16px/1.35 var(--font); letter-spacing: -0.01em; color: var(--ink); }
-.sv-empty__actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
-
-.sv-suggest { margin-top: 64px; }
-.sv-suggest[hidden] { display: none; }
-.sv-suggest__head { margin-bottom: 24px; }
-/* "Gợi ý để bắt đầu": the home's job cards (njc.html, server-rendered), as the rail and "Việc tương tự" */
-/* touch: status menu and icon buttons at finger size; 16px text so iOS does not zoom on the select */
-@media (max-width: 1100px), (pointer: coarse) {
-  .sv-select { height: 40px; font-size: 16px; border-radius: 12px; padding-left: 12px; }
-  .sv-icon { width: 40px; height: 40px; border-radius: 12px; }
-  .sv-card__remove { width: 40px; height: 40px; margin: -10px -10px -10px 0; }
-}
-/* small laptops and iPad landscape: the same five-column board, scrolling sideways */
-@media (min-width: 901px) and (max-width: 1100px) {
-  .sv-board {
-    grid-template-columns: repeat(5, minmax(256px, 1fr));
-    overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
-    margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter) 14px; scroll-padding-inline: var(--gutter);
-  }
-  .sv-col { scroll-snap-align: start; }
-}
-/* tablet portrait and phones: one status at a time behind the app's chips */
-@media (max-width: 900px) {
-  .sv { padding-top: 32px; }
-  .sv-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; overflow: visible; background: none; border: 0; border-radius: 0; }
-  .sv-tabs[hidden] { display: none; }
-  .sv-tabs .tab { height: 40px; padding: 0 15px; gap: 8px; border-radius: 999px; background: var(--sa-tag); font: 600 14px/1 var(--font); color: var(--ink-2); }
-  .sv-tabs .tab .tab__count { color: var(--muted); }
-  .sv-tabs .tab[aria-pressed="true"] { background: var(--blue); color: #fff; box-shadow: none; }
-  .sv-tabs .tab[aria-pressed="true"] .tab__count { color: rgba(255, 255, 255, .86); }
-  .sv-board { grid-template-columns: minmax(0, 1fr); margin-top: 18px; }
-  .sv-col { display: none; min-height: 0; padding: 0; background: none; }
-  .sv-col.is-active { display: flex; }
-  .sv-col__head { display: none; }
-  .sv-col__list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-  .sv-col.is-over { background: none; box-shadow: none; }
-}
 @media (max-width: 1100px) {
-  .sv-empty { gap: 44px; }
-  .sv-empty__body { padding: 44px 40px 40px; }
+  .sv-rows.jl-rows .job-row { grid-template-columns: 50px minmax(0, 1fr) auto auto 44px; gap: 14px; }
 }
-@media (max-width: 880px) {
-  .sv-empty { grid-template-columns: minmax(0, 1fr); gap: 40px; }
-  /* the message first, the app under it */
-  .sv-art { order: 2; padding: 0; }
-  .sv-art .sa-phone { --phone-k: .6; }
-  .sv-empty__body { padding: 32px 28px 32px; }
+/* tablets: the numbers row in two lines of three; the controls drop under the row's text */
+@media (max-width: 960px) {
+  .sv-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sv-tabs:empty { min-height: 200px; }
+  .sv-tab { min-height: 96px; }
+  .sv-tab:nth-child(-n+3) { border-bottom: 1px solid var(--ed-line); }
+  .sv-tab::after { bottom: -1px; }
+  .sv-rows.jl-rows .job-row { grid-template-columns: 50px minmax(0, 1fr) auto 44px; row-gap: 10px; }
+  .sv-rows .job-row > .logo { grid-row: 1 / span 2; }
+  .sv-rows .sv-row__ctl { grid-column: 2 / 4; grid-row: 2; }
+  .sv-rows .sv-row__remove { grid-column: 4; grid-row: 1; }
 }
-@media (max-width: 767px) {
-  .sv-hero .sa-hero__actions { display: flex; flex-wrap: wrap; }
-  .sv-hero .sa-hero__actions[hidden] { display: none; }
-  .sv-hero .sa-hero__actions .btn { flex: 1 1 0; width: auto; padding: 0 16px; }
-  /* phones: the caption stays one pill on one line, in its short form (superapp.css wraps the long one) */
-  .sa-cap.jl-cap { flex-wrap: nowrap; white-space: nowrap; border-radius: 999px; padding: 5px 14px 5px 10px; }
-  .jl-cap .sa-cap__sep { display: inline; }
-  .jl-cap .sa-cap__rest { flex-basis: auto; }
-  .jl-cap .jl-cap__long { display: none; }
-  .jl-cap .jl-cap__short { display: inline; }
+@media (max-width: 899px) {
+  .sv-hero .ed-split__media img { object-position: 46% 40%; }
+  /* the copy ends well clear of the warm section's edge (the kit's split copy keeps 4 px under it) */
+  .sv-hero .ed-split__copy { padding-bottom: 40px; }
 }
+/* phones: the board's compact row (§3), the remove button where the bookmark sits, the controls on their own line */
 @media (max-width: 640px) {
-  .sv { padding: 24px 0 72px; }
-  .sv-tabs .tab { height: 38px; padding: 0 13px; font-size: 13.5px; }
-  .sv-col__list { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .sv-empty { gap: 32px; }
-  .sv-empty__body { padding: 24px 20px 26px; border-radius: var(--sa-r-card); }
-  .sv-empty__text { font-size: 15.5px; }
-  .sv-empty__actions { width: 100%; }
-  .sv-empty__actions .btn { flex: 1 1 100%; }
-  .sv-local { font-size: 13.5px; align-items: flex-start; }
-  .sv-suggest { margin-top: 44px; }
-  /* phones: the three cards scroll sideways, as the board's rail */
-  .sv-suggest .sa-grid--jobs {
-    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 86%; gap: 10px;
-    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-    margin-inline: calc(-1 * var(--gutter)); padding: 4px var(--gutter) 14px; scroll-padding-inline: var(--gutter);
-  }
-  .sv-suggest .sa-grid--jobs::-webkit-scrollbar { display: none; }
-  .sv-suggest .sa-grid--jobs > * { scroll-snap-align: start; }
+  .sv-tab { min-height: 84px; gap: 6px; padding: 10px 8px 14px 0; }
+  .sv-tab__n { font-size: 38px; }
+  .sv-tab__l { font-size: 14px; white-space: normal; line-height: 1.25; }
+  .sv-tab::after { right: 8px; }
+  .sv-tabs:empty { min-height: 170px; }
+  .sv-rows.jl-rows .job-row { grid-template-columns: 48px minmax(0, 1fr) 44px; column-gap: 12px; row-gap: 8px; }
+  .sv-rows.jl-rows .job-row__meta { flex-wrap: wrap; row-gap: 2px; }
+  /* a long employer name wraps inside the row (the board's rule keeps it from shrinking) */
+  .sv-rows.jl-rows .job-row__meta span { flex-shrink: 1; min-width: 0; overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+  .sv-rows.jl-rows .job-row__meta span:first-child { flex-shrink: 1; max-width: 100%; }
+  /* its "·" hangs in the clipped gutter (base.css .job-row__meta), so a wrapped second line starts under the first */
+  .sv-rows.jl-rows .job-row__meta span { padding-left: 18px; }
+  .sv-rows.jl-rows .job-row__meta span::before { margin-left: -18px; }
+  .sv-rows .job-row > .logo { grid-row: 1; }
+  .sv-rows .job-row__main { grid-column: 2; grid-row: 1; }
+  .sv-rows .sv-row__remove { grid-column: 3; grid-row: 1; width: 44px; height: 44px; margin-top: -8px; }
+  .sv-rows .job-row__side { grid-column: 2 / 4; grid-row: 2; }
+  .sv-rows .sv-row__ctl { grid-column: 1 / -1; grid-row: 3; padding-top: 8px; border-top: 1px solid #EEF0F3; }
+  .rv .sv-row .sv-select { flex: 1; width: auto; font-size: 16px; }
+  .sv-group__t { margin-bottom: 12px; }
+  .sv-empty__go { width: 100%; }
+  .sv-hero .sv-head__actions .rv-pill { flex: 1 1 0; }
 }
 
 /* ---------------------------------------------------------------- 7 salary */
-/* The compact cobalt hero: the board-wide hourly median as the h1, and every hourly rate as a white chart card
-   floating on the band (right, over the glow, which never sits behind text). */
-.sl-hero { --glow-at: 82% 56%; --glow-size: 36% 64%; }
-.sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 500px); }
-.sl-hero .sa-hero__copy { max-width: 640px; }
-.sl-title { text-wrap: wrap; }
-.sl-title .mark { white-space: nowrap; }
-.sl-lead strong { color: #fff; font-weight: 700; }
-.sl-hero__art { align-content: center; }
+/* The photo band (ed.css §2: page-salary, the man to the right, the H1 over the café's darker left), then the answer
+   (the median huge in cobalt, the page's one count-up) beside ONE product view (every hourly rate as a histogram in a
+   white window, a readout in its head); the fields as editorial rows with a slim bar each on the warm section; one
+   full-bleed photograph with one line; the rate flow (four figures joined by a rule that draws on entry); skills and
+   the method as numbered rows. */
+/* the whole photo width, framed low enough that his hands on the laptop show beside his face (the story, not a face crop) */
+.sl-hero { --ed-zoom: 100%; --ed-focus: 50% 36%; --ed-focus-m: 64% 18%; }
+.sl-title { max-width: 8.6em; }
+.sl-page .sl.ed-sec { padding-block: clamp(72px, 6.6vw, 104px); }
 
-.sl-dist {
-  width: 100%; padding: 24px 26px 20px; border-radius: var(--sa-r-card);
-  background: #fff; color: var(--ink-2); box-shadow: var(--sa-sh-float);
+/* the answer | the chart */
+.sl-lead { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; gap: clamp(40px, 5.6vw, 96px); }
+.sl-lead__copy { min-width: 0; }
+.sl-big { margin-top: 20px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.sl-big__n { font: 600 clamp(120px, 12.6vw, 188px)/.82 var(--font); letter-spacing: -0.058em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; padding-block: .05em; }
+.sl-big__n .nsep { font-size: .62em; }
+.sl-big__u { font: 500 clamp(22px, 1.8vw, 28px)/1.2 var(--font); letter-spacing: -0.016em; color: var(--ed-ink); }
+.sl-lead__quote { margin-top: 26px; font: 400 clamp(18px, 1.35vw, 20px)/1.5 var(--font); color: var(--ed-grey); }
+.sl-lead__quote b { font-weight: 600; color: var(--ed-ink); }
+.sl-lead__go { margin-top: 32px; }
+.sl-dist { margin: 0; min-width: 0; padding: 24px 28px 22px; }
+.sl-dist__bar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; padding-bottom: 18px; border-bottom: 1px solid var(--ed-line); }
+.sl-dist__cap { font: 600 16px/1.35 var(--font); letter-spacing: -0.01em; color: var(--ed-ink); }
+.sl-dist__read { font: 400 15px/1.35 var(--font); color: var(--ed-grey); font-variant-numeric: tabular-nums; }
+.sl-dist__read b { font-weight: 600; color: var(--rv-cobalt); }
+.sl-dist__read.is-swap { animation: sl-read 200ms var(--rv-ease) both; }
+@keyframes sl-read { from { opacity: .15; } to { opacity: 1; } }
+.sl-dist__plot { padding-top: 28px; }
+.sl-dist__bars {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); align-items: end; gap: clamp(3px, .4vw, 6px);
+  height: clamp(220px, 20vw, 290px); border-bottom: 1px solid #CDD2DA; border-radius: 4px 4px 0 0;
 }
-.sl-dist__head { display: flex; align-items: center; gap: 14px; }
-.sl-dist__titles { display: grid; gap: 3px; min-width: 0; }
-.sl-dist__title { font: 740 16.5px/1.3 var(--font); letter-spacing: -0.012em; color: var(--ink); }
-.sl-dist__n { font-size: 13.5px; color: var(--muted); }
-.sl-dist__bars { margin-top: 24px; display: flex; align-items: flex-end; gap: 4px; height: 176px; border-bottom: 1px solid var(--line-2); }
-.sl-dist__bars i { flex: 1; height: calc(var(--h) * 1%); border-radius: 4px 4px 0 0; background: #D9E2F4; transform-origin: 50% 100%; transition: background-color var(--d-micro) var(--ease); }
-.sl-dist__bars i:hover { background: #C3D1EE; }
-.sl-dist__bars i.is-median { background: var(--blue); }
-.sl-dist.is-armed .sl-dist__bars i { transform: scaleY(0); }
-.sl-dist.is-armed.is-in .sl-dist__bars i { transform: none; transition: transform 700ms var(--ease), background-color var(--d-micro) var(--ease); }
-.sl-dist__axis { position: relative; height: 14px; margin-top: 8px; font: 500 12px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
-.sl-dist__axis span { position: absolute; top: 0; left: calc(var(--x) * 1%); white-space: nowrap; }
-.sl-dist__axis span:last-child { left: auto; right: 0; }
-.sl-dist__note { margin-top: 16px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.sl-key { display: inline-block; flex: none; }
-.sl-key--range { width: 20px; height: 8px; border-radius: 4px; background: #C9D7FF; }
-.sl-key--median { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+.sl-dist__bars:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 8px; }
+.sl-dist__bars > i {
+  display: block; height: calc(var(--h) * 1%); border-radius: 5px 5px 0 0; background: #E2E5EA;
+  transform-origin: 50% 100%; transition: background-color var(--rv-dur-2) var(--rv-ease);
+}
+.sl-dist__bars > i.is-mid { background: #C2CDF7; }
+.sl-dist__bars > i.is-median { background: var(--rv-cobalt); }
+.sl-dist__bars > i.is-on:not(.is-median) { background: #8D95A3; }
+.sl-dist__bars > i.is-mid.is-on { background: #7F95EE; }
+.sl-dist__bars > i.is-median.is-on { background: #1F3CC0; }
+html.rv-live .sl-lead:not(.is-live) .sl-dist__bars > i { transform: scaleY(0); }
+html.rv-live .sl-dist__bars > i { transition: transform 700ms var(--rv-ease) calc(var(--i, 0) * 22ms + 120ms), background-color var(--rv-dur-2) var(--rv-ease); }
+.sl-dist__axis { position: relative; height: 18px; margin-top: 10px; font: 400 13px/18px var(--font); color: var(--ed-grey); font-variant-numeric: tabular-nums; }
+.sl-dist__axis span { position: absolute; top: 0; left: calc(var(--x) * 1%); }
+.sl-none { display: grid; justify-items: start; gap: 18px; }
 
-.sl-main { padding-bottom: 88px; }
-.sl-card { --c-label: 260px; --c-val: 104px; --c-n: 72px; --c-fixed: 136px; --c-gap: 24px; padding: 32px 34px 26px; }
-.sl-card__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; }
-.sl-card__sub { margin-top: 6px; font-size: 15px; color: var(--muted); }
-.sl-toggle { padding: 4px; border: 0; background: var(--sa-tag); }
-.sl-toggle .tab { height: 38px; padding: 0 17px; font: 600 14.5px/1 var(--font); color: var(--ink-2); }
-.sl-toggle .tab[aria-checked="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(10, 18, 48, .08), 0 0 0 1px var(--tile-line); }
-.sl-table { margin-top: 22px; }
+/* by field: editorial rows, a slim bar each on one shared axis (jobs.js swaps hourly / monthly figures in place) */
+.sl-fields { --sl-cols: 60px minmax(170px, 270px) minmax(0, 1fr) 84px 72px 20px; --sl-gap: 20px; }
+.sl-fields__head { align-items: flex-end; }
+.sl-toggle { flex: none; }
+.sl-fields .sl-toggle > button { min-height: 44px; }
+.sl-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.sl-list > li { border-bottom: 1px solid var(--ed-line); }
 .sl-row {
-  display: grid;
-  grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n) var(--c-fixed);
-  gap: var(--c-gap); align-items: center;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: var(--sl-cols); grid-template-areas: "n name track v s go"; align-items: center; column-gap: var(--sl-gap);
+  min-height: 76px; padding: 14px 12px 14px 4px; color: var(--ed-ink); text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease);
 }
-.sl-row--head { padding: 0 0 10px; border-top: 0; font: 600 13px/1.3 var(--font); color: var(--muted); }
-.sl-col-num { text-align: right; }
-.sl-rows { position: relative; }
-.sl-rows::before {
-  content: ""; position: absolute; top: 0; bottom: 0; pointer-events: none;
-  left: calc(var(--c-label) + var(--c-gap));
-  right: calc(var(--c-val) + var(--c-n) + var(--c-fixed) + 3 * var(--c-gap));
-  background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
-  background-size: calc(100% / var(--steps, 6)) 100%;
-  border-right: 1px solid var(--line);
-}
-.sl-label { display: grid; gap: 2px; min-width: 0; }
-.sl-label a { font: 680 15.5px/1.3 var(--font); letter-spacing: -0.01em; color: var(--ink); transition: color var(--d-micro); }
-.sl-label a:hover { color: var(--ultra-ink); }
-.sl-label__meta { font-size: 13px; color: var(--muted); }
-.sl-label__n { display: none; }
-.sl-track { position: relative; height: 28px; }
-.sl-range {
-  position: absolute; top: 50%; height: 10px; margin-top: -5px;
-  left: calc(var(--a) * 1%); width: max(calc((var(--b) - var(--a)) * 1%), 0px);
-  border-radius: 5px; background: #C9D7FF;
-  transform-origin: calc((var(--m) - var(--a)) / max(var(--b) - var(--a), .01) * 100%) 50%;
-}
-.sl-dot {
-  position: absolute; top: 50%; left: calc(var(--m) * 1%);
-  width: 14px; height: 14px; margin: -7px 0 0 -7px;
-  border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 2.5px #fff, 0 2px 6px rgba(36, 83, 232, .3);
-}
-.sl-card.is-armed .sl-range { transform: scaleX(0); }
-.sl-card.is-armed .sl-dot { transform: scale(0); }
-.sl-card.is-armed.is-in .sl-range { transform: none; transition: transform 800ms var(--ease) calc(var(--d, 0) * 45ms); }
-.sl-card.is-armed.is-in .sl-dot { transform: none; transition: transform var(--d-base) var(--ease) calc(300ms + var(--d, 0) * 45ms); }
-.sl-value { display: grid; justify-items: end; gap: 1px; }
-.sl-value strong { font: 740 19px/1.15 var(--font); letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
-.sl-value small { font: 500 12.5px/1.35 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
-.sl-n, .sl-fixed { font-size: 14px; color: var(--ink-2); white-space: nowrap; }
-.sl-n__unit { font-size: 12.5px; color: var(--muted); }
-.sl-axis { display: grid; grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n) var(--c-fixed); gap: var(--c-gap); margin-top: 8px; }
-.sl-ticks { position: relative; height: 14px; font: 500 12px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--muted); }
-.sl-ticks span { position: absolute; top: 0; left: calc(var(--x) * 1%); transform: translateX(-50%); white-space: nowrap; }
+.sl-row__n { grid-area: n; font: 400 30px/1 var(--font); letter-spacing: -0.035em; color: var(--ed-num); font-variant-numeric: tabular-nums; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sl-row__name { grid-area: name; min-width: 0; font: 600 18.5px/1.3 var(--font); letter-spacing: -0.014em; text-wrap: balance; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sl-row__track { grid-area: track; position: relative; height: 6px; border-radius: 99px; background: rgba(22, 24, 29, .07); }
+.sl-row__band { position: absolute; top: 0; bottom: 0; left: calc(var(--a) * 1%); width: max(calc((var(--b) - var(--a)) * 1%), 6px); border-radius: 99px; background: #BFCAF6; transition: background-color var(--rv-dur-2) var(--rv-ease); }
+.sl-row__dot { position: absolute; top: 50%; left: calc(var(--m) * 1%); width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--rv-cobalt); box-shadow: 0 0 0 3px var(--ed-warm); transition: box-shadow var(--rv-dur-2) var(--rv-ease); }
+/* the middle half as figures, small, over the band's start (never across the track) */
+.sl-row__r { position: absolute; bottom: 13px; left: calc(var(--a) * 1%); font: 400 13px/1 var(--font); color: var(--ed-grey); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sl-row.is-flip .sl-row__r { left: auto; right: calc((100 - var(--b)) * 1%); }
+.sl-row__v { grid-area: v; text-align: right; }
+.sl-row__v strong { font: 600 26px/1 var(--font); letter-spacing: -0.03em; color: var(--ed-ink); font-variant-numeric: tabular-nums; }
+.sl-row__s { grid-area: s; text-align: right; font: 400 14.5px/1.3 var(--font); color: var(--ed-grey); white-space: nowrap; }
+.sl-row__go { grid-area: go; width: 18px; height: 18px; color: var(--ed-chev); stroke-width: 1.8; transition: translate var(--rv-dur-3) var(--rv-ease), color var(--rv-dur-2) var(--rv-ease); }
+.sl-row:hover { background: var(--ed-hover); }
+.sl-row:hover :is(.sl-row__name, .sl-row__n), .sl-row:focus-visible :is(.sl-row__name, .sl-row__n) { color: var(--rv-cobalt); }
+.sl-row:hover .sl-row__band, .sl-row:focus-visible .sl-row__band { background: #93A7F4; }
+.sl-row:hover .sl-row__dot { box-shadow: 0 0 0 3px var(--ed-hover); }
+.sl-row:hover .sl-row__go, .sl-row:focus-visible .sl-row__go { translate: 4px 0; color: var(--rv-cobalt); }
+.sl-row:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: 3px; border-radius: 6px; background: var(--ed-hover); }
+.sl-row:active { background: var(--ed-press); }
+.sl-axis { display: grid; grid-template-columns: var(--sl-cols); column-gap: var(--sl-gap); padding: 10px 12px 0 4px; }
+.sl-ticks { grid-column: 3; position: relative; height: 18px; font: 400 13px/18px var(--font); color: var(--ed-grey); font-variant-numeric: tabular-nums; }
+.sl-ticks span { position: absolute; top: 0; left: calc(var(--x) * 1%); transform: translateX(-50%); }
 .sl-ticks span:first-child { transform: none; }
 .sl-ticks span:last-child { transform: translateX(-100%); }
-.sl-axis__unit { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
-.sl-card__foot { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
-.sl-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; font-size: 13px; color: var(--muted); }
-.sl-legend > span { display: inline-flex; align-items: center; gap: 7px; }
-.sl-legend > span[hidden] { display: none; }
-.sl-legend > span[data-sl-monthnote] { display: block; flex-basis: 100%; line-height: 1.5; }
-.sl-thin { font-size: 13.5px; line-height: 1.6; color: var(--muted); }
-.sl-thin a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
-.sl-thin a:hover { color: var(--ink); text-decoration-color: var(--ink); }
-.sl-empty { border: 0; box-shadow: var(--sa-sh-card); border-radius: var(--sa-r-card); }
+.sl-foot { margin-top: 28px; display: grid; gap: 8px; }
+.sl-monthnote, .sl-thin { font: 400 15px/1.55 var(--font); color: var(--ed-grey); }
+.sl-thin a { color: var(--ed-ink-2); text-decoration: underline; text-decoration-color: #C6CBD3; text-underline-offset: 4px; }
+.sl-thin a:hover { color: var(--rv-cobalt); text-decoration-color: currentColor; }
 
-.sl-lower { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
-.sl-lower__head { display: flex; align-items: center; gap: 14px; }
-.sl-lower__title { font: 740 20px/1.25 var(--font); letter-spacing: -0.018em; color: var(--ink); }
-.sl-skills__sub { margin-top: 3px; font-size: 14px; line-height: 1.45; color: var(--muted); }
-/* the top skills as a ranked bar list: name · count, a light bar sized to the most-asked skill */
-.sl-rank { margin-top: 14px; display: grid; }
-.sl-rank li + li { border-top: 1px solid var(--line); }
-.sl-rank__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name n" "bar bar"; gap: 7px 12px; padding: 10px 0 11px; }
-.sl-rank__name { grid-area: name; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 640 15px/1.3 var(--font); letter-spacing: -0.008em; color: var(--ink); transition: color var(--d-micro) var(--ease); }
-.sl-rank__n { grid-area: n; font-size: 13.5px; line-height: 1.3; color: var(--muted); white-space: nowrap; }
-.sl-rank__bar { grid-area: bar; height: 8px; border-radius: 4px; background: var(--sa-tag); overflow: hidden; }
-.sl-rank__bar i { display: block; height: 100%; border-radius: inherit; background: #AFC4FF; transition: background-color var(--d-micro) var(--ease); }
-.sl-rank__row:hover .sl-rank__name { color: var(--ultra-ink); }
-.sl-rank__row:hover .sl-rank__bar i { background: var(--blue); }
-.sl-method__list { margin-top: 14px; }
-.sl-method__list li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 13px 0; border-top: 1px solid var(--line); font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
-.sl-method__list li:first-child { border-top: 0; }
-.sl-method__list strong { color: var(--ink); font-weight: 680; }
-.sl-method__num { font: 700 13px/1.75 var(--font); letter-spacing: .02em; color: var(--ultra-ink); }
+/* the photo band: the line's block shrinks to its longer line (.ed-l), so it ends at the wrap's right edge, in the dark sky */
+.sl-page .ed-band__line { max-width: none; }
 
-/* the navy band, the home's split + leaning phone (superapp.css .sa-split / .sa-lean): the rate calculator's own
-   screen, pushed from "Công cụ", with its result for its default inputs (the tool's navy balance card) */
-.sl-calc .sa-title { margin-top: 18px; }
-.sl-calc .sa-lead { margin-top: 18px; }
-.sl-calc .sa-chips { margin-top: 26px; }
-.sl-calc .sa-actions { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
-.sl-calc .sa-more { color: #fff; }
-.sl-calc .sa-split__copy > .sa-cap { margin-top: 24px; }
-.va-sl-in .va-card__value { font-variant-numeric: tabular-nums; }
-.va-sl-presets { margin: 12px -14px 0; padding: 0 14px; }
-.va-sl-presets span { height: 28px; padding: 0 10px; font-size: 12.5px; }
-.va-sl-res {
-  margin: 12px 16px 0; padding: 16px 16px 15px; border-radius: 16px; overflow: hidden;
-  display: grid; gap: 2px; color: #fff;
-  background: var(--field-navy-bar);
-  box-shadow: 0 16px 26px -18px rgba(10, 22, 70, .6);
+/* from the money you want to the rate you quote: four figures on one rule that draws once on entry */
+.sl-calc .ed-head { align-items: flex-end; }
+.sl-calc__go { flex: none; }
+.sl-flow { position: relative; display: grid; grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+.sl-flow::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 15px; height: 1px; background: var(--ed-rule);
+  transform-origin: left center;
 }
-.va-sl-res__label { font: 600 12.5px/16px var(--font); color: rgba(255, 255, 255, .86); }
-.va-sl-res__big { display: flex; align-items: baseline; gap: 6px; font: 680 14px/1.2 var(--font); color: rgba(255, 255, 255, .88); }
-.va-sl-res__big b { font: 780 40px/1.05 var(--font-wide); font-stretch: 106%; letter-spacing: -0.04em; color: #fff; }
-.va-sl-res__range { margin-top: 8px; padding-top: 9px; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 13px; line-height: 18px; color: rgba(255, 255, 255, .86); }
-.va-sl-res__range b { font-weight: 720; color: #fff; }
+html.rv-live .sl-flow:not(.is-live)::before { transform: scaleX(0); }
+html.rv-live .sl-flow::before { transition: transform 1100ms var(--rv-ease) 120ms; }
+.sl-flow__step { position: relative; min-width: 0; padding-right: clamp(20px, 2.4vw, 40px); }
+.sl-flow__n { position: relative; display: inline-block; padding-right: 14px; background: var(--ed-surface); font: 400 30px/30px var(--font); letter-spacing: -0.035em; color: var(--ed-num); font-variant-numeric: tabular-nums; }
+.sl-flow__step + .sl-flow__step .sl-flow__n { margin-left: -14px; padding-left: 14px; }
+.sl-flow__fig { margin-top: 28px; font: 500 clamp(18px, 1.4vw, 21px)/1 var(--font); color: var(--ed-ink); white-space: nowrap; }
+.sl-flow__fig b { font: 600 clamp(34px, 3.1vw, 48px)/1 var(--font); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.sl-flow__fig .nsep { font-size: .7em; }
+.sl-flow__t { margin-top: 14px; max-width: 24ch; font: 400 16px/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.sl-flow__step--key :is(.sl-flow__n, .sl-flow__fig) { color: var(--rv-cobalt); }
+.sl-flow__step--key .sl-flow__t { color: var(--ed-ink-2); }
 
-@media (max-width: 1240px) {
-  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 40px; }
+/* the skills (numbered rows, a slim bar each) | the method (numbered one-line rules) */
+.sl-more__grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; gap: clamp(48px, 6.4vw, 104px); }
+.sl-rank, .sl-method__list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.sl-rank > li, .sl-method__list > li { border-bottom: 1px solid var(--ed-line); }
+.sl-rank__row {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; grid-template-areas: "n name c" ". bar bar";
+  align-items: baseline; column-gap: 12px; row-gap: 10px; padding: 16px 12px 18px 4px; color: var(--ed-ink); text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease);
 }
-/* small laptops and iPad landscape: copy and the chart card stay side by side (no empty right third of the band) */
+.sl-rank__n { grid-area: n; font: 400 24px/1 var(--font); letter-spacing: -0.03em; color: var(--ed-num); font-variant-numeric: tabular-nums; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sl-rank__name { grid-area: name; min-width: 0; font: 600 17.5px/1.3 var(--font); letter-spacing: -0.012em; overflow-wrap: anywhere; transition: color var(--rv-dur-2) var(--rv-ease); }
+.sl-rank__c { grid-area: c; font: 400 15px/1.3 var(--font); color: var(--ed-grey); white-space: nowrap; }
+.sl-rank__bar { grid-area: bar; display: block; height: 4px; border-radius: 99px; background: rgba(22, 24, 29, .07); overflow: hidden; }
+.sl-rank__bar i { display: block; width: calc(var(--v) * 1%); height: 100%; border-radius: inherit; background: #A9B8F3; transform-origin: left center; transition: background-color var(--rv-dur-2) var(--rv-ease); }
+.sl-rank__row:hover { background: var(--ed-hover); }
+.sl-rank__row:hover :is(.sl-rank__name, .sl-rank__n), .sl-rank__row:focus-visible :is(.sl-rank__name, .sl-rank__n) { color: var(--rv-cobalt); }
+.sl-rank__row:hover .sl-rank__bar i, .sl-rank__row:focus-visible .sl-rank__bar i { background: var(--rv-cobalt); }
+.sl-rank__row:focus-visible { outline: 2px solid var(--rv-cobalt); outline-offset: -2px; }
+.sl-rank__row:active { background: var(--ed-press); }
+html.rv-live .sl-rank:not(.is-live) .sl-rank__bar i { transform: scaleX(0); }
+html.rv-live .sl-rank__bar i { transition: transform var(--rv-dur-4) var(--rv-ease) calc(var(--i, 0) * 60ms + 200ms), background-color var(--rv-dur-2) var(--rv-ease); }
+/* "Cách tính": five notes, not a ranking: quiet meta lines on hairlines, no numerals */
+.sl-method__list > li { padding: 13px 0; font: 400 15px/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+
+/* the shared axis: "Theo tháng" labels ("12,8k") are wider, so every other one goes from 1280 px down */
+@media (max-width: 1279px) {
+  .sl-fields[data-unit="monthly"] .sl-ticks span:nth-child(even) { display: none; }
+}
 @media (max-width: 1100px) {
-  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 36px; }
-  .sl-dist { padding: 22px 22px 18px; }
-  .sl-dist__bars { height: 144px; gap: 3px; }
-  .sl-card { --c-label: 200px; --c-fixed: 0px; --c-gap: 20px; }
-  .sl-col-fixed { display: none; }
-  .sl-rows::before { right: calc(var(--c-val) + var(--c-n) + 2 * var(--c-gap)); }
-  .sl-row, .sl-axis { grid-template-columns: var(--c-label) minmax(0, 1fr) var(--c-val) var(--c-n); }
-  .sl-lower { grid-template-columns: 1fr; }
+  .sl-fields { --sl-cols: 48px minmax(150px, 220px) minmax(0, 1fr) 72px 64px 18px; --sl-gap: 16px; }
+  .sl-ticks span:nth-child(even) { display: none; }
+  .sl-lead { grid-template-columns: minmax(0, 1fr); }
+  .sl-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 48px; }
+  .sl-flow::before { display: none; }
+  .sl-flow__step { padding-top: 0; border-top: 1px solid var(--ed-rule); }
+  .sl-flow__n, .sl-flow__step + .sl-flow__step .sl-flow__n { margin-left: 0; padding: 16px 0 0; background: none; }
 }
-/* the kit stacks heroes with art under 900 px and lets the art rise from the floor: this art is a whole card */
-@media (max-width: 960px) {
-  .sl-hero__grid:has(> .sa-hero__art) { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .sl-hero .sa-hero__art { justify-items: stretch; }
-  .sl-dist { max-width: none; }
-}
-@media (max-width: 900px) {
-  .sl-hero, .sl-hero:has(.sa-hero__art) { --glow-at: 100% 100%; --glow-size: 60% 40%; padding-bottom: 48px; }
-  .sl-hero .sa-hero__art { height: auto; }
-  .sl-hero .sa-hero__art > .sl-dist { order: 0; }
+@media (max-width: 899px) {
+  .sl-more__grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 767px) {
-  .sl-hero, .sl-hero:has(.sa-hero__art) { padding-bottom: 36px; }
-  .sl-title { font-size: clamp(30px, 8.4vw, 40px); }
-  .sl-dist { padding: 18px 16px 16px; border-radius: var(--sa-r-card-sm); }
-  .sl-dist__bars { height: 124px; gap: 3px; }
-  .sl-main { padding-bottom: 64px; }
-  .sl-card { padding: 22px 16px 18px; }
-  .sl-toggle { width: 100%; }
-  .sl-toggle .tab { flex: 1 1 0; justify-content: center; }
-  .sl-row--head { display: none; }
-  .sl-rows::before { display: none; }
-  .sl-row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 14px 0 12px; }
-  .sl-row:first-child { border-top: 0; }
-  .sl-label { grid-column: 1; grid-row: 1; }
-  .sl-value { grid-column: 2; grid-row: 1; }
-  .sl-track {
-    grid-column: 1 / -1; grid-row: 2; height: 16px;
-    background: linear-gradient(var(--sa-tag), var(--sa-tag)) 0 50% / 100% 4px no-repeat;
-  }
-  .sl-n { display: none; }
-  .sl-label__n { display: inline; }
-  .sl-axis { grid-template-columns: 1fr; margin-top: 4px; }
-  .sl-axis > span:not(.sl-ticks) { display: none; }
-  .sl-lower__head { align-items: flex-start; }
-  .sl-rank__name { font-size: 14.5px; }
+  .sl-title { max-width: none; }
+  .sl-big__n { font-size: clamp(104px, 30vw, 128px); }
+  .sl-big__u { font-size: 21px; }
+  .sl-lead__quote { margin-top: 20px; font-size: 17px; }
+  .sl-lead__go { width: 100%; }
+  .sl-dist { padding: 18px 16px 16px; border-radius: 16px; }
+  .sl-dist__bar { padding-bottom: 14px; }
+  .sl-dist__cap { font-size: 15px; }
+  .sl-dist__read { font-size: 14px; }
+  .sl-dist__plot { padding-top: 20px; }
+  .sl-dist__bars { height: 200px; gap: 2px; }
+  .sl-dist__bars > i { border-radius: 3px 3px 0 0; }
+  .sl-dist__axis { font-size: 12px; }
+  /* a field row: the rank, the field and its median on one line; the bar and the sample under them */
+  .sl-fields { --sl-cols: 36px minmax(0, 1fr) 64px; --sl-gap: 12px; }
+  .sl-fields__head { gap: 18px; }
+  .sl-row { grid-template-areas: "n name v" ". track s"; row-gap: 26px; min-height: 0; padding: 16px 4px 16px 0; align-items: center; }
+  .sl-row__n { font-size: 22px; }
+  .sl-row__name { font-size: 16.5px; }
+  .sl-row__v strong { font-size: 22px; }
+  .sl-row__s { font-size: 13.5px; }
+  .sl-row__r { font-size: 12.5px; }
+  .sl-row__go { display: none; }
+  .sl-axis { grid-template-columns: var(--sl-cols); padding: 8px 4px 0 0; }
+  .sl-ticks { grid-column: 2; font-size: 12px; }
+  .sl-calc__go { width: 100%; }
+  .sl-flow { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .sl-flow__step { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: baseline; padding: 20px 0; border-top: 1px solid var(--ed-line); }
+  .sl-flow__step:last-child { border-bottom: 1px solid var(--ed-line); }
+  .sl-flow__n, .sl-flow__step + .sl-flow__step .sl-flow__n { grid-row: span 2; padding: 0; font-size: 24px; line-height: 1; }
+  .sl-flow__fig { margin-top: 0; font-size: 17px; }
+  .sl-flow__fig b { font-size: 36px; }
+  .sl-flow__t { margin-top: 8px; font-size: 15px; }
+  .sl-rank__row { grid-template-columns: 40px minmax(0, 1fr) auto; padding: 14px 4px 16px 0; }
+  .sl-rank__n { font-size: 20px; }
+  .sl-method__list > li { padding: 12px 0; font-size: 14.5px; }
 }
+@media (max-width: 767px) {
+  .sl-page .ed-band__line { max-width: 11em; }
+  .sl-page .ed-band__line .ed-l { display: inline; }
+}
+@media (max-width: 380px) {
+  .sl-big__n { font-size: 96px; }
+  .sl-fields { --sl-cols: 30px minmax(0, 1fr) 62px; --sl-gap: 10px; }   /* "6.400" in "Theo tháng" */
+}
+
+/* ---------------------------------------------------------------- 8 motion: reduced motion, the lite tier */
+@media (prefers-reduced-motion: reduce) {
+  .jl-rows.is-fresh > * { animation: none; }
+  .jl-loading::before { animation: none; }
+  .jl-rows .job-row:hover { translate: none; }
+  .sv-list.is-swap, .sl-dist__read.is-swap, .sv-rows .job-row.is-flash { animation: none; }
+  .sv-tab::after, .sl-row__go, .jd-desc__more .icon { transition: none; }
+  .sl-row:hover .sl-row__go { translate: none; }
+  .js .jl-panel, .js .jl-fab { transition-duration: .01s; }
+}
+html.hm-lite .jl-rows.is-fresh > * { animation: none; }
+html.hm-lite .jl-rows .job-row:hover { translate: none; }
+html.hm-lite :is(.sv-list.is-swap, .sl-dist__read.is-swap) { animation: none; }

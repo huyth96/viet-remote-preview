@@ -1,104 +1,31 @@
-/* Việt Remote — community & company pages (community, events, stories, post a job, about, 404).
-   Depends on common.js (window.VR). Everything here also works on the static export:
-   ?loai= / ?da-gui=1 are read in the browser, and forms with [data-remote] post to the
-   external form endpoint with fetch, falling back to a normal submit. */
+/* Việt Remote — the community group (events, stories, a story, post a job, about), direction A (community-a.css).
+   common.js (window.VR) does the heavy lifting: inline validation (form[data-validate]), copy buttons
+   ([data-copy-from|text]), VR.busy, toasts, the action bar, the lively layer ([data-live], [data-to] count-ups).
+   Here only what these pages add: the post-a-job submit (pending, the static export's fetch, the success panel) and
+   its live preview, .ics on events and the next session's agenda (its time track), the story frame you can write in
+   (/cau-chuyen/: what you type fills the text the copy button copies). A row lighting its twin (the about checks,
+   the agenda's parts and segments) is the kit's: ed.js [data-ed-twins]. Static-export safe: ?da-gui=1 is read in the
+   browser.
+   (The peer-group / mentor sign-up was cut, client 19/11.) */
 (function () {
   "use strict";
   const VR = window.VR;
   if (!VR) return;
 
   const params = new URLSearchParams(window.location.search);
-  const KINDS = ["peer_group", "find_mentor", "be_mentor"];
-
-  /* ---------------------------------------------------------------- validation (both forms) */
-  const MESSAGES = {
-    radio: "Chọn một trong ba lựa chọn.",
-    select: "Chọn một mục trong danh sách.",
-    email: "Email chưa đúng, ví dụ: ban@email.com.",
-    url: "Link chưa đúng, ví dụ: https://congty.vn",
-    text: "Ô này cần được điền.",
-    long: "Nội dung dài quá giới hạn.",
+  const smooth = () => (VR.reducedMotion ? "auto" : "smooth");
+  /* run after the load event: the browser's own scroll to the URL's #fragment would undo an earlier focus */
+  const afterLoad = (fn) => {
+    if (document.readyState === "complete") requestAnimationFrame(fn);
+    else window.addEventListener("load", () => requestAnimationFrame(fn), { once: true });
   };
 
-  function messageFor(el) {
-    const v = el.validity;
-    if (el.type === "radio") return MESSAGES.radio;
-    if (el.tagName === "SELECT") return MESSAGES.select;
-    if (v.valueMissing) return el.dataset.msg || MESSAGES.text;
-    if (v.typeMismatch && el.type === "email") return MESSAGES.email;
-    if (v.typeMismatch && el.type === "url") return MESSAGES.url;
-    if (v.tooLong) return MESSAGES.long;
-    return el.validationMessage || MESSAGES.text;
-  }
-
-  function errorHost(el) {
-    return el.type === "radio" ? el.closest(".kinds") : el.closest(".field");
-  }
-
-  function setError(el, message) {
-    const host = errorHost(el);
-    if (!host) return;
-    const id = "err-" + el.name;
-    let node = host.querySelector(".field__error");
-    if (message) {
-      if (!node) {
-        node = document.createElement("p");
-        node.className = "field__error";
-        node.id = id;
-        host.appendChild(node);
-      }
-      node.textContent = message;
-      host.classList.add(el.type === "radio" ? "is-invalid" : "field--error");
-      const targets = el.type === "radio" ? [host] : [el];
-      targets.forEach((t) => {
-        if (t !== host) t.setAttribute("aria-invalid", "true");
-        const ids = new Set((t.getAttribute("aria-describedby") || "").split(" ").filter(Boolean));
-        ids.add(node.id);
-        t.setAttribute("aria-describedby", Array.from(ids).join(" "));
-      });
-    } else if (node) {
-      node.remove();
-      host.classList.remove("is-invalid", "field--error");
-      const targets = el.type === "radio" ? [host] : [el];
-      targets.forEach((t) => {
-        t.removeAttribute("aria-invalid");
-        const ids = (t.getAttribute("aria-describedby") || "").split(" ").filter((x) => x && x !== node.id);
-        if (ids.length) t.setAttribute("aria-describedby", ids.join(" "));
-        else t.removeAttribute("aria-describedby");
-      });
-    }
-  }
-
-  /** "congty.vn" → "https://congty.vn": employers rarely type the scheme. */
+  /* ---- the submit (post a job) */
+  /** "congty.vn" → "https://congty.vn": employers rarely type the scheme. Runs on blur, before the kit's check
+      (focusout), so the field is judged with the scheme already added. */
   function fixUrl(el) {
-    if (!el || el.type !== "url") return;
     const value = el.value.trim();
     if (value && !/^[a-z][a-z0-9+.-]*:\/\//i.test(value) && !/^mailto:/i.test(value)) el.value = "https://" + value.replace(/^\/+/, "");
-  }
-
-  function validate(form) {
-    form.querySelectorAll('input[type="url"]').forEach(fixUrl);
-    let first = null;
-    const seenRadio = new Set();
-    form.querySelectorAll("input, select, textarea").forEach((el) => {
-      if (el.type === "hidden" || el.disabled || !el.name) return;
-      if (el.type === "radio") {
-        if (seenRadio.has(el.name)) return;
-        seenRadio.add(el.name);
-      }
-      const ok = el.checkValidity();
-      setError(el, ok ? "" : messageFor(el));
-      if (!ok && !first) first = el;
-    });
-    // the server-side summary notice is stale once the user has edited the form
-    const summary = form.querySelector(".form-errors");
-    if (summary) summary.hidden = true;
-    if (first) {
-      const target = first.type === "radio" ? form.querySelector('.kind__input:not(:checked)') || first : first;
-      target.focus({ preventScroll: true });
-      (errorHost(first) || first).scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "center" });
-    }
-    return !first;
   }
 
   function showSent(form, sent) {
@@ -107,215 +34,94 @@
     sent.hidden = false;
     sent.classList.add("is-new");
     sent.focus({ preventScroll: true });
-    sent.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "center" });
+    sent.scrollIntoView({ behavior: smooth(), block: "center" });
   }
 
-  /** Validate in Vietnamese; post [data-remote] forms with fetch (static export). */
-  function wireForm(form, sent) {
-    form.noValidate = true;
-    form.querySelectorAll('input[type="url"]').forEach((el) => el.addEventListener("blur", () => {
-      fixUrl(el);
-      if (errorHost(el) && errorHost(el).querySelector(".field__error") && el.checkValidity()) setError(el, "");
-    }));
-    form.addEventListener("input", (event) => {
-      const el = event.target;
-      if (el.name && errorHost(el) && errorHost(el).querySelector(".field__error") && el.checkValidity()) setError(el, "");
-    });
-    form.addEventListener("change", (event) => {
-      const el = event.target;
-      if (el.name && errorHost(el) && errorHost(el).querySelector(".field__error") && el.checkValidity()) setError(el, "");
-    });
+  function wireForm(form) {
+    const sent = document.querySelector("[data-sent]");
+    form.querySelectorAll('input[type="url"]').forEach((el) => el.addEventListener("blur", () => fixUrl(el)));
+    /* the server's "Còn N ô cần sửa" summary goes once nothing is marked wrong any more */
+    const summary = form.querySelector(".cg-form-errors");
+    if (summary) {
+      const check = () => { if (!form.querySelector('[aria-invalid="true"]')) summary.hidden = true; };
+      form.addEventListener("input", () => requestAnimationFrame(check));
+      form.addEventListener("change", () => requestAnimationFrame(check));
+    }
+    const buttons = () => Array.from(document.querySelectorAll(`[data-submit], button[type="submit"][form="${form.id}"]`))
+      .filter((b) => b.form === form);
+    /* the kit's check runs first (capture) and stops an invalid submit; this only sees a valid one */
     form.addEventListener("submit", (event) => {
-      if (!validate(form)) { event.preventDefault(); return; }
-      const button = form.querySelector('[type="submit"]');
-      if (!form.hasAttribute("data-remote")) {
-        if (button) { button.classList.add("is-disabled"); button.setAttribute("aria-busy", "true"); }
-        return; // normal POST to the Django view
-      }
+      form.querySelectorAll('input[type="url"]').forEach(fixUrl);
+      buttons().forEach((b) => VR.busy(b, true));
+      if (!form.hasAttribute("data-remote")) return;                    // a normal POST to the Django view
       event.preventDefault();
-      if (button) { button.disabled = true; button.setAttribute("aria-busy", "true"); }
       fetch(form.action, { method: "POST", body: new FormData(form), headers: { Accept: "application/json" } })
         .then((response) => {
           if (!response.ok) throw new Error("HTTP " + response.status);
+          buttons().forEach((b) => VR.busy(b, false));
           form.reset();
+          form.dispatchEvent(new Event("input", { bubbles: true }));
           showSent(form, sent);
         })
         .catch(() => {
-          // endpoint refused fetch (CORS/old browser): let the browser post the form itself
-          if (button) { button.disabled = false; button.removeAttribute("aria-busy"); }
+          /* the endpoint refused fetch (CORS, an old browser): let the browser post the form itself */
           HTMLFormElement.prototype.submit.call(form);
         });
     });
-    // Both run after the load event: the browser's scroll to the URL's #fragment (#dang-ky, #gui-tin) happens then and
-    // would blur anything focused earlier.
-    const afterLoad = (fn) => {
-      if (document.readyState === "complete") requestAnimationFrame(fn);
-      else window.addEventListener("load", () => requestAnimationFrame(fn), { once: true });
-    };
-    // on the static export the endpoint can redirect back with ?da-gui=1
+    /* back from the next page (bfcache): the pending state must not stick */
+    window.addEventListener("pageshow", (event) => { if (event.persisted) buttons().forEach((b) => VR.busy(b, false)); });
+
     if (params.get("da-gui") === "1" && sent && sent.hidden) afterLoad(() => showSent(form, sent));
-    // after a real (server-side) submit the page comes back with the success card already showing: move focus to
-    // it, so screen readers announce it (role=status alone is not read when it is there on load)
+    /* after a real submit the page comes back with the panel showing: focus it, so screen readers announce it */
     else if (sent && !sent.hidden) afterLoad(() => sent.focus({ preventScroll: true }));
-  }
+    /* back with server errors: the first wrong field takes focus (the summary above says how many) */
+    else if (form.querySelector('[aria-invalid="true"]')) afterLoad(() => form.querySelector('[aria-invalid="true"]').focus());
 
-  /* ---------------------------------------------------------------- community signup */
-  /** Program rows: pick the kind and glide to #dang-ky instead of reloading the page. */
-  function wireKindLinks(radios, pick) {
-    document.querySelectorAll("[data-kind-link]").forEach((link) => {
-      link.addEventListener("click", (event) => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey) return;
-        event.preventDefault();
-        const kind = link.dataset.kindLink;
-        pick(kind);
-        const target = document.getElementById("dang-ky");
-        if (target) target.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
-        const radio = radios.find((r) => r.value === kind);
-        if (radio) setTimeout(() => radio.focus({ preventScroll: true }), VR.reducedMotion ? 0 : 450);
-      });
-    });
-  }
-
-  /** Copy-a-template buttons ([data-copy-template]): copy the visible <pre> next to them. */
-  function wireTemplateCopy(root, message) {
-    const button = root.querySelector("[data-copy-template]");
-    if (!button) return;
-    button.hidden = false;
-    button.addEventListener("click", () => {
-      const pre = Array.from(root.querySelectorAll(".msg-tpl__body")).find((el) => el.offsetParent !== null);
-      if (pre) VR.copy(pre.textContent.trim() + "\n", message);
-    });
-  }
-
-  /* Static export without a form endpoint: the kind picker chooses a Skool message template. */
-  function initSkoolSignup() {
-    const box = document.querySelector("[data-skool-signup]");
-    if (!box) return;
-    const radios = Array.from(box.querySelectorAll(".kind__input"));
-    const select = (kind, updateUrl) => {
-      const radio = radios.find((r) => r.value === kind);
-      if (!radio) return;
-      radio.checked = true;
-      box.dataset.kind = kind;
-      if (updateUrl && window.history && history.replaceState) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("loai", kind);
-        history.replaceState(null, "", url.pathname + url.search + url.hash);
-      }
-    };
-    radios.forEach((radio) => radio.addEventListener("change", () => select(radio.value, true)));
-    const fromUrl = params.get("loai");
-    const checked = radios.find((r) => r.checked);
-    select(KINDS.includes(fromUrl) ? fromUrl : checked ? checked.value : "peer_group", false);
-    wireKindLinks(radios, (kind) => select(kind, true));
-    wireTemplateCopy(box, "Đã sao chép mẫu, dán vào tin nhắn trên Skool");
-  }
-
-  function initSignup() {
-    const form = document.querySelector("[data-signup-form]");
-    if (!form) return;
-    const sent = document.querySelector("[data-sent]");
-    const radios = Array.from(form.querySelectorAll(".kind__input"));
-    const goal = form.querySelector("#id_goal");
-
-    const apply = (kind, updateUrl) => {
-      if (!KINDS.includes(kind)) return;
-      form.dataset.kind = kind;
-      if (goal) {
-        const ph = goal.getAttribute("data-ph-" + kind);
-        if (ph) goal.placeholder = ph;
-      }
-      if (updateUrl && window.history && history.replaceState) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("loai", kind);
-        url.searchParams.delete("da-gui");
-        history.replaceState(null, "", url.pathname + url.search + url.hash);
-      }
-    };
-    const select = (kind, updateUrl) => {
-      const radio = radios.find((r) => r.value === kind);
-      if (!radio) return;
-      radio.checked = true;
-      setError(radio, "");
-      apply(kind, updateUrl);
-    };
-
-    radios.forEach((radio) => radio.addEventListener("change", () => apply(radio.value, true)));
-    // static export: ?loai= is not seen by the server, honour it here
-    const fromUrl = params.get("loai");
-    if (KINDS.includes(fromUrl) && !radios.some((r) => r.checked && r.value === fromUrl)) select(fromUrl, false);
-    const checked = radios.find((r) => r.checked);
-    apply(checked ? checked.value : "peer_group", false);
-
-    wireKindLinks(radios, (kind) => {
-      if (form.hidden && sent) { sent.hidden = true; form.hidden = false; }
-      select(kind, true);
-    });
-
-    // availability quick picks fill the text field (comma separated), the field stays editable
-    const avail = form.querySelector("#id_availability");
-    const picks = form.querySelector("[data-avail-picks]");
-    if (avail && picks) {
-      const chips = Array.from(picks.querySelectorAll(".chip"));
-      const parts = () => avail.value.split(",").map((s) => s.trim()).filter(Boolean);
-      const sync = () => {
-        const now = parts().map((p) => VR.fold(p));
-        chips.forEach((chip) => {
-          const on = now.includes(VR.fold(chip.textContent));
-          chip.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-      };
-      chips.forEach((chip) => chip.addEventListener("click", () => {
-        const label = chip.textContent.trim();
-        let list = parts();
-        const i = list.findIndex((p) => VR.fold(p) === VR.fold(label));
-        if (i >= 0) list.splice(i, 1); else list.push(label);
-        avail.value = list.join(", ");
-        sync();
-      }));
-      avail.addEventListener("input", sync);
-      sync();
-    }
-
-    // "Gửi thêm một đăng ký" after an inline (fetch) success: same document, so reopen the form
-    const again = document.querySelector("[data-send-again]");
+    /* "Gửi thêm một tin" after an inline (fetch) success: same document, so reopen the form */
+    const again = sent && sent.querySelector(".cg-sent__again");
     if (again) again.addEventListener("click", (event) => {
-      if (!form.hidden || window.location.pathname !== "/cong-dong/" || params.get("da-gui") === "1") return;
+      if (!form.hidden || params.get("da-gui") === "1") return;
       event.preventDefault();
       sent.hidden = true;
       form.hidden = false;
-      form.querySelector("#id_name").focus();
+      const first = form.querySelector("input:not([type=hidden]):not(.hp):not([type=radio]), textarea");
+      if (first) first.focus();
     });
-
-    wireForm(form, sent);
   }
 
-  /* ---------------------------------------------------------------- illustrative group card */
-  function initGroupCard() {
-    const card = document.querySelector("[data-group-card]");
-    if (!card) return;
-    const items = card.querySelectorAll("li[data-done]");
-    VR.inView(card, () => {
-      items.forEach((li, i) => setTimeout(() => li.classList.add("is-done"), VR.reducedMotion ? 0 : 500 + i * 420));
-    }, { threshold: 0.5 });
-  }
-
-  /* ---------------------------------------------------------------- events: save to calendar (.ics) */
+  /* ---- events: save to calendar (.ics) */
   const icsDate = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const icsText = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+  const slug = (s) => VR.fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  /* RFC 5545 §3.1: a content line is at most 75 octets; longer ones continue on lines that start with one space. Cut
+     on whole characters (UTF-8: a Vietnamese letter is 2-3 octets), never inside one. */
+  const utf8 = new TextEncoder();
+  const icsFold = (line) => {
+    const out = [];
+    let cur = "";
+    let size = 0;
+    for (const ch of line) {
+      const n = utf8.encode(ch).length;
+      if (size + n > (out.length ? 74 : 75)) { out.push(cur); cur = ""; size = 0; }
+      cur += ch;
+      size += n;
+    }
+    out.push(cur);
+    return out.join("\r\n ");
+  };
 
   function initCalendar() {
     document.querySelectorAll("[data-event]").forEach((item) => {
       const button = item.querySelector("[data-ics]");
       const start = new Date(item.dataset.start);
-      if (!button || Number.isNaN(start.getTime())) return;
-      button.hidden = false;
+      if (!button) return;
+      if (Number.isNaN(start.getTime())) { button.hidden = true; return; }
       button.addEventListener("click", () => {
         const end = new Date(start.getTime() + (Number(item.dataset.minutes) || 60) * 60000);
         const lines = [
           "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Viet Remote//Events//VI", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
           "BEGIN:VEVENT",
-          "UID:" + icsDate(start) + "-" + VR.fold(item.dataset.title).replace(/[^a-z0-9]+/g, "-").slice(0, 40) + "@vietremote",
+          "UID:" + icsDate(start) + "-" + slug(item.dataset.title).slice(0, 40) + "@vietremote",
           "DTSTAMP:" + icsDate(new Date()),
           "DTSTART:" + icsDate(start),
           "DTEND:" + icsDate(end),
@@ -326,116 +132,183 @@
           "BEGIN:VALARM", "TRIGGER:-PT30M", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(item.dataset.title), "END:VALARM",
           "END:VEVENT", "END:VCALENDAR",
         ];
-        const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(new Blob([lines.map(icsFold).join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }));
         const a = document.createElement("a");
         a.href = url;
-        a.download = (VR.fold(item.dataset.title).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "su-kien") + ".ics";
+        a.download = (slug(item.dataset.title) || "su-kien") + ".ics";
         document.body.appendChild(a);
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        VR.toast("Đã tạo file lịch, mở để thêm vào lịch của bạn");
+        VR.toast("Đã tạo file lịch, mở để thêm vào lịch của bạn", { tone: "ok" });
       });
     });
   }
 
-  /* ---------------------------------------------------------------- post a job */
+  /* ---- post a job: the live preview */
   function initials(company) {
     const words = String(company || "").split(/[\s\-–—|()]+/).filter((w) => w && /[\p{L}\p{N}]/u.test(w[0]));
     if (!words.length) return "VR";
     return (words[0][0] + (words[1] ? words[1][0] : "")).toUpperCase();
   }
+  /* the board's tone for a company (the twin of the logo_tone filter): the same company keeps its tint */
+  const tone = (company) => VR.logoTone({ company, initials: company ? "x" : "", field: "" });
 
   function initPostJob() {
     const form = document.querySelector("[data-job-form]");
-    const review = document.querySelector("[data-review]");
-    const mine = document.querySelector("[data-mine]");
-    if (review) VR.inView(review, () => {
-      review.classList.add("is-live");
-      // the illustrative post goes live once the five checks and the badge have ticked (CSS delays)
-      if (mine) setTimeout(() => mine.classList.add("is-live"), VR.reducedMotion ? 0 : 1500);
-    }, { threshold: 0.4 });
-    const send = document.querySelector(".pj-send");
-    if (send) wireTemplateCopy(send, "Đã sao chép mẫu tin tuyển dụng");
     if (!form) return;
-    const sent = document.querySelector("[data-sent]");
     const previews = Array.from(document.querySelectorAll("[data-preview]"));
-    const get = (name) => form.elements.namedItem(name);
-    const val = (name) => { const el = get(name); return el ? String(el.value || "").trim() : ""; };
+    const val = (name) => { const el = form.elements.namedItem(name); return el ? String(el.value || "").trim() : ""; };
+    const vn = form.elements.namedItem("open_to_vietnam");
+    const count = document.querySelector("[data-count]");
+    const countN = count && count.querySelector("[data-count-n]");
+    const scores = Array.from(document.querySelectorAll("[data-tips-score]"));
+    const rings = Array.from(document.querySelectorAll("[data-tips-ring]"));
+    const bar = document.querySelector("[data-bar-value]");
+    const barLabel = document.querySelector("[data-bar-label]");
+    const tips = Array.from(document.querySelectorAll("[data-tip]"));
+    const RULES = ["salary", "timezone_note", "job_url", "description"];
 
+    let frame = 0;
     const render = () => {
+      frame = 0;
+      const company = val("company");
+      const title = val("job_title");
       previews.forEach((preview) => {
         const set = (key, text, fallback) => {
           const node = preview.querySelector(`[data-p="${key}"]`);
           if (!node) return;
-          node.textContent = text || fallback;
+          if (node.textContent !== (text || fallback)) node.textContent = text || fallback;
           node.classList.toggle("is-placeholder", !text);
         };
-        const company = val("company");
         set("company", VR.shortCompany(company), "Tên công ty");
-        set("title", VR.shortTitle(val("job_title")), "Vị trí bạn đang tuyển");
-        set("salary", val("salary"), "Lương thỏa thuận");
-        set("type", val("employment_type"), "Hợp đồng");
+        set("title", VR.shortTitle(title), "Vị trí bạn đang tuyển");
+        set("salary", VR.keepRanges ? VR.keepRanges(val("salary")) : val("salary"), "Lương thỏa thuận");
+        const type = preview.querySelector('[data-p="type"]');
+        if (type) { type.textContent = val("employment_type"); type.hidden = !val("employment_type"); type.classList.remove("is-placeholder"); }
         const logo = preview.querySelector('[data-p="logo"]');
-        if (logo) logo.textContent = initials(company);
-        const vn = get("open_to_vietnam");
+        if (logo) { logo.textContent = initials(company); logo.dataset.tone = String(tone(company)); }
         const badge = preview.querySelector('[data-p="vn"]');
         if (badge && vn) badge.hidden = !vn.checked;
       });
-      document.querySelectorAll("[data-tip]").forEach((li) => {
-        const rule = li.dataset.tip;
-        const on = rule === "description" ? val("description").length >= 300 : Boolean(val(rule));
+      /* the tips are rendered twice (beside the form, and inside it under 1100 px): judge each rule once */
+      const done = {};
+      RULES.forEach((rule) => { done[rule] = rule === "description" ? val("description").length >= 300 : Boolean(val(rule)); });
+      tips.forEach((li) => {
+        const on = Boolean(done[li.dataset.tip]);
         li.classList.toggle("is-off", !on);
         const state = li.querySelector("[data-tip-state]");
         if (state) state.textContent = on ? "Đã có: " : "Chưa có: ";
       });
+      const met = RULES.filter((rule) => done[rule]).length;
+      scores.forEach((score) => {
+        VR.liveCount(score, `${met}/${RULES.length}`);
+        score.classList.toggle("is-full", met === RULES.length);
+      });
+      rings.forEach((ring) => {
+        ring.style.setProperty("--v", String(Math.round((met / RULES.length) * 100)));
+        ring.classList.toggle("is-full", met === RULES.length);
+      });
+      if (countN) {
+        const n = val("description").length;
+        VR.liveCount(countN, n);
+        count.classList.toggle("is-met", n >= 300);
+      }
+      if (bar) bar.textContent = title ? VR.shortTitle(title) : "Chưa có tên vị trí";
+      if (barLabel) barLabel.textContent = `Tin của bạn · đủ ${met}/${RULES.length} điều nên có`;
     };
-    form.addEventListener("input", render);
-    form.addEventListener("change", render);
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
+    form.addEventListener("input", schedule);
+    form.addEventListener("change", schedule);
     render();
-    wireForm(form, sent);
   }
 
-  /* ---------------------------------------------------------------- copy link (story detail) */
-  function initCopy() {
-    document.querySelectorAll("[data-copy-link]").forEach((button) => {
-      button.hidden = false;
-      button.addEventListener("click", () => VR.copy(window.location.href.split("#")[0], "Đã sao chép link câu chuyện"));
+  /* ---- events: the next session's agenda. Each line of Event.description is one part ("1. Đọc tin … (15 phút)"):
+     the leading number goes (the list numbers itself), the minutes become the part's segment length on the track
+     and its clock times (Vietnam time, from the session's start); a line without minutes stays as written. */
+  const clock = (d) => d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Ho_Chi_Minh" });
+  function initAgenda() {
+    document.querySelectorAll("[data-agenda]").forEach((box) => {
+      const items = Array.from(box.querySelectorAll(".ca-ag__item"));
+      const segs = Array.from(box.querySelectorAll(".ca-ag__track > i"));
+      const start = new Date(box.dataset.start);
+      const parts = items.map((li) => {
+        const t = li.querySelector(".ca-ag__t");
+        const raw = t.textContent.replace(/^\s*\d+\s*[.)]\s*/, "");
+        const m = /^(.*?)\s*\((\d+)\s*phút\)\s*$/i.exec(raw);
+        t.textContent = m ? m[1] : raw;
+        return m ? Number(m[2]) : 0;
+      });
+      const timed = parts.every((n) => n > 0) && !Number.isNaN(start.getTime());
+      let at = start.getTime();
+      items.forEach((li, i) => {
+        li.dataset.edK = String(i);
+        if (segs[i]) { segs[i].dataset.edK = String(i); if (parts[i]) segs[i].style.setProperty("--m", String(parts[i])); }
+        const min = li.querySelector(".ca-ag__min");
+        if (!min || !parts[i]) return;
+        if (timed) {
+          const from = new Date(at);
+          at += parts[i] * 60000;
+          min.textContent = `${clock(from)}–${clock(new Date(at))}`;
+        } else min.textContent = `${parts[i]} phút`;
+      });
+      const axis = box.querySelector(".ca-ag__axis");
+      if (axis && timed) axis.innerHTML = `<span>${clock(start)}</span><span>${clock(new Date(at))}</span>`;
+      /* the longest part is the session's centre: lit until a row is pointed at */
+      const longest = parts.indexOf(Math.max(...parts));
+      box.setAttribute("data-ed-twins", parts[longest] ? String(longest) : "");
+      if (window.edTwins) window.edTwins(box.parentNode);   // the kit's twins (ed.js)
     });
   }
 
-  /* ---------------------------------------------------------------- story frame (/cau-chuyen/) */
-  /** "Sao chép khung": copies the six questions as a plain-text post (from a <template>, so the
-      wording lives in the page), and briefly marks the button as done. */
-  function initStoryFrame() {
-    const button = document.querySelector("[data-copy-frame]");
-    const source = document.querySelector("template[data-frame-text]");
-    if (!button || !source) return;
-    button.hidden = false;
-    const label = button.querySelector("[data-copy-label]");
-    const idle = label ? label.textContent : "";
-    let timer;
-    button.addEventListener("click", () => {
-      const text = source.content.textContent.replace(/^\s+|\s+$/g, "").replace(/\n[ \t]+/g, "\n");
-      VR.copy(text + "\n", "Đã sao chép khung 6 câu hỏi, dán vào bài đăng trên Skool");
-      button.classList.add("is-done");
-      if (label) label.textContent = "Đã sao chép";
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        button.classList.remove("is-done");
-        if (label) label.textContent = idle;
-      }, 2400);
+  /* ---- stories: the frame you can write in. Each question is a real field; what is typed fills the plain text the
+     copy button copies ([data-tell] names it), so "Sao chép" hands over the story ready to paste on Skool. The draft
+     stays on this device only (localStorage, when the browser allows it). */
+  function initTell() {
+    const post = document.querySelector("[data-tell]");
+    const out = post && document.querySelector(post.dataset.tell);
+    if (!out) return;
+    const base = out.textContent;
+    const fields = Array.from(post.querySelectorAll("textarea[data-q]"));
+    const count = post.querySelector("[data-tell-count]");
+    const KEY = "vr-story-draft";
+    const fits = window.CSS && CSS.supports && CSS.supports("field-sizing", "content");
+    const grow = (f) => { if (fits) return; f.style.height = "auto"; f.style.height = `${f.scrollHeight}px`; };
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(KEY) || "null");
+      if (saved) fields.forEach((f) => { if (typeof saved[f.name] === "string") f.value = saved[f.name]; });
+    } catch (error) { /* storage blocked: start empty */ }
+    const render = () => {
+      let text = base;
+      const draft = {};
+      let done = 0;
+      fields.forEach((f) => {
+        const v = f.value.trim();
+        draft[f.name] = f.value;
+        f.closest(".ca-q").classList.toggle("is-done", Boolean(v));
+        if (v) { done += 1; text = text.replace(`${f.dataset.q}:`, () => `${f.dataset.q}: ${v}`); }   // a function: "$&", "$'" stay as typed
+      });
+      out.textContent = text;
+      if (count) {
+        count.textContent = `Đã viết ${done}/${fields.length} câu`;
+        count.classList.toggle("is-full", done === fields.length);
+      }
+      try { window.localStorage.setItem(KEY, JSON.stringify(draft)); } catch (error) { /* not kept: fine */ }
+    };
+    let frame = 0;
+    post.addEventListener("input", (event) => {
+      if (event.target.matches("textarea[data-q]")) grow(event.target);
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; render(); });
     });
+    fields.forEach(grow);
+    render();
   }
 
   VR.onReady(() => {
-    initSignup();
-    initSkoolSignup();
-    initGroupCard();
+    document.querySelectorAll("[data-job-form]").forEach(wireForm);
     initCalendar();
     initPostJob();
-    initCopy();
-    initStoryFrame();
+    initAgenda();
+    initTell();
   });
 })();

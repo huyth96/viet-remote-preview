@@ -140,7 +140,7 @@
     cv: {
       label: "Điểm CV", noun: "CV", unit: "từ",
       field: "Dán nội dung CV",
-      hint: "Dán chữ từ file CV (Ctrl + A, Ctrl + C trong Word hoặc PDF). Ứng tuyển khách quốc tế thì dùng bản tiếng Anh.",
+      hint: "Dán chữ từ file CV, bản tiếng Anh.",
       placeholder: "NGUYEN VAN A · Video Editor · email · LinkedIn…",
       checks: [
         { id: "length", label: "Độ dài một đến hai trang", weight: 1, test: rangeCheck(200, 900, "từ"),
@@ -190,7 +190,7 @@
     upwork: {
       label: "Điểm Upwork profile", noun: "profile", unit: "từ",
       field: "Dán tiêu đề và phần Overview",
-      hint: "Dòng đầu tiên là tiêu đề (Title), phần còn lại là Overview đúng như trên Upwork.",
+      hint: "Dòng đầu là Title, phần sau là Overview.",
       placeholder: "Podcast Video Editor | YouTube & Shorts\nYour podcast deserves clips people actually finish…",
       checks: [
         { id: "headline", label: "Tiêu đề cụ thể, dưới 70 ký tự", weight: 2,
@@ -248,7 +248,7 @@
     proposal: {
       label: "Điểm proposal", noun: "proposal", unit: "từ",
       field: "Dán proposal hoặc cover letter",
-      hint: "Dán đúng bản bạn định gửi, kể cả lời chào và chữ ký.",
+      hint: "Dán đúng bản bạn định gửi.",
       placeholder: "Hi Sarah, you need 4 podcast episodes edited every week…",
       checks: [
         { id: "dear", label: "Không mở bằng “Dear Sir/Madam”", weight: 2,
@@ -296,6 +296,51 @@
     },
   };
 
+  /* ---------------- the user's own sentence ----------------
+     A failed check with a stock rewrite quotes the sentence of YOURS it is about ("Responsible for editing videos…"),
+     when the rule can point at one; otherwise the stock "before" shows the shape. */
+  const BULLET_RE = /^([-•*✓✔▪►–]|\d+[.)])\s*/;
+  const clip = (s) => (s.length > 150 ? s.slice(0, 149).replace(/\s+\S*$/, "") + "…" : s);
+  function sentencesOf(lines) {
+    return lines.flatMap((l) => l.replace(BULLET_RE, "").split(/(?<=[.!?])\s+(?=[\p{Lu}"“(])/u))
+      .map((x) => x.trim()).filter((x) => /\p{L}/u.test(x));
+  }
+  const reEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  function quoteFor(id, mode, c) {
+    const all = sentencesOf(c.lines);
+    const bullets = c.lines.filter((l) => BULLET_RE.test(l)).map((l) => l.replace(BULLET_RE, "").trim());
+    const first = (list, re) => list.find((x) => re.test(x)) || "";
+    const WEAK_OPEN = /^(responsible for|worked on|helped with|duties|in charge of|tasks? included|i (was|am) responsible)/i;
+    const tail = () => withoutSignoff(c.lines).split("\n").filter(Boolean);
+    switch (id) {
+      case "metrics": return first(bullets, /^(?!.*\d)\p{L}.{10,}/u) || first(all, WEAK_OPEN);
+      case "verbs": return first(bullets, WEAK_OPEN) || first(all, WEAK_OPEN);
+      case "weak": return c.weak.list.length ? first(all, new RegExp(reEsc(c.weak.list[0]), "i")) : "";
+      case "personal": { const m = c.find(PERSONAL_RE); return m ? first(c.lines, new RegExp(reEsc(m), "i")) : ""; }
+      case "contact": return first(c.lines, /@|\b(e-?mail|contact|phone|tel)\b/i);
+      case "links": return first(all, /\b(portfolio|on request|linkedin)\b/i);
+      case "firstperson": return first(all, new RegExp(FIRST_PERSON_RE.source, "iu"));
+      case "headline": return mode === "upwork" ? c.first : "";
+      case "opening": return mode === "upwork" ? sentencesOf(c.lines.slice(1, 2))[0] || "" : "";
+      case "cta": return sentencesOf(tail().slice(-1)).slice(-1)[0] || "";
+      case "offplatform": return first(all, /\b(whatsapp|telegram|skype|zalo|viber|wechat)\b|@|\+?\d[\d .()-]{7,}\d/i);
+      case "dear": { const s0 = sentencesOf(c.lines.slice(0, 2)); return s0.slice(0, /,$/.test(s0[0] || "") ? 2 : 1).join(" "); }
+      case "question": return sentencesOf(tail()).slice(-1)[0] || "";
+      case "proof": return first(all, /\b(experience|years?)\b/i);
+      case "beg": return first(all, /\b(give me (a|one) chance|i am new|i'?m new|new (to|on) upwork|low (budget|price)|cheap|please hire|kindly)\b/i);
+      default: return "";
+    }
+  }
+  /** the rewrite to show for a failed check: {before, after, why, mine} (mine: the before is the user's sentence) */
+  function rewriteFor(r, mode, c, used) {
+    const ex = r.check.example;
+    if (!ex) return null;
+    const q = c ? clip(quoteFor(r.check.id, mode, c)) : "";
+    if (!q || q === ex.after || (used && used.has(q))) return Object.assign({ mine: false }, ex);   /* never the same sentence twice */
+    if (used) used.add(q);
+    return { before: q, after: ex.after, why: ex.why, mine: true };
+  }
+
   function grade(mode, text) {
     const conf = MODES[mode];
     const c = context(text);
@@ -308,65 +353,111 @@
     return { score, results, ctx: c };
   }
 
-  /* ---------------- rendering ---------------- */
+  /* ---------------- rendering ----------------
+     The ink card (#ket-qua) keeps one shape before and after grading: the mode's criteria as rows (a grey ring
+     before the first run, then a green tick or a red cross, in the checklist's own order so nothing jumps while
+     you edit), the score /10, the weakest sentence rewritten. The white card under it (data-result) explains
+     each failed criterion. Counts are set, never rolled up (DESIGN_SYSTEM_REVOLUT.md §13.3). */
   const e = (s) => VR.escape(s);
   const icon = (name) => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
   const fmtScore = (n) => n.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
-  const C = 326.73;
+  const mark = (state) => `<span class="tl-check__mark" aria-hidden="true">${icon(state === "fail" ? "x" : "check")}</span>`;
 
+  /** [title, the line under it, the phone bar's short word] */
   function verdict(score, noun) {
-    if (score >= 8.5) return [`Sẵn sàng gửi`, `${noun[0].toUpperCase() + noun.slice(1)} đạt gần hết tiêu chí. Đọc lại một lượt với đúng vị trí bạn ứng tuyển rồi gửi.`];
-    if (score >= 7) return ["Gần xong, sửa nốt vài chỗ", "Phần lớn đã ổn. Sửa các mục bên dưới, nhất là mục có trọng số cao."];
-    if (score >= 5) return ["Cần sửa trước khi gửi", "Có nền tảng, nhưng còn những lỗi khiến người đọc lướt qua. Sửa từ trên xuống."];
-    return ["Nên viết lại phần chính", "Trượt nhiều tiêu chí quan trọng. Xem ví dụ viết lại bên dưới để có khung bắt đầu."];
+    if (score >= 8.5) return [`Sẵn sàng gửi`, `${noun[0].toUpperCase() + noun.slice(1)} đạt gần hết tiêu chí. Đọc lại một lượt với đúng vị trí bạn ứng tuyển rồi gửi.`, "Sẵn sàng gửi"];
+    if (score >= 7) return ["Gần xong, sửa nốt vài chỗ", "Phần lớn đã ổn. Sửa các mục bên dưới, nhất là mục có trọng số cao.", "Gần xong"];
+    if (score >= 5) return ["Cần sửa trước khi gửi", "Có nền tảng, nhưng còn những lỗi khiến người đọc lướt qua. Sửa từ trên xuống.", "Cần sửa"];
+    return ["Nên viết lại phần chính", "Trượt nhiều tiêu chí quan trọng. Mỗi mục bên dưới kèm cách sửa, có mục kèm câu viết lại để bạn có khung bắt đầu.", "Nên viết lại"];
   }
 
-  function itemHtml(r) {
-    const heavy = r.check.weight > 1 ? ` <span class="badge badge--neutral">Quan trọng</span>` : "";
-    return `<li class="check-item ${r.pass ? "is-pass" : "is-fail"}">${icon(r.pass ? "check-circle" : "x-circle")}
-  <span class="check-item__title">${e(r.check.label)}${r.pass ? "" : heavy}</span>
+  function rowsHtml(conf, res) {
+    return conf.checks.map((check, i) => {
+      const r = res ? res.results[i] : null;
+      const state = !r ? "wait" : r.pass ? "pass" : "fail";
+      const sr = !r ? "" : `<span class="sr-only">${r.pass ? "Đạt: " : "Chưa đạt: "}</span>`;
+      return `<li class="tl-check is-${state}">${mark(state)}<span>${sr}${e(check.label)}</span></li>`;
+    }).join("");
+  }
+
+  function fixHtml(r, mode, c, used) {
+    const heavy = r.check.weight > 1 ? ` <span class="check-item__w">Quan trọng</span>` : "";
+    const ex = rewriteFor(r, mode, c, used);
+    return `<li class="check-item is-fail">${mark("fail")}
+  <span class="check-item__title">${e(r.check.label)}${heavy}</span>
   <span class="check-item__detail">${e(r.detail)}</span>
-  ${r.pass ? "" : `<span class="check-item__fix"><strong>Sửa:</strong> ${e(r.check.fix)}</span>`}
+  <span class="check-item__fix"><strong>Sửa:</strong> ${e(r.check.fix)}</span>
+  ${ex ? `<div class="rewrite" lang="en">
+    <p class="rewrite__side rewrite__before"><span class="rewrite__tag" lang="vi">${ex.mine ? "Bạn viết" : "Trước"}</span><span>${e(ex.before)}</span></p>
+    <p class="rewrite__side rewrite__after"><span class="rewrite__tag" lang="vi">${ex.mine ? "Nên viết" : "Sau"}</span><span>${e(ex.after)}</span></p>
+    <p class="rewrite__why" lang="vi">${e(ex.why)}</p>
+  </div>` : ""}
 </li>`;
+  }
+
+  /** the ink card in its waiting state for a mode: the checklist itself, no score */
+  function renderEmpty(root, mode) {
+    const conf = MODES[mode];
+    const card = root.querySelector("[data-score-card]");
+    card.querySelector("[data-mode-label]").textContent = conf.label;
+    card.querySelector("[data-score-count]").textContent = `${conf.checks.length} tiêu chí`;
+    card.querySelector("[data-score]").textContent = "Chưa chấm";
+    card.querySelector("[data-big]").classList.add("is-empty");
+    const ring = card.querySelector("[data-ring]");
+    if (ring) ring.style.setProperty("--v", 0);
+    card.querySelector("[data-verdict]").textContent = "";
+    card.querySelector("[data-checks]").innerHTML = rowsHtml(conf, null);
+    card.querySelector("[data-rewrite]").hidden = true;     // the rewrite joins the readout once there is a grade
+    card.querySelector("[data-rewrite-empty]").hidden = false;
+    card.querySelector("[data-rewrite-before]").hidden = true;
+    card.querySelector("[data-rewrite-after]").hidden = true;
+    root.querySelector("[data-result]").hidden = true;
   }
 
   function render(root, mode, res) {
     const conf = MODES[mode];
+    const card = root.querySelector("[data-score-card]");
     const out = root.querySelector("[data-result]");
-    const ring = out.querySelector("[data-ring]");
-    ring.classList.remove("is-good", "is-ok", "is-low");
-    ring.classList.add(res.score >= 8 ? "is-good" : res.score >= 5 ? "is-ok" : "is-low");
-    const arc = out.querySelector("[data-arc]");
-    const scoreEl = out.querySelector("[data-score]");
-    const prev = Number(scoreEl.dataset.count) || 0;
-    requestAnimationFrame(() => { arc.style.strokeDashoffset = String(C * (1 - res.score / 10)); });
-    VR.countTo(scoreEl, res.score, { from: prev, decimals: 1, duration: 700 });
-
-    const [title, text] = verdict(res.score, conf.noun);
-    out.querySelector("[data-mode-label]").textContent = conf.label;
-    out.querySelector("[data-verdict]").textContent = title;
-    out.querySelector("[data-summary]").textContent = text;
     const passed = res.results.filter((r) => r.pass);
     const failed = res.results.filter((r) => !r.pass).sort((a, b) => b.check.weight - a.check.weight);
+    const [title, text, short] = verdict(res.score, conf.noun);
+
+    card.querySelector("[data-mode-label]").textContent = conf.label;
+    card.querySelector("[data-score-count]").textContent = `${passed.length}/${res.results.length} đạt`;
+    card.querySelector("[data-big]").classList.remove("is-empty");
+    VR.liveCount(card.querySelector("[data-score]"), fmtScore(res.score));
+    /* the score ring: the score's share of 10, swept in the mode's hue (tools.css §E) */
+    const ring = card.querySelector("[data-ring]");
+    if (ring) ring.style.setProperty("--v", Math.round(res.score * 10));
+    const v = card.querySelector("[data-verdict]");
+    if (v.textContent !== title) v.textContent = title;
+    card.querySelector("[data-checks]").innerHTML = rowsHtml(conf, res);
+
+    /* the rewrite: the heaviest failed criterion that has one (your own sentence before it when the rule found one),
+       else the mode's first example (to show the shape) */
+    const pick = failed.find((r) => r.check.example);
+    const ex = pick ? rewriteFor(pick, mode, res.ctx) : (conf.checks.find((ch) => ch.example) || {}).example;
+    card.querySelector("[data-rewrite]").hidden = false;
+    card.querySelector("[data-rewrite-empty]").hidden = Boolean(ex);
+    const before = card.querySelector("[data-rewrite-before]");
+    const after = card.querySelector("[data-rewrite-after]");
+    before.hidden = after.hidden = !ex;
+    if (ex) { before.textContent = ex.before; after.textContent = ex.after; }
+
+    out.querySelector("[data-fix-title]").textContent = failed.length ? `Cách sửa ${failed.length} mục chưa đạt` : "Không còn mục nào cần sửa";
+    out.querySelector("[data-summary]").textContent = text;
     out.querySelector("[data-stats]").innerHTML = `<span><b>${passed.length}/${res.results.length}</b> tiêu chí đạt</span><span><b>${VR.fmt.int(res.ctx.wordCount)}</b> từ</span><span><b>${res.ctx.metrics}</b> con số</span>`;
-
-    out.querySelector("[data-fail-count]").textContent = String(failed.length);
-    out.querySelector("[data-pass-count]").textContent = String(passed.length);
-    out.querySelector("[data-fails]").innerHTML = failed.map(itemHtml).join("");
-    out.querySelector("[data-passes]").innerHTML = passed.map(itemHtml).join("");
-    out.querySelector("[data-fail-group]").hidden = !failed.length;
-    out.querySelector("[data-pass-group]").hidden = !passed.length;
-
-    let examples = failed.filter((r) => r.check.example).slice(0, 3);
-    if (!examples.length) examples = conf.checks.filter((ch) => ch.example).slice(0, 1).map((check) => ({ check }));
-    out.querySelector("[data-rewrites]").innerHTML = examples.map((r) => `<div class="rewrite" lang="en">
-  <div class="rewrite__side rewrite__before"><span class="badge badge--risk" lang="vi">Trước</span><span>${e(r.check.example.before)}</span></div>
-  <div class="rewrite__side"><span class="badge badge--ok" lang="vi">Sau</span><span>${e(r.check.example.after)}</span></div>
-  <p class="rewrite__why" lang="vi">${e(r.check.label)}: ${e(r.check.example.why)}</p>
-</div>`).join("");
-
+    const used = new Set();
+    out.querySelector("[data-fails]").innerHTML = failed.map((r) => fixHtml(r, mode, res.ctx, used)).join("");
+    out.querySelector("[data-fails]").hidden = !failed.length;
     out.hidden = false;
-    root.querySelector("[data-empty]").hidden = true;
+
+    const bar = document.querySelector("[data-cv-bar]");
+    if (bar) {
+      bar.querySelector("[data-bar-label]").textContent = conf.label;
+      bar.querySelector("[data-bar-value]").textContent = `${fmtScore(res.score)}/10 · ${short}`;
+      VR.actionbar.ready(bar, true);
+    }
   }
 
   VR.onReady(() => {
@@ -375,36 +466,43 @@
     const root = card.closest(".tool-main") || document;
     const input = card.querySelector("[data-input]");
     const counter = card.querySelector("[data-counter]");
-    const result = root.querySelector("[data-result]");
+    const scoreCard = root.querySelector("[data-score-card]");
     const tabs = Array.from(card.querySelectorAll('[role="tab"]'));
     const panel = card.querySelector("[data-panel]");
+    const runBtn = card.querySelector("[data-run]");
+    const bar = document.querySelector("[data-cv-bar]");
     const drafts = { cv: "", upwork: "", proposal: "" };   // per-mode text, memory only
     let mode = "cv";
     let live = false;
     let timer;
 
     const words = () => input.value.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-    const updateCount = () => { counter.textContent = VR.fmt.int(words()) + " từ"; };
-    const showCriteria = () => {
-      const conf = MODES[mode];
-      root.querySelector("[data-criteria-title]").textContent = `Checklist chấm ${conf.noun} · ${conf.checks.length} tiêu chí`;
-      root.querySelector("[data-criteria]").innerHTML = conf.checks.map((ch) => `<li>${e(ch.label)}</li>`).join("");
+    const updateCount = () => { VR.liveCount(counter, VR.fmt.int(words()) + " từ"); };
+    const reset = () => {
+      live = false;
+      renderEmpty(root, mode);
+      if (bar) VR.actionbar.ready(bar, false);
     };
-    const reset = () => { live = false; result.hidden = true; root.querySelector("[data-empty]").hidden = false; };
 
     const run = (scroll) => {
       const text = input.value.normalize("NFC").replace(/\r\n?/g, "\n").trim();
       if (text.split(/\s+/).length < 8) {
         reset();
-        if (scroll) { VR.toast("Dán thêm nội dung, ít nhất vài câu"); input.focus(); }
+        if (scroll) { VR.toast("Dán thêm nội dung, ít nhất vài câu để chấm", { tone: "info" }); input.focus(); }
         return;
       }
       render(root, mode, grade(mode, text));
       live = true;
       if (scroll) {
-        const top = result.getBoundingClientRect().top;
-        if (top > window.innerHeight * 0.7 || top < 0) result.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+        /* the score card sits beside the field on wide screens; on phones it is below: bring it into view */
+        const r = scoreCard.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.6 || r.bottom < 80) scoreCard.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
       }
+    };
+    /* the pill shows its pending state for one beat so a click always reads as "graded" */
+    const runFromButton = () => {
+      VR.busy(runBtn, true);
+      setTimeout(() => { VR.busy(runBtn, false); run(true); }, VR.reducedMotion ? 0 : 160);
     };
 
     const setMode = (next, focus) => {
@@ -423,17 +521,19 @@
       input.placeholder = conf.placeholder;
       input.value = drafts[next];
       updateCount();
-      showCriteria();
       if (input.value.trim()) run(false); else reset();
+      try { history.replaceState(null, "", next === "cv" ? location.pathname + location.search : "#" + next); } catch (_) { /* file:// */ }
     };
 
     tabs.forEach((tab, i) => {
       tab.addEventListener("click", () => setMode(tab.dataset.mode));
       tab.addEventListener("keydown", (event) => {
-        const dir = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
-        if (!dir) return;
+        const last = tabs.length - 1;
+        const j = event.key === "ArrowRight" ? (i === last ? 0 : i + 1) : event.key === "ArrowLeft" ? (i === 0 ? last : i - 1)
+          : event.key === "Home" ? 0 : event.key === "End" ? last : -1;
+        if (j < 0) return;
         event.preventDefault();
-        setMode(tabs[(i + dir + tabs.length) % tabs.length].dataset.mode, true);
+        setMode(tabs[j].dataset.mode, true);
       });
     });
     input.addEventListener("input", () => {
@@ -445,13 +545,45 @@
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); run(true); }
     });
-    card.querySelector("[data-run]").addEventListener("click", () => run(true));
-    card.querySelector("[data-sample]").addEventListener("click", () => { input.value = MODES[mode].sample; updateCount(); run(true); });
-    card.querySelector("[data-clear]").addEventListener("click", () => { input.value = ""; updateCount(); reset(); input.focus(); });
+    runBtn.addEventListener("click", runFromButton);
+    card.querySelector("[data-sample]").addEventListener("click", () => {
+      input.value = MODES[mode].sample;
+      updateCount();
+      runFromButton();
+    });
+    card.querySelector("[data-clear]").addEventListener("click", () => {
+      if (!input.value) { input.focus(); return; }
+      input.value = "";
+      updateCount();
+      reset();
+      input.focus();
+      VR.toast("Đã xóa nội dung", { tone: "info" });
+    });
+    /* the band's white pill leads to the field: common.js [data-focus-target] */
 
     const fromHash = (location.hash || "").replace("#", "");
-    if (MODES[fromHash]) setMode(fromHash); else { showCriteria(); updateCount(); }
-    window.addEventListener("hashchange", () => { const h = location.hash.replace("#", ""); if (MODES[h]) setMode(h); });
+    if (MODES[fromHash]) setMode(fromHash); else { renderEmpty(root, mode); updateCount(); }
+    /* a link to #cv, #upwork or #proposal (the mode tiles under the tool, other pages) switches the mode and brings
+       the desk into view */
+    window.addEventListener("hashchange", () => {
+      const h = location.hash.replace("#", "");
+      if (!MODES[h]) return;
+      if (h !== mode) setMode(h);
+      toDesk();
+    });
+    function toDesk() {
+      const desk = card.closest(".ta-frame") || card;   // the tool's window
+      const top = desk.getBoundingClientRect().top;
+      if (top < 0 || top > window.innerHeight * 0.5) desk.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+    }
+    /* the same links on this page, even when the hash is already theirs (no hashchange) */
+    document.querySelectorAll('a[href="#cv"], a[href="#upwork"], a[href="#proposal"]').forEach((a) => a.addEventListener("click", (event) => {
+      const h = a.getAttribute("href").slice(1);
+      event.preventDefault();
+      if (h !== mode) setMode(h);
+      toDesk();
+      if (window.matchMedia("(pointer: fine)").matches) input.focus({ preventScroll: true });
+    }));
   });
 
   VR.gradeText = grade;   // console / test hook

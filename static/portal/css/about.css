@@ -1,0 +1,136 @@
+/* =====================================================================
+   Việt Remote — about.css  (/gioi-thieu/ and the 404 page; direction A "Ảnh thật, chữ biên tập", rolled out 19/11)
+   Page composition only, with the page prefixes (.ab- about, .nf- 404). Loaded after ed.css (the A kit) and
+   community-a.css (the group's A layer: the off-white surface, light numerals, the photo band, the right-hand hero,
+   .ca-jrow, .ca-head-sticky). Navy, white and neutral greys; cobalt for links, the key figure, the selected state; the
+   photographs bring the colour; the green tick only inside the product view. Transform/opacity only for motion.
+   ---------------------------------------------------------------------
+     1  About: the hero's framing, the mission statement + three figures, the five checks | one real job, the
+        sources as rows, principles | contact
+     2  404: "404" over the night photo, three ways back as rows
+   ===================================================================== */
+
+/* key figures stay tabular: a page rule's `font:` shorthand resets font-variant-numeric */
+.rv .rv-num { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- 1 about */
+/* the hero: an evening meetup, the kit's .ed-hero--foot (the faces ride high, the copy sits low over the dark table);
+   the photo framed from its foot */
+.ab-hero { --ed-zoom: 108%; --ed-focus: 50% 100%; --ed-focus-m: 56% 40%; }
+
+/* the mission: ONE big statement, one line under it, then the three figures on a hairline, each a way in */
+.ab-mission .ed-eyebrow { margin-bottom: 22px; }
+.ab-statement {
+  max-width: 17em; font: 500 clamp(36px, 4.3vw, 64px)/1.08 var(--font); letter-spacing: -0.038em; color: var(--ed-ink);
+  text-wrap: balance; padding-block: .04em;
+}
+.ab-statement__sub { margin-top: 22px; max-width: 34em; font: 400 clamp(18px, 1.45vw, 22px)/1.5 var(--font); color: var(--ed-grey); text-wrap: pretty; }
+.ab-figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: clamp(56px, 6vw, 88px) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.ab-figs > li + li { border-left: 1px solid var(--ed-line); }
+.ab-fig {
+  display: grid; align-content: start; gap: 14px; height: 100%; padding: 30px clamp(20px, 2.6vw, 40px) 34px; color: var(--ed-ink); text-decoration: none;
+  transition: background-color var(--rv-dur-2) var(--rv-ease);
+}
+.ab-figs > li:first-child .ab-fig { padding-left: 0; }
+.ab-fig__n { display: flex; align-items: flex-start; font: 400 clamp(64px, 6.6vw, 104px)/.86 var(--font); letter-spacing: -0.052em; color: var(--ed-ink); font-variant-numeric: tabular-nums; padding-block: .04em; transition: color var(--rv-dur-2) var(--rv-ease); }
+.ab-fig__plus { margin-left: .03em; font-size: .5em; line-height: 1; letter-spacing: 0; }
+.ab-fig.is-key .ab-fig__n { color: var(--rv-cobalt); }
+.ab-fig__u { max-width: 18em; font: 400 17px/1.45 var(--font); color: var(--ed-ink-2); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: color var(--rv-dur-2) var(--rv-ease), text-decoration-color var(--rv-dur-2) var(--rv-ease); }
+.ab-fig:hover .ab-fig__u { color: var(--rv-cobalt); text-decoration-color: rgba(44, 79, 230, .35); }
+.ab-fig:hover .ab-fig__n { color: var(--rv-cobalt); }
+.ab-fig:focus-visible { outline: 2px solid var(--rv-cobalt); }
+/* focus: the ring stands off the figure (the first one has no left padding: an inset ring would cut "1.344") */
+.ab-fig:focus-visible { outline-offset: 6px; border-radius: 10px; }
+@media (max-width: 767px) {
+  /* the mission is said at section scale on phones: the hero's h1 stays the one display headline in view */
+  .ab-statement { font-size: clamp(26px, 7.2vw, 28px); line-height: 1.16; letter-spacing: -0.03em; }
+  .ab-statement__sub { margin-top: 14px; font-size: 17px; }
+  .ab-figs { grid-template-columns: minmax(0, 1fr); margin-top: 40px; }
+  .ab-figs > li + li { border-left: 0; border-top: 1px solid var(--ed-line); }
+  /* each label under its numeral, as on desktop: one left edge for the three */
+  .ab-fig, .ab-figs > li:first-child .ab-fig { gap: 8px; padding: 22px 0 24px; }
+  .ab-fig__n { font-size: clamp(52px, 15vw, 60px); }
+  .ab-fig__u { font-size: 16px; }
+  .ab-fig:focus-visible { outline-offset: 4px; }
+}
+
+/* the five checks as numbered rows | ONE real job and its checks in a window; a row lights its check */
+.ab-check__grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 40px clamp(40px, 5.6vw, 96px); align-items: start; }
+.ab-checks .ed-row { grid-template-columns: var(--ed-row-n, 84px) minmax(0, 1fr); cursor: default; }
+.ab-checks > li.is-lit .ed-row { background: var(--ed-hover); }
+.ab-check .ab-checks > li.is-lit .ed-row .ed-row__n { color: var(--rv-cobalt); }
+.ab-proof { display: grid; gap: 16px; justify-items: start; }
+.ab-proof__win { width: 100%; padding: 0; overflow: clip; }
+.ab-proof__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--ed-line); }
+.ab-proof__bar b { font: 600 16px/1.2 var(--font); color: var(--ed-ink); }
+.ab-proof__score { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 99px; background: #EAF6EF; color: #17733F; font: 600 14px/1 var(--font); }
+.ab-proof__job { padding: 14px; background: #F1F3F6; }
+.ab-proof__link { color: inherit; text-decoration: none; }
+.ab-proof__link:hover { color: var(--rv-cobalt); }
+.ab-proof__link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.ab-proof__link:focus-visible { outline: none; }
+.ab-proof__job .ca-jrow:has(.ab-proof__link:focus-visible) { box-shadow: 0 0 0 2px var(--rv-cobalt); }
+.ab-proof .ab-ticks { margin: 0; padding: 10px 22px 14px; list-style: none; }
+.ab-ticks > li {
+  display: flex; align-items: center; gap: 12px; min-height: 48px; margin-inline: -10px; padding: 8px 10px; border-radius: 10px;
+  font: 500 16px/1.35 var(--font); color: var(--ed-ink); transition: background-color var(--rv-dur-2) var(--rv-ease);
+}
+.ab-ticks > li.is-lit { background: #F2F4FE; }
+.ab-ticks__mark { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #1E9E5A; color: #fff; }
+.ab-ticks__mark .icon { width: 15px; height: 15px; stroke-width: 2.4; }
+html.rv-live .ab-ticks__mark { transition: transform var(--rv-dur-3) var(--rv-ease) calc(var(--i, 0) * 110ms + 240ms), opacity var(--rv-dur-3) var(--rv-ease) calc(var(--i, 0) * 110ms + 240ms); }
+html.rv-live .ab-proof[data-live]:not(.is-live) .ab-ticks__mark { transform: scale(.4); opacity: 0; }
+@media (max-width: 1023px) {
+  .ab-check__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .ab-checks .ed-row { grid-template-columns: var(--ed-row-n, 52px) minmax(0, 1fr); }
+  .ab-proof__bar { padding: 14px 16px; }
+  .ab-proof__job { padding: 10px; }
+  .ab-proof .ab-ticks { padding: 6px 16px 10px; }
+}
+
+/* where the jobs come from: the head | the sources as ranked editorial rows: the name at the left, its count a light
+   numeral at the right, the largest in cobalt; hairlines, no bars (a bar chart reads as an analytics widget) */
+.ab-src__grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 28px clamp(40px, 6vw, 96px); align-items: start; }
+.ab-sources { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ed-line); }
+.ab-source { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 24px; min-height: 76px; padding: 14px 0; border-bottom: 1px solid var(--ed-line); }
+.ab-source__name { font: 600 clamp(18px, 1.4vw, 20px)/1.3 var(--font); letter-spacing: -0.014em; color: var(--ed-ink); }
+.ab-source__n { font: 400 clamp(30px, 2.5vw, 38px)/1 var(--font); letter-spacing: -0.045em; color: var(--ca-num-2); text-align: right; font-variant-numeric: tabular-nums; }
+.ab-source:first-child .ab-source__n { color: var(--rv-cobalt); }
+.ab-source--more .ab-source__name { font-weight: 400; color: var(--ed-grey); }
+@media (max-width: 1023px) {
+  .ab-src__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .ab-source { min-height: 64px; padding: 12px 0; }
+  .ab-source__name { font-size: 17.5px; }
+  .ab-source__n { font-size: 28px; }
+}
+
+/* the photo band: the kit's .ed-band--bottom (three friends round a laptop fill the width: the line at the foot) */
+
+/* principles (numbered rows) | contact (rows, each a way in) */
+.ab-end__grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 56px clamp(40px, 6vw, 104px); align-items: start; }
+.ab-end__grid .ed-head__t { margin-bottom: clamp(24px, 2.6vw, 36px); }
+.ab-rules .ed-row { grid-template-columns: var(--ed-row-n, 84px) minmax(0, 1fr); cursor: default; }
+.ab-rules .ed-row:hover { background: none; }
+.ab-rules .ed-row:hover .ed-row__t { color: var(--ed-ink); }
+.ab-contact { scroll-margin-top: calc(var(--header-h) + 16px); }
+@media (max-width: 1023px) {
+  .ab-end__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .ab-rules .ed-row { grid-template-columns: var(--ed-row-n, 52px) minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------------- 2 404 */
+/* the split hero (ed.css §3, flush): "404" huge and light in cobalt, the h1 and one line beside the night-train photo
+   (her face framed in the upper half); then three ways back as rows. No join band. */
+.nf-hero { --ed-focus: 62% 30%; --ed-focus-m: 62% 28%; }
+.nf-code { margin: 4px 0 18px; font: 400 clamp(120px, 12.5vw, 188px)/.8 var(--font); letter-spacing: -0.06em; color: var(--rv-cobalt); font-variant-numeric: tabular-nums; padding-block: .04em; }
+.nf-title { --ed-h1: clamp(34px, 3.2vw, 48px); max-width: 12em; }
+@media (max-width: 899px) {
+  .nf-code { margin-bottom: 12px; font-size: clamp(96px, 30vw, 128px); }
+}
+.nf-ways .ed-head__t { margin-bottom: 8px; }

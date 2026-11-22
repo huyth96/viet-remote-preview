@@ -62,10 +62,10 @@
         ],
       },
       tips: [
-        ["Mở bằng dự án của khách", "Trong danh sách proposal, khách chỉ thấy khoảng 200 ký tự đầu. Câu đầu nhắc đúng việc họ cần thì được mở ra đọc; câu “I am writing to apply…” thì bị lướt qua."],
-        ["Một kết quả có số thay cho mười kỹ năng", "Khách không kiểm chứng được “hard-working, detail-oriented”. Một con số cụ thể chứng minh nhanh hơn cả đoạn tự giới thiệu."],
-        ["Cho khách thấy bước đầu tiên", "Kế hoạch ngắn và bản nháp sớm làm giảm rủi ro cho khách, nhất là khi bạn chưa có nhiều đánh giá."],
-        ["Kết bằng một câu hỏi dễ trả lời", "Câu hỏi có hoặc không khiến khách dễ nhắn lại, mở ra cuộc trò chuyện thay vì im lặng."],
+        ["Mở bằng dự án của khách", "Khách chỉ thấy khoảng 200 ký tự đầu của thư."],
+        ["Một kết quả có số thay cho mười kỹ năng", "Một con số chứng minh nhanh hơn “hard-working”."],
+        ["Cho khách thấy bước đầu tiên", "Bản nháp sớm làm giảm rủi ro cho khách."],
+        ["Kết bằng một câu hỏi dễ trả lời", "Câu hỏi có hoặc không dễ được nhắn lại."],
       ],
     },
     cold: {
@@ -89,9 +89,9 @@
         ],
       },
       tips: [
-        ["Chứng minh bạn đã tìm hiểu khách", "Email gửi hàng loạt bị nhận ra ngay. Một câu nhắc đúng việc của khách cho thấy đây là thư viết riêng cho họ."],
-        ["Bằng chứng ngắn, có số", "Người nhận chưa biết bạn là ai. Một kết quả cụ thể trả lời câu hỏi “sao tôi phải đọc tiếp?”."],
-        ["Lời mời nhỏ, chỉ một lời mời", "Bản mẫu miễn phí hoặc cuộc gọi 15 phút dễ đồng ý hơn “hãy thuê tôi”. Giữ cả thư dưới 120 từ."],
+        ["Chứng minh bạn đã tìm hiểu khách", "Một câu nhắc đúng việc của họ, không gửi hàng loạt."],
+        ["Bằng chứng ngắn, có số", "Trả lời câu “sao tôi phải đọc tiếp?”."],
+        ["Lời mời nhỏ, chỉ một lời mời", "Mẫu thử hay cuộc gọi ngắn; cả thư dưới 120 từ."],
       ],
     },
     followup: {
@@ -117,9 +117,9 @@
         ],
       },
       tips: [
-        ["Ngắn, không trách móc", "Khách im lặng thường vì bận, không phải vì từ chối. Nhắc lại trong một câu, đừng viết “Did you see my email?”."],
-        ["Mang thêm một giá trị mới", "Follow-up tốt có lý do để gửi: một ý tưởng, một bản phác thảo. Đừng chỉ hỏi “có tin gì chưa?”."],
-        ["Cho khách một lối ra", "Được phép nói “chưa” thì khách dễ trả lời hơn. Gửi sau 3–5 ngày làm việc, tối đa hai lần."],
+        ["Ngắn, không trách móc", "Khách im lặng thường vì bận, không phải từ chối."],
+        ["Mang thêm một giá trị mới", "Một ý tưởng, một bản phác thảo, không chỉ hỏi tin."],
+        ["Cho khách một lối ra", "Được nói “chưa” thì dễ trả lời; tối đa hai lần."],
       ],
     },
     quote: {
@@ -147,9 +147,9 @@
         ],
       },
       tips: [
-        ["Mở bằng cuộc trao đổi trước đó", "Nhắc lại bối cảnh để khách nhớ ngay đây là báo giá cho việc gì, nhất là khi họ nhận nhiều báo giá cùng lúc."],
-        ["Ghi rõ những gì có trong giá", "Liệt kê phạm vi và số lần sửa giúp tránh phát sinh về sau. Giá đứng cạnh phạm vi trông hợp lý hơn giá đứng một mình."],
-        ["Hạn báo giá và điều khoản thanh toán", "Hạn 14 ngày tạo lý do để quyết sớm. Đặt cọc 50% bảo vệ bạn nếu khách đổi ý giữa chừng."],
+        ["Mở bằng cuộc trao đổi trước đó", "Khách nhớ ngay đây là báo giá cho việc gì."],
+        ["Ghi rõ những gì có trong giá", "Phạm vi và số lần sửa đứng cạnh giá, tránh phát sinh."],
+        ["Hạn báo giá và điều khoản thanh toán", "Có hạn thì khách quyết sớm; đặt cọc giữ an toàn cho bạn."],
       ],
     },
     raise: {
@@ -175,9 +175,9 @@
         ],
       },
       tips: [
-        ["Nhắc kết quả trước khi nói về giá", "Khách đồng ý tăng giá khi thấy rõ giá trị đã nhận. Mở bằng con số kết quả của chính dự án này."],
-        ["Nói thẳng con số và ngày áp dụng", "Không xin phép, không vòng vo. Báo trước ít nhất 30 ngày; tăng 10–20% mỗi năm là bình thường."],
-        ["Khẳng định điều không đổi", "Khách lo nhất là mất chất lượng hay tốc độ. Nói rõ những gì giữ nguyên và mở lời trao đổi nếu cần."],
+        ["Nhắc kết quả trước khi nói về giá", "Khách đồng ý khi thấy rõ giá trị đã nhận."],
+        ["Nói thẳng con số và ngày áp dụng", "Không vòng vo; báo trước ít nhất 30 ngày."],
+        ["Khẳng định điều không đổi", "Chất lượng và tốc độ giữ nguyên, sẵn lòng trao đổi."],
       ],
     },
     review: {
@@ -203,9 +203,9 @@
         ],
       },
       tips: [
-        ["Xin ngay khi khách còn vui", "Gửi trong 1–3 ngày sau khi bàn giao, khi kết quả còn mới. Nhắc lại kết quả để khách có sẵn ý mà viết."],
-        ["Nói rõ việc cần làm, và nó ngắn", "“Hai, ba câu” nghe nhẹ hơn “viết đánh giá”. Chỉ đường cụ thể đến chỗ để review."],
-        ["Gợi ý chủ đề, xin cả góp ý", "Vài gợi ý giúp khách viết nhanh. Xin góp ý thật lòng khiến lời nhờ không giống đòi khen."],
+        ["Xin ngay khi khách còn vui", "Gửi vài ngày sau bàn giao, nhắc lại kết quả."],
+        ["Nói rõ việc cần làm, và nó ngắn", "“Hai, ba câu” nghe nhẹ hơn “viết đánh giá”."],
+        ["Gợi ý chủ đề, xin cả góp ý", "Có gợi ý thì viết nhanh, xin góp ý thì không giống đòi khen."],
       ],
     },
   };
@@ -317,14 +317,23 @@
       tips: $("[data-tpl-tips]") || document.querySelector("[data-tpl-tips]"),
       tipsTitle: $("[data-tpl-tips-title]"),
       stats: $("[data-tpl-stats]"),
-      snippet: $("[data-tpl-snippet]"),
-      snippetText: $("[data-tpl-snippet-text]"),
-      snippetName: $("[data-tpl-snippet-name]"),
+      /* what a client sees in the proposal list: the visual of the "why it works" section, after the tool */
+      snippet: $("[data-tpl-snippet]") || document.querySelector("[data-tpl-snippet]"),
+      snippetText: $("[data-tpl-snippet-text]") || document.querySelector("[data-tpl-snippet-text]"),
+      snippetName: $("[data-tpl-snippet-name]") || document.querySelector("[data-tpl-snippet-name]"),
+      snippetInitial: document.querySelector("[data-tpl-snippet-initial]"),
+      /* the letter in miniature beside the tips (#vi-sao-hieu-qua, after the tool): the kit's twins light a tip and
+         its paragraph (ed.js); this file writes both and keeps the picked key */
+      why: document.querySelector("[data-tpl-why]"),
+      mini: document.querySelector("[data-tpl-mini]"),
+      miniLabel: document.querySelector("[data-tpl-mini-label]"),
       label: $("[data-tpl-label]"),
       use: $("[data-tpl-use]"),
       to: $("[data-tpl-to]"),
       rail: $(".tp-types"),
       errs: Array.from(root.querySelectorAll("[data-tpl-err]")),
+      barLabel: $("[data-tpl-bar-label]"),
+      barValue: $("[data-tpl-bar-value]"),
     };
 
     let saved = {};
@@ -410,9 +419,15 @@
         }
       });
 
-      els.tips.innerHTML = tpl.tips.map(([title, text], i) => `<li class="tp-tip" data-tip="${i + 1}" tabindex="0">
-        <span class="tp-tip__num" aria-hidden="true">${i + 1}</span>
-        <div><p class="tp-tip__title">${e(title)}</p><p class="tp-tip__text">${e(text)}</p></div></li>`).join("");
+      /* the tips and the letter in miniature: the picked key lit in both (the twins' key at rest) */
+      let key = els.why ? els.why.dataset.edTwins || "1" : "1";
+      if (Number(key) > tpl.tips.length) key = "1";
+      if (els.why) els.why.dataset.edTwins = key;
+      els.tips.innerHTML = tpl.tips.map(([title, text], i) => `<li><button type="button" class="tp-tip${String(i + 1) === key ? " is-lit" : ""}" data-tip="${i + 1}" data-ed-k="${i + 1}" aria-pressed="${String(i + 1) === key}"><span class="tp-tip__num ed-num" aria-hidden="true">0${i + 1}</span><span class="tp-tip__main"><span class="tp-tip__title">${e(title)}</span><span class="tp-tip__text">${e(text)}</span></span></button></li>`).join("");
+      if (els.mini) {
+        els.mini.innerHTML = paras.map((p) => `<p class="ta-mini__p${p.tip && String(p.tip) === key ? " is-lit" : ""}"${p.tip ? ` data-ed-k="${p.tip}"` : ""}>${p.tip ? `<span class="ta-mini__pin">${p.tip}</span>` : ""}${e(fillText(p.t, tk)).replace(/\n/g, "<br>")}</p>`).join("");
+        if (els.miniLabel) els.miniLabel.textContent = tpl.label;
+      }
 
       /* plain text for copy + stats */
       const subjectText = subjectTpl ? fillText(cap(subjectTpl), tk) : "";
@@ -422,7 +437,7 @@
       const samples = Array.from(used).filter((k) => tk[k] && tk[k].sample).length;
       last = { subject: subjectText, body: bodyText, samples };
 
-      els.stats.innerHTML = `<span><b class="tnum">${words}</b> từ</span><span>đọc khoảng ${secs < 60 ? secs + " giây" : Math.round(secs / 60) + " phút"}</span>${state.type === "upwork" ? `<span><b class="tnum">${bodyText.length.toLocaleString("vi-VN")}</b>/5.000 ký tự</span>` : ""}${samples ? `<span class="tp-stats__samples"><span class="tp-sample-key">${samples} ô</span> còn là ví dụ</span>` : ""}`;
+      els.stats.innerHTML = `<span><b class="tnum">${words}</b> từ</span><span>đọc khoảng ${secs < 60 ? secs + " giây" : Math.round(secs / 60) + " phút"}</span>${state.type === "upwork" ? `<span><b class="tnum">${bodyText.length.toLocaleString("vi-VN")}</b>/5.000 ký tự</span>` : ""}${samples ? `<span class="tp-stats__samples"><span class="tp-sample-key">${samples} ô</span> còn là mẫu</span>` : ""}`;
 
       /* Upwork: what the client sees in the proposal list (first ~200 characters) */
       if (els.snippet) {
@@ -431,8 +446,12 @@
           const flat = paras.slice(0, -1).map((p) => fillText(p.t, tk)).join(" ").replace(/\s+/g, " ");
           els.snippetText.textContent = flat.length > 200 ? flat.slice(0, 199).replace(/\s+\S*$/, "") + "…" : flat;
           els.snippetName.textContent = tk.name.text;
+          if (els.snippetInitial) els.snippetInitial.textContent = (tk.name.text.trim()[0] || "·").toUpperCase();
         }
       }
+      /* phones: the action bar repeats the letter's name and how much is still sample text */
+      if (els.barLabel) els.barLabel.textContent = tpl.label;
+      if (els.barValue) els.barValue.textContent = `${words} từ` + (samples ? ` · ${samples} ô còn là mẫu` : " · sẵn sàng gửi");
       root.dataset.activeType = state.type;
       root.dataset.activeTone = state.tone;
     }
@@ -443,7 +462,7 @@
       const rail = els.rail;
       const input = els.types.find((r) => r.checked);
       if (!rail || !input || rail.scrollWidth <= rail.clientWidth + 1) return;
-      const pill = input.closest(".seg__opt") || input;
+      const pill = input.closest("label") || input;
       const r = rail.getBoundingClientRect();
       const p = pill.getBoundingClientRect();
       const edge = 16;
@@ -455,25 +474,12 @@
       rail.scrollTo({ left: Math.max(0, left), behavior: smooth && !VR.reducedMotion ? "smooth" : "auto" });
     }
 
-    /* highlight the paragraph a tip explains (and back): hover, or keyboard focus on a tip */
-    const tipZones = [root].concat(els.tips && !root.contains(els.tips) ? [els.tips] : []);
-    function highlight(n) {
-      tipZones.forEach((zone) => zone.querySelectorAll("[data-tip]").forEach((el) => el.classList.toggle("is-hl", n != null && el.dataset.tip === String(n))));
-    }
-    tipZones.forEach((zone) => {
-      zone.addEventListener("pointerover", (ev) => {
-        const t = ev.target.closest("[data-tip]");
-        highlight(t ? t.dataset.tip : null);
-      });
-      zone.addEventListener("pointerleave", () => highlight(null));
-    });
-    els.tips.addEventListener("focusin", (ev) => {
-      const t = ev.target.closest(".tp-tip");
-      if (t) highlight(t.dataset.tip);
-    });
-    els.tips.addEventListener("focusout", (ev) => {
-      if (!els.tips.contains(ev.relatedTarget)) highlight(null);
-    });
+    /* a tip and its paragraph light each other in #vi-sao-hieu-qua (the kit's twins); a click or focus keeps the pick
+       (the twins' key at rest), so a re-render (another template, a field typed) keeps it too */
+    if (els.why) ["click", "focusin"].forEach((type) => els.why.addEventListener(type, (ev) => {
+      const el = ev.target.closest && ev.target.closest("[data-ed-k]");
+      if (el) els.why.dataset.edTwins = el.dataset.edK;
+    }));
 
     /* the field you are typing in lights up its words in the preview */
     function focusVar(key) {
@@ -501,24 +507,24 @@
       input.addEventListener("blur", () => focusVar(null));
     });
 
-    const copyBtn = $("[data-tpl-copy]");
-    if (copyBtn) copyBtn.addEventListener("click", () => {
+    /* the letter's copy pill (and its twin in the phone action bar): the tick and "Đã sao chép" on the pill, a toast
+       that says when sample values are still in the letter */
+    root.querySelectorAll("[data-tpl-copy]").forEach((btn) => btn.addEventListener("click", () => {
       const text = last.subject ? `Subject: ${last.subject}\n\n${last.body}` : last.body;
-      const msg = last.samples ? `Đã sao chép. Còn ${last.samples} ô đang là ví dụ, nhớ sửa trước khi gửi.` : "Đã sao chép, sẵn sàng dán vào email";
-      VR.copy(text, msg);
-      copyBtn.classList.add("is-done");
-      setTimeout(() => copyBtn.classList.remove("is-done"), 1600);
-    });
+      const msg = last.samples ? `Đã sao chép. Còn ${last.samples} ô đang là giá trị mẫu, nhớ sửa trước khi gửi.` : "Đã sao chép, sẵn sàng dán vào email";
+      VR.copy(text, msg, btn);
+    }));
     const copySubject = $("[data-tpl-copy-subject]");
-    if (copySubject) copySubject.addEventListener("click", () => VR.copy(last.subject, "Đã sao chép tiêu đề"));
+    if (copySubject) copySubject.addEventListener("click", () => VR.copy(last.subject, "Đã sao chép tiêu đề", copySubject));
     const clearBtn = $("[data-tpl-clear]");
     if (clearBtn) clearBtn.addEventListener("click", () => {
       els.fields.forEach((input) => { input.value = input.dataset.tplField === "unit" ? "hour" : ""; });
       state.values = { unit: "hour", effective: "" };
       persist();
       render();
-      VR.toast("Đã xóa các ô, xem trước quay về ví dụ");
+      VR.toast("Đã xóa các ô, xem trước quay về giá trị mẫu", { tone: "info" });
     });
+    /* the band's white pill leads to the field: common.js [data-focus-target] */
 
     render();
     revealType(false);

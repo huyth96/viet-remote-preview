@@ -454,23 +454,38 @@
     return out.slice(0, 3);
   }
 
+  /* the verdict card (#ket-qua, the page's one ink card): the level, the meter, one line of why and how many signs
+     each group has; the white card under it (data-result) shows the text marked up, every sign, what to do next */
   function render(root, text, res) {
     const out = root.querySelector("[data-result]");
-    const risk = out.querySelector("[data-risk]");
+    const risk = root.querySelector("[data-risk]");
     risk.classList.remove("is-low", "is-mid", "is-high");
     risk.classList.add("is-" + res.level);
 
     const n = res.flags.length;
     const groups = new Set(res.flags.map((f) => f.rule.cat)).size;
     const verdict = VERDICT[res.level === "low" && !n ? "none" : res.level];
-    out.querySelector("[data-verdict]").innerHTML = icon(verdict.icon) + `<span>${verdict.text}</span>`;
+    const v = risk.querySelector("[data-verdict] span");
+    if (v.textContent !== verdict.text) v.textContent = verdict.text;
+    /* the readout's lead: how many signs, big, in the level's colour (tools.css §D) */
+    const fig = risk.querySelector("[data-count-fig]");
+    if (fig) {
+      fig.hidden = false;
+      VR.liveCount(fig.querySelector("[data-count]"), String(n));
+      fig.querySelector("[data-count-unit]").textContent = n ? `dấu hiệu · ${groups} nhóm` : "dấu hiệu";
+    }
     let summary;
     if (!n) summary = "Không khớp mẫu câu đáng ngờ nào trong bộ quy tắc. Công cụ chỉ nhận ra cách viết quen thuộc, hãy tự xác minh công ty trước khi chuyển tiền hay gửi giấy tờ.";
     else if (res.level === "high" && res.critical) summary = `Tìm thấy ${n} dấu hiệu thuộc ${groups} nhóm, trong đó có dấu hiệu nghiêm trọng. Đừng chuyển tiền hay gửi thông tin cá nhân.`;
     else if (res.level === "high") summary = `Tìm thấy ${n} dấu hiệu thuộc ${groups} nhóm; cộng dồn lại đã ở mức rủi ro cao. Đừng chuyển tiền hay gửi thông tin cá nhân.`;
     else if (res.level === "mid") summary = `Tìm thấy ${n} dấu hiệu thuộc ${groups} nhóm. Hỏi thêm và tự xác minh trước khi đi tiếp.`;
     else summary = `Có ${n} dấu hiệu nhẹ. Công cụ chỉ nhận ra mẫu câu quen thuộc, hãy tự xác minh công ty trước khi chuyển tiền hay gửi giấy tờ.`;
-    out.querySelector("[data-summary]").textContent = summary;
+    risk.querySelector("[data-summary]").textContent = summary;
+    risk.querySelectorAll("[data-group]").forEach((row) => {
+      const k = res.flags.filter((f) => f.rule.cat === row.dataset.group).length;
+      row.classList.toggle("is-hit", k > 0);
+      row.querySelector("[data-group-n]").textContent = k ? `${k} dấu hiệu` : "Không thấy";
+    });
 
     const marked = out.querySelector("[data-marked]");
     marked.innerHTML = markedHtml(text, res.spans);
@@ -502,8 +517,27 @@
     out.querySelector("[data-next]").innerHTML = NEXT[res.level].map((li) => `<li><span>${li}</span></li>`).join("");
 
     out.hidden = false;
-    root.querySelector("[data-empty]").hidden = true;
     clipHint(marked);
+
+    const bar = document.querySelector("[data-scam-bar]");
+    if (bar) {
+      bar.querySelector("[data-bar-value]").textContent = n ? `${verdict.text} · ${n} dấu hiệu` : verdict.text;
+      VR.actionbar.ready(bar, true);
+    }
+  }
+
+  /** the verdict card before (or after clearing) a check: the four groups explained, no level */
+  function renderEmpty(root) {
+    const risk = root.querySelector("[data-risk]");
+    risk.classList.remove("is-low", "is-mid", "is-high");
+    risk.querySelector("[data-verdict] span").textContent = "Chưa kiểm tra";
+    const fig = risk.querySelector("[data-count-fig]");
+    if (fig) fig.hidden = true;
+    risk.querySelector("[data-summary]").textContent = "Công cụ tìm bốn nhóm dấu hiệu:";
+    risk.querySelectorAll("[data-group]").forEach((row) => { row.classList.remove("is-hit"); row.querySelector("[data-group-n]").textContent = ""; });
+    root.querySelector("[data-result]").hidden = true;
+    const bar = document.querySelector("[data-scam-bar]");
+    if (bar) VR.actionbar.ready(bar, false);
   }
 
   /* a long paste scrolls inside its box on desktop: fade the bottom edge while more text is below */
@@ -518,28 +552,38 @@
     const input = card.querySelector("[data-input]");
     const counter = card.querySelector("[data-counter]");
     const result = root.querySelector("[data-result]");
+    const verdictCard = root.querySelector("[data-risk]");
+    const runBtn = card.querySelector("[data-run]");
+    const samples = Array.from(card.querySelectorAll("[data-sample]"));
     let live = false;
     let timer;
 
-    const count = () => { counter.textContent = VR.fmt.int(input.value.length) + " ký tự"; };
+    const count = () => { VR.liveCount(counter, VR.fmt.int(input.value.length) + " ký tự"); };
+    const reset = () => { live = false; renderEmpty(root); };
     const run = (scroll) => {
       const text = input.value.normalize("NFC").replace(/\r\n?/g, "\n");
       if (text.trim().length < 12) {
-        result.hidden = true;
-        root.querySelector("[data-empty]").hidden = false;
-        if (scroll) { VR.toast("Dán thêm nội dung, ít nhất một câu"); input.focus(); }
+        reset();
+        if (scroll) { VR.toast(text.trim() ? "Dán thêm nội dung, ít nhất một câu để kiểm tra" : "Dán một tin trước đã", { tone: "info" }); input.focus(); }
         return;
       }
       render(root, text, analyse(text));
       live = true;
       if (scroll) {
-        const top = result.getBoundingClientRect().top;
-        if (top > window.innerHeight * 0.7 || top < 0) result.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
+        /* beside the field on wide screens; below it on phones: bring the verdict into view */
+        const r = verdictCard.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.6 || r.bottom < 80) verdictCard.scrollIntoView({ behavior: VR.reducedMotion ? "auto" : "smooth", block: "start" });
       }
+    };
+    /* the pill shows its pending state for one beat so a click always reads as "checked" */
+    const runFromButton = () => {
+      VR.busy(runBtn, true);
+      setTimeout(() => { VR.busy(runBtn, false); run(true); }, VR.reducedMotion ? 0 : 160);
     };
 
     input.addEventListener("input", () => {
       count();
+      samples.forEach((b) => b.setAttribute("aria-pressed", "false"));
       if (!live) return;
       clearTimeout(timer);
       timer = setTimeout(() => run(false), 280);
@@ -547,41 +591,38 @@
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); run(true); }
     });
-    card.querySelector("[data-run]").addEventListener("click", () => run(true));
+    runBtn.addEventListener("click", runFromButton);
     card.querySelector("[data-clear]").addEventListener("click", () => {
+      samples.forEach((b) => b.setAttribute("aria-pressed", "false"));
+      if (!input.value) { input.focus(); return; }
       input.value = "";
       count();
-      live = false;
-      result.hidden = true;
-      root.querySelector("[data-empty]").hidden = false;
-      card.querySelectorAll("[data-sample]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      reset();
       input.focus();
+      VR.toast("Đã xóa nội dung", { tone: "info" });
     });
-    card.querySelectorAll("[data-sample]").forEach((btn) => {
-      btn.setAttribute("aria-pressed", "false");
+    samples.forEach((btn) => {
       btn.addEventListener("click", () => {
         input.value = SAMPLES[btn.dataset.sample] || "";
-        card.querySelectorAll("[data-sample]").forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+        samples.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
         count();
-        run(true);
+        runFromButton();
       });
     });
+    /* the band's white pill leads to the field: common.js [data-focus-target] */
 
     const marked = result.querySelector("[data-marked]");
     marked.addEventListener("scroll", () => clipHint(marked), { passive: true });
-    window.addEventListener("resize", () => { if (!result.hidden) clipHint(marked); });
+    window.addEventListener("resize", () => { if (!result.hidden) clipHint(marked); }, { passive: true });
 
     /* hovering or focusing a flag thickens the underline of its phrases in the text */
-    result.addEventListener("pointerover", (event) => {
+    const focusRule = (event) => {
       const flag = event.target.closest(".flag");
       result.querySelectorAll("mark.is-focus").forEach((m) => m.classList.remove("is-focus"));
       if (flag) result.querySelectorAll(`mark[data-rule="${flag.dataset.rule}"]`).forEach((m) => m.classList.add("is-focus"));
-    });
-    result.addEventListener("focusin", (event) => {
-      const flag = event.target.closest(".flag");
-      result.querySelectorAll("mark.is-focus").forEach((m) => m.classList.remove("is-focus"));
-      if (flag) result.querySelectorAll(`mark[data-rule="${flag.dataset.rule}"]`).forEach((m) => m.classList.add("is-focus"));
-    });
+    };
+    result.addEventListener("pointerover", focusRule);
+    result.addEventListener("focusin", focusRule);
 
     count();
   });
